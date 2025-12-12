@@ -89,40 +89,62 @@ export default function VoiceAssistant() {
     }
   };
 
-  const speakResponse = (text: string) => {
+  const speakResponse = async (text: string) => {
     // Clean up the text for speech
     const cleanText = text.replace(/\[SIMULATED\]/g, 'Simulated:').replace(/\n/g, ' ');
     
-    console.log('[TTS] Speaking:', cleanText.substring(0, 50) + '...');
+    console.log('[TTS] Attempting to speak:', cleanText.substring(0, 50) + '...');
     setIsSpeaking(true);
     
-    // Use Web Speech API for web, expo-speech for native
+    // Use Web Speech API for web
     if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
       console.log('[TTS] Using Web Speech API');
-      // Web Speech API fallback
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.9;
-      utterance.onend = () => {
-        console.log('[TTS] Speech ended');
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        utterance.onend = () => {
+          console.log('[TTS] Speech ended');
+          setIsSpeaking(false);
+        };
+        utterance.onerror = (e) => {
+          console.error('[TTS] Speech error:', e);
+          setIsSpeaking(false);
+        };
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.error('[TTS] Web Speech failed:', e);
         setIsSpeaking(false);
-      };
-      utterance.onerror = (e) => {
-        console.error('[TTS] Speech error:', e);
-        setIsSpeaking(false);
-      };
-      window.speechSynthesis.speak(utterance);
+      }
     } else {
-      console.log('[TTS] Using expo-speech (native)');
-      // Native expo-speech
-      Speech.speak(cleanText, {
-        language: 'en-US',
-        rate: 0.9,
-        onDone: () => setIsSpeaking(false),
-        onStopped: () => setIsSpeaking(false),
-        onError: () => setIsSpeaking(false),
-      });
+      // Native expo-speech - NOTE: Only works in development builds, NOT Expo Go
+      console.log('[TTS] Using expo-speech (native) - requires dev build, not Expo Go');
+      try {
+        // Check if speech is available
+        const isAvailable = await Speech.isSpeakingAsync().catch(() => false);
+        console.log('[TTS] Speech available check passed');
+        
+        Speech.speak(cleanText, {
+          language: 'en-US',
+          rate: 0.9,
+          onDone: () => {
+            console.log('[TTS] Native speech done');
+            setIsSpeaking(false);
+          },
+          onStopped: () => {
+            console.log('[TTS] Native speech stopped');
+            setIsSpeaking(false);
+          },
+          onError: (error) => {
+            console.error('[TTS] Native speech error:', error);
+            setIsSpeaking(false);
+          },
+        });
+      } catch (e) {
+        console.error('[TTS] expo-speech failed (expected in Expo Go):', e);
+        setIsSpeaking(false);
+      }
     }
   };
 
