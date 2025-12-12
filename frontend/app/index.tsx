@@ -359,7 +359,10 @@ export default function VoiceAssistant() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Powered by Claude AI • Demo Mode
+            Powered by GPT-4o • Demo Mode
+          </Text>
+          <Text style={styles.footerNote}>
+            TTS: Web only (Expo Go doesn't support native TTS)
           </Text>
         </View>
       </KeyboardAvoidingView>
