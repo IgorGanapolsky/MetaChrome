@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
 from datetime import datetime
-import httpx
+from emergentintegrations.llm.openai import LlmChat, UserMessage
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -88,8 +88,8 @@ Examples:
 
 Be helpful, conversational, and acknowledge that some actions are simulated in this demo."""
 
-async def call_claude_api(user_command: str, context: Optional[str] = None) -> dict:
-    """Call Claude API via Emergent LLM Key to interpret the command"""
+async def call_llm_api(user_command: str, context: Optional[str] = None) -> dict:
+    """Call LLM API via Emergent LLM Key to interpret the command"""
     
     if not EMERGENT_LLM_KEY:
         return {
@@ -100,69 +100,47 @@ async def call_claude_api(user_command: str, context: Optional[str] = None) -> d
             "parameters": {}
         }
     
-    messages = [
-        {
-            "role": "user",
-            "content": f"Interpret this voice command: \"{user_command}\"\n\nContext: {context if context else 'No additional context'}"
-        }
-    ]
-    
     try:
-        async with httpx.AsyncClient(timeout=30.0) as http_client:
-            response = await http_client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": EMERGENT_LLM_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json"
-                },
-                json={
-                    "model": "claude-sonnet-4-20250514",
-                    "max_tokens": 1024,
-                    "system": SYSTEM_PROMPT,
-                    "messages": messages
-                }
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                content = data.get("content", [{}])[0].get("text", "{}")
-                
-                # Parse the JSON response from Claude
-                import json
-                try:
-                    # Find JSON in the response
-                    json_start = content.find('{')
-                    json_end = content.rfind('}') + 1
-                    if json_start != -1 and json_end > json_start:
-                        parsed = json.loads(content[json_start:json_end])
-                        return parsed
-                except json.JSONDecodeError:
-                    pass
-                
-                return {
-                    "action_type": "general",
-                    "interpreted_action": "Process command",
-                    "response_text": content,
-                    "target_app": None,
-                    "parameters": {}
-                }
-            else:
-                logging.error(f"Claude API error: {response.status_code} - {response.text}")
-                return {
-                    "action_type": "error",
-                    "interpreted_action": "API Error",
-                    "response_text": f"Sorry, I couldn't process that command. Error: {response.status_code}",
-                    "target_app": None,
-                    "parameters": {}
-                }
+        # Create LLM chat instance with emergent key
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"voice-cmd-{uuid.uuid4()}",
+            system_message=SYSTEM_PROMPT
+        )
+        
+        # Create user message
+        prompt = f"Interpret this voice command: \"{user_command}\"\n\nContext: {context if context else 'No additional context'}"
+        msg = UserMessage(text=prompt)
+        
+        # Get response
+        response = await chat.send_message(msg)
+        
+        # Parse the JSON response
+        import json
+        try:
+            # Find JSON in the response
+            json_start = response.find('{')
+            json_end = response.rfind('}') + 1
+            if json_start != -1 and json_end > json_start:
+                parsed = json.loads(response[json_start:json_end])
+                return parsed
+        except json.JSONDecodeError:
+            pass
+        
+        return {
+            "action_type": "general",
+            "interpreted_action": "Process command",
+            "response_text": response,
+            "target_app": None,
+            "parameters": {}
+        }
                 
     except Exception as e:
-        logging.error(f"Error calling Claude API: {str(e)}")
+        logging.error(f"Error calling LLM API: {str(e)}")
         return {
             "action_type": "error",
             "interpreted_action": "Connection Error",
-            "response_text": f"Sorry, I had trouble connecting to my brain. Please try again.",
+            "response_text": f"Sorry, I had trouble processing that. Please try again.",
             "target_app": None,
             "parameters": {}
         }
@@ -200,10 +178,10 @@ async def root():
 
 @api_router.post("/command", response_model=CommandResponse)
 async def process_command(request: CommandRequest):
-    """Process a voice command using Claude AI"""
+    """Process a voice command using LLM AI"""
     
-    # Get Claude's interpretation
-    interpretation = await call_claude_api(request.command, request.context)
+    # Get LLM's interpretation
+    interpretation = await call_llm_api(request.command, request.context)
     
     action_type = interpretation.get("action_type", "general")
     interpreted_action = interpretation.get("interpreted_action", "Unknown action")
