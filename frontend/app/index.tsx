@@ -93,19 +93,28 @@ export default function VoiceAssistant() {
     // Clean up the text for speech
     const cleanText = text.replace(/\[SIMULATED\]/g, 'Simulated:').replace(/\n/g, ' ');
     
+    console.log('[TTS] Speaking:', cleanText.substring(0, 50) + '...');
     setIsSpeaking(true);
     
     // Use Web Speech API for web, expo-speech for native
     if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      console.log('[TTS] Using Web Speech API');
       // Web Speech API fallback
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'en-US';
       utterance.rate = 0.9;
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utterance.onend = () => {
+        console.log('[TTS] Speech ended');
+        setIsSpeaking(false);
+      };
+      utterance.onerror = (e) => {
+        console.error('[TTS] Speech error:', e);
+        setIsSpeaking(false);
+      };
       window.speechSynthesis.speak(utterance);
     } else {
+      console.log('[TTS] Using expo-speech (native)');
       // Native expo-speech
       Speech.speak(cleanText, {
         language: 'en-US',
