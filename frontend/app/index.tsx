@@ -575,4 +575,9 @@ const styles = StyleSheet.create({
     color: '#52525B',
     fontSize: 12,
   },
+  footerNote: {
+    color: '#3F3F46',
+    fontSize: 10,
+    marginTop: 2,
+  },
 });
