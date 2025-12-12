@@ -94,13 +94,27 @@ export default function VoiceAssistant() {
     const cleanText = text.replace(/\[SIMULATED\]/g, 'Simulated:').replace(/\n/g, ' ');
     
     setIsSpeaking(true);
-    Speech.speak(cleanText, {
-      language: 'en-US',
-      rate: 0.9,
-      onDone: () => setIsSpeaking(false),
-      onStopped: () => setIsSpeaking(false),
-      onError: () => setIsSpeaking(false),
-    });
+    
+    // Use Web Speech API for web, expo-speech for native
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      // Web Speech API fallback
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    } else {
+      // Native expo-speech
+      Speech.speak(cleanText, {
+        language: 'en-US',
+        rate: 0.9,
+        onDone: () => setIsSpeaking(false),
+        onStopped: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false),
+      });
+    }
   };
 
   const stopSpeaking = () => {
