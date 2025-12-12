@@ -118,7 +118,11 @@ export default function VoiceAssistant() {
   };
 
   const stopSpeaking = () => {
-    Speech.stop();
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    } else {
+      Speech.stop();
+    }
     setIsSpeaking(false);
   };
 
