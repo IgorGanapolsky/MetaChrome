@@ -11,6 +11,7 @@ import {
   Animated,
   Keyboard,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,6 +39,26 @@ export default function VoiceAssistant() {
   const [lastResponse, setLastResponse] = useState<CommandResponse | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ttsAvailable, setTtsAvailable] = useState(true);
+  
+  // Check TTS availability on mount
+  useEffect(() => {
+    const checkTTS = async () => {
+      try {
+        if (Platform.OS !== 'web') {
+          const voices = await Speech.getAvailableVoicesAsync();
+          console.log('[TTS] Available voices:', voices.length);
+          if (voices.length === 0) {
+            console.warn('[TTS] No voices available - TTS may not work');
+          }
+        }
+      } catch (e) {
+        console.error('[TTS] Check failed:', e);
+        setTtsAvailable(false);
+      }
+    };
+    checkTTS();
+  }, []);
   
   // Animation for the mic button
   const pulseAnim = useState(new Animated.Value(1))[0];
