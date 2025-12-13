@@ -30,7 +30,7 @@ interface CommandHistory {
   interpreted_action: string;
   action_type: string;
   response_text: string;
-  simulated: bool;
+  simulated: boolean;
   timestamp: string;
 }
 
