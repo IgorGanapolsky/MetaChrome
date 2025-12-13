@@ -150,11 +150,11 @@ export default function VoiceAssistant() {
     }
   };
 
-  const stopSpeaking = () => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    } else {
-      Speech.stop();
+  const stopSpeaking = async () => {
+    try {
+      await Speech.stop();
+    } catch (e) {
+      console.error('[TTS] Stop failed:', e);
     }
     setIsSpeaking(false);
   };
