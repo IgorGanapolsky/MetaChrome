@@ -364,7 +364,7 @@ export default function VoiceAssistant() {
             Powered by GPT-4o • Demo Mode
           </Text>
           <Text style={styles.footerNote}>
-            TTS: Web only (Expo Go doesn't support native TTS)
+            TTS requires Google TTS on Android • Volume up
           </Text>
         </View>
       </KeyboardAvoidingView>
