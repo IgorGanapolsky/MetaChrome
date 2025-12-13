@@ -11,15 +11,17 @@ import {
   Animated,
   Keyboard,
   KeyboardAvoidingView,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+const SETTINGS_KEY = '@voice_assistant_settings';
 
 interface CommandResponse {
   id: string;
@@ -31,6 +33,50 @@ interface CommandResponse {
   timestamp: string;
 }
 
+interface AppSettings {
+  hapticsEnabled: boolean;
+  autoSpeak: boolean;
+  speechRate: number;
+}
+
+const defaultSettings: AppSettings = {
+  hapticsEnabled: true,
+  autoSpeak: true,
+  speechRate: 0.75,
+};
+
+// Command categories with icons
+const commandCategories = [
+  { 
+    id: 'browser', 
+    label: 'Browser', 
+    icon: 'globe-outline',
+    color: '#3B82F6',
+    examples: ['Open Chrome with Claude Code', 'Go to my Gmail tab']
+  },
+  { 
+    id: 'apps', 
+    label: 'Apps', 
+    icon: 'apps-outline',
+    color: '#10B981',
+    examples: ['Open Google Keep', 'Launch Spotify']
+  },
+  { 
+    id: 'ai', 
+    label: 'AI Query', 
+    icon: 'sparkles-outline',
+    color: '#F59E0B',
+    examples: ['Ask Grok to review my repo', 'Ask Claude about this code']
+  },
+  { 
+    id: 'read', 
+    label: 'Reading', 
+    icon: 'book-outline',
+    color: '#EC4899',
+    examples: ['Read the last paragraph', 'Summarize this page']
+  },
+];
+
 export default function VoiceAssistant() {
   const router = useRouter();
   const [isListening, setIsListening] = useState(false);
@@ -39,42 +85,70 @@ export default function VoiceAssistant() {
   const [lastResponse, setLastResponse] = useState<CommandResponse | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ttsAvailable, setTtsAvailable] = useState(true);
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
-  // Check TTS availability on mount
-  useEffect(() => {
-    const checkTTS = async () => {
-      try {
-        if (Platform.OS !== 'web') {
-          const voices = await Speech.getAvailableVoicesAsync();
-          console.log('[TTS] Available voices:', voices.length);
-          if (voices.length === 0) {
-            console.warn('[TTS] No voices available - TTS may not work');
-          }
-        }
-      } catch (e) {
-        console.error('[TTS] Check failed:', e);
-        setTtsAvailable(false);
-      }
-    };
-    checkTTS();
-  }, []);
-  
-  // Animation for the mic button
+  // Animation values
   const pulseAnim = useState(new Animated.Value(1))[0];
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings();
+    // Fade in animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(SETTINGS_KEY);
+      if (stored) {
+        setSettings(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error('Failed to load settings:', e);
+    }
+  };
+
+  // Haptic feedback helper
+  const triggerHaptic = useCallback((type: 'light' | 'medium' | 'success' | 'error' | 'selection') => {
+    if (!settings.hapticsEnabled) return;
+    
+    switch (type) {
+      case 'light':
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        break;
+      case 'medium':
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        break;
+      case 'success':
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        break;
+      case 'error':
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        break;
+      case 'selection':
+        Haptics.selectionAsync();
+        break;
+    }
+  }, [settings.hapticsEnabled]);
   
   useEffect(() => {
     if (isListening) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.2,
-            duration: 500,
+            toValue: 1.15,
+            duration: 600,
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 500,
+            duration: 600,
             useNativeDriver: true,
           }),
         ])
@@ -89,6 +163,7 @@ export default function VoiceAssistant() {
     
     setIsProcessing(true);
     setError(null);
+    triggerHaptic('light');
     
     try {
       const response = await axios.post(`${BACKEND_URL}/api/command`, {
@@ -98,51 +173,41 @@ export default function VoiceAssistant() {
       
       const data: CommandResponse = response.data;
       setLastResponse(data);
+      triggerHaptic('success');
       
-      // Speak the response
-      speakResponse(data.response_text);
+      // Auto-speak if enabled
+      if (settings.autoSpeak) {
+        speakResponse(data.response_text);
+      }
     } catch (err: any) {
       console.error('Error processing command:', err);
       setError(err.response?.data?.detail || 'Failed to process command');
+      triggerHaptic('error');
     } finally {
       setIsProcessing(false);
       setInputText('');
+      setSelectedCategory(null);
     }
   };
 
   const speakResponse = async (text: string) => {
-    // Clean up the text for speech
     const cleanText = text.replace(/\[SIMULATED\]/g, 'Simulated:').replace(/\n/g, ' ').trim();
     
     if (!cleanText) return;
     
-    console.log('[TTS] Speaking:', cleanText.substring(0, 50) + '...');
     setIsSpeaking(true);
     
     try {
-      // Stop any current speech first
       await Speech.stop();
       
-      // Use simpler Speech.speak call that works on both platforms
       Speech.speak(cleanText, {
         language: 'en',
         pitch: 1.0,
-        rate: 0.75,
-        onStart: () => {
-          console.log('[TTS] Started speaking');
-        },
-        onDone: () => {
-          console.log('[TTS] Done speaking');
-          setIsSpeaking(false);
-        },
-        onStopped: () => {
-          console.log('[TTS] Stopped');
-          setIsSpeaking(false);
-        },
-        onError: (error) => {
-          console.error('[TTS] Error:', error);
-          setIsSpeaking(false);
-        },
+        rate: settings.speechRate,
+        onStart: () => console.log('[TTS] Started'),
+        onDone: () => setIsSpeaking(false),
+        onStopped: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false),
       });
     } catch (e) {
       console.error('[TTS] Failed:', e);
@@ -160,13 +225,11 @@ export default function VoiceAssistant() {
   };
 
   const toggleListening = () => {
+    triggerHaptic('medium');
     if (isListening) {
       setIsListening(false);
-      // In a real implementation, this would stop the speech recognition
     } else {
       setIsListening(true);
-      // Note: Real speech-to-text would require native modules
-      // For now, we'll use text input as fallback
       setTimeout(() => {
         setIsListening(false);
       }, 5000);
@@ -178,31 +241,27 @@ export default function VoiceAssistant() {
     processCommand(inputText);
   };
 
-  const getActionIcon = (actionType: string) => {
-    switch (actionType) {
-      case 'browser_control':
-        return 'globe-outline';
-      case 'app_control':
-        return 'apps-outline';
-      case 'ai_query':
-        return 'sparkles-outline';
-      case 'device_control':
-        return 'phone-portrait-outline';
-      case 'note_taking':
-        return 'document-text-outline';
-      case 'reading':
-        return 'book-outline';
-      default:
-        return 'chatbox-outline';
-    }
+  const handleCategoryPress = (categoryId: string) => {
+    triggerHaptic('selection');
+    setSelectedCategory(selectedCategory === categoryId ? null : categoryId);
   };
 
-  const exampleCommands = [
-    'Open my Google Chrome tab with Claude Code',
-    'Open Google Keep and tell me my notes',
-    'Read me the last paragraph',
-    'Ask Grok to review my public repo',
-  ];
+  const handleExamplePress = (example: string) => {
+    triggerHaptic('light');
+    setInputText(example);
+  };
+
+  const getActionIcon = (actionType: string): string => {
+    switch (actionType) {
+      case 'browser_control': return 'globe-outline';
+      case 'app_control': return 'apps-outline';
+      case 'ai_query': return 'sparkles-outline';
+      case 'device_control': return 'phone-portrait-outline';
+      case 'note_taking': return 'document-text-outline';
+      case 'reading': return 'book-outline';
+      default: return 'chatbox-outline';
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -211,18 +270,32 @@ export default function VoiceAssistant() {
         style={styles.keyboardView}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
           <View style={styles.headerLeft}>
             <Ionicons name="glasses-outline" size={28} color="#8B5CF6" />
             <Text style={styles.headerTitle}>Voice Command AI</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.historyButton}
-            onPress={() => router.push('/history')}
-          >
-            <Ionicons name="time-outline" size={24} color="#A1A1AA" />
-          </TouchableOpacity>
-        </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={() => {
+                triggerHaptic('light');
+                router.push('/history');
+              }}
+            >
+              <Ionicons name="time-outline" size={24} color="#A1A1AA" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={() => {
+                triggerHaptic('light');
+                router.push('/settings');
+              }}
+            >
+              <Ionicons name="settings-outline" size={24} color="#A1A1AA" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
 
         <ScrollView 
           style={styles.content}
@@ -230,20 +303,20 @@ export default function VoiceAssistant() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Integration Badges */}
-          <View style={styles.badgeContainer}>
+          <Animated.View style={[styles.badgeContainer, { opacity: fadeAnim }]}>
             <View style={styles.badge}>
               <Ionicons name="glasses" size={16} color="#8B5CF6" />
               <Text style={styles.badgeText}>Ray-Ban Meta</Text>
             </View>
             <View style={styles.badge}>
               <Ionicons name="logo-google" size={16} color="#34A853" />
-              <Text style={styles.badgeText}>Google Assistant</Text>
+              <Text style={styles.badgeText}>Assistant</Text>
             </View>
             <View style={styles.badge}>
               <Ionicons name="logo-apple" size={16} color="#A1A1AA" />
-              <Text style={styles.badgeText}>Apple Control</Text>
+              <Text style={styles.badgeText}>Control</Text>
             </View>
-          </View>
+          </Animated.View>
 
           {/* Main Voice Button */}
           <View style={styles.voiceSection}>
@@ -252,6 +325,7 @@ export default function VoiceAssistant() {
                 style={[styles.voiceButton, isListening && styles.voiceButtonActive]}
                 onPress={toggleListening}
                 disabled={isProcessing}
+                activeOpacity={0.8}
               >
                 {isProcessing ? (
                   <ActivityIndicator size="large" color="#fff" />
@@ -300,11 +374,11 @@ export default function VoiceAssistant() {
 
           {/* Last Response */}
           {lastResponse && (
-            <View style={styles.responseCard}>
+            <Animated.View style={[styles.responseCard, { opacity: fadeAnim }]}>
               <View style={styles.responseHeader}>
                 <View style={styles.responseHeaderLeft}>
                   <Ionicons 
-                    name={getActionIcon(lastResponse.action_type)} 
+                    name={getActionIcon(lastResponse.action_type) as any} 
                     size={20} 
                     color="#8B5CF6" 
                   />
@@ -334,26 +408,69 @@ export default function VoiceAssistant() {
               {lastResponse.simulated && (
                 <View style={styles.simulatedBadge}>
                   <Ionicons name="flask" size={14} color="#F59E0B" />
-                  <Text style={styles.simulatedText}>Simulated Response</Text>
+                  <Text style={styles.simulatedText}>Demo Mode</Text>
                 </View>
               )}
-            </View>
+            </Animated.View>
           )}
 
-          {/* Example Commands */}
+          {/* Command Categories */}
           {!lastResponse && (
-            <View style={styles.examplesSection}>
-              <Text style={styles.examplesTitle}>Try saying:</Text>
-              {exampleCommands.map((cmd, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.exampleItem}
-                  onPress={() => setInputText(cmd)}
-                >
-                  <Ionicons name="chatbubble-outline" size={16} color="#8B5CF6" />
-                  <Text style={styles.exampleText}>{cmd}</Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.categoriesSection}>
+              <Text style={styles.sectionTitle}>Command Categories</Text>
+              <View style={styles.categoriesGrid}>
+                {commandCategories.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.categoryCard,
+                      selectedCategory === cat.id && styles.categoryCardActive,
+                    ]}
+                    onPress={() => handleCategoryPress(cat.id)}
+                  >
+                    <View style={[styles.categoryIcon, { backgroundColor: `${cat.color}20` }]}>
+                      <Ionicons name={cat.icon as any} size={22} color={cat.color} />
+                    </View>
+                    <Text style={styles.categoryLabel}>{cat.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Examples for selected category */}
+              {selectedCategory && (
+                <View style={styles.examplesSection}>
+                  <Text style={styles.examplesTitle}>Try saying:</Text>
+                  {commandCategories
+                    .find((c) => c.id === selectedCategory)
+                    ?.examples.map((example, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        style={styles.exampleItem}
+                        onPress={() => handleExamplePress(example)}
+                      >
+                        <Ionicons name="chatbubble-outline" size={16} color="#8B5CF6" />
+                        <Text style={styles.exampleText}>{example}</Text>
+                      </TouchableOpacity>
+                    ))}
+                </View>
+              )}
+
+              {/* Quick examples when no category selected */}
+              {!selectedCategory && (
+                <View style={styles.examplesSection}>
+                  <Text style={styles.examplesTitle}>Quick Examples:</Text>
+                  {['Open Chrome with Claude Code', 'Open Google Keep notes', 'Ask Grok about my repo'].map((example, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={styles.exampleItem}
+                      onPress={() => handleExamplePress(example)}
+                    >
+                      <Ionicons name="chatbubble-outline" size={16} color="#8B5CF6" />
+                      <Text style={styles.exampleText}>{example}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
           )}
         </ScrollView>
@@ -362,9 +479,6 @@ export default function VoiceAssistant() {
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             Powered by GPT-4o • Demo Mode
-          </Text>
-          <Text style={styles.footerNote}>
-            TTS requires Google TTS on Android • Volume up
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -399,7 +513,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FAFAFA',
   },
-  historyButton: {
+  headerRight: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  headerButton: {
     padding: 8,
   },
   content: {
@@ -436,9 +554,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   voiceButton: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#8B5CF6',
     justifyContent: 'center',
     alignItems: 'center',
@@ -544,6 +662,46 @@ const styles = StyleSheet.create({
     color: '#F59E0B',
     fontSize: 12,
   },
+  categoriesSection: {
+    marginTop: 8,
+  },
+  sectionTitle: {
+    color: '#A1A1AA',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 16,
+  },
+  categoryCard: {
+    width: '47%',
+    backgroundColor: '#1F1F28',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  categoryCardActive: {
+    borderColor: '#8B5CF6',
+  },
+  categoryIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryLabel: {
+    color: '#FAFAFA',
+    fontSize: 14,
+    fontWeight: '500',
+  },
   examplesSection: {
     marginTop: 8,
   },
@@ -576,10 +734,5 @@ const styles = StyleSheet.create({
   footerText: {
     color: '#52525B',
     fontSize: 12,
-  },
-  footerNote: {
-    color: '#3F3F46',
-    fontSize: 10,
-    marginTop: 2,
   },
 });
