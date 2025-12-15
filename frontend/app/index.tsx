@@ -45,6 +45,80 @@ export default function Browser() {
   const [isConnected, setIsConnected] = useState(true);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState(false);
+  
+  // Voice input state
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Pulse animation when listening
+  useEffect(() => {
+    if (isListening) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.3, duration: 500, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isListening]);
+
+  // Speech recognition event handlers
+  if (useSpeechRecognitionEvent) {
+    useSpeechRecognitionEvent('result', (event: any) => {
+      const text = event.results[0]?.transcript || '';
+      setTranscript(text);
+    });
+    
+    useSpeechRecognitionEvent('end', () => {
+      setIsListening(false);
+      if (transcript) {
+        simulateCommand(transcript);
+        setTranscript('');
+      }
+    });
+    
+    useSpeechRecognitionEvent('error', (event: any) => {
+      console.log('Speech error:', event.error);
+      setIsListening(false);
+    });
+  }
+
+  const startListening = async () => {
+    if (!ExpoSpeechRecognitionModule) {
+      setLastResult('Speech recognition not available. Use test buttons below.');
+      return;
+    }
+    
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setTranscript('');
+      setIsListening(true);
+      
+      await ExpoSpeechRecognitionModule.start({
+        lang: 'en-US',
+        interimResults: true,
+        continuous: false,
+      });
+    } catch (e: any) {
+      console.error('Speech start error:', e);
+      setIsListening(false);
+      setLastResult('Could not start voice input. Check microphone permissions.');
+    }
+  };
+
+  const stopListening = async () => {
+    if (ExpoSpeechRecognitionModule) {
+      try {
+        await ExpoSpeechRecognitionModule.stop();
+      } catch (e) {
+        console.error('Speech stop error:', e);
+      }
+    }
+    setIsListening(false);
+  };
 
   const activeTab = tabs.find(t => t.id === activeTabId);
 
