@@ -52,7 +52,36 @@ export default function Browser() {
     setIsLoading(true);
     
     try {
-      const result = await executeCommand(command);
+      let result: string;
+      
+      // On web, simulate responses since WebView doesn't work
+      if (Platform.OS === 'web') {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+        const cmd = command.toLowerCase();
+        
+        if (cmd.includes('read')) {
+          result = "Here's Claude's response: \"I've analyzed your code and found a few issues. First, the authentication flow needs to handle edge cases better. Second, consider adding error boundaries around async operations...\"";
+        } else if (cmd.includes('scroll')) {
+          result = cmd.includes('up') ? 'Scrolled up' : 'Scrolled down';
+        } else if (cmd.includes('switch') || cmd.includes('github')) {
+          const tabName = cmd.includes('github') ? 'GitHub' : cmd.includes('claude') ? 'Claude' : 'Cursor';
+          const tab = tabs.find(t => t.name.toLowerCase().includes(tabName.toLowerCase()));
+          if (tab) {
+            setActiveTab(tab.id);
+            result = `Switched to ${tab.name}`;
+          } else {
+            result = `Tab not found`;
+          }
+        } else if (cmd.includes('tabs')) {
+          result = `You have ${tabs.length} tabs: ${tabs.map(t => t.name).join(', ')}`;
+        } else {
+          result = `Simulated: ${command}`;
+        }
+      } else {
+        // On mobile, use actual WebView
+        result = await executeCommand(command);
+      }
+      
       setLastResult(result);
       addCommandLog({
         command,
@@ -66,7 +95,7 @@ export default function Browser() {
     } finally {
       setIsLoading(false);
     }
-  }, [executeCommand, addCommandLog]);
+  }, [executeCommand, addCommandLog, tabs, setActiveTab]);
 
   const handleMessage = useCallback((event: any) => {
     try {
