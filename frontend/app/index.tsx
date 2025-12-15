@@ -170,17 +170,17 @@ export default function Browser() {
       <View style={styles.browserContainer}>
         {activeTab ? (
           Platform.OS === 'web' ? (
-            <iframe
-              src={activeTab.url}
-              style={{
-                flex: 1,
-                width: '100%',
-                height: '100%',
-                border: 'none',
-              }}
-              title={activeTab.name}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-            />
+            <View style={styles.webPreview}>
+              <Ionicons name="phone-portrait-outline" size={48} color="#8B5CF6" />
+              <Text style={styles.webPreviewTitle}>Mobile App</Text>
+              <Text style={styles.webPreviewText}>
+                This browser runs on iOS/Android.{'\n'}
+                Use Expo Go to test on your phone.
+              </Text>
+              <View style={styles.webPreviewUrl}>
+                <Text style={styles.webPreviewUrlText}>{activeTab.url}</Text>
+              </View>
+            </View>
           ) : (
             <WebView
               ref={webViewRef}
