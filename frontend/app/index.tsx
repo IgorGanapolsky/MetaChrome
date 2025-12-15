@@ -65,7 +65,7 @@ export default function Browser() {
     }
   }, [isListening]);
 
-  // Speech recognition event handlers
+  // Speech recognition event handlers (for native)
   if (useSpeechRecognitionEvent) {
     useSpeechRecognitionEvent('result', (event: any) => {
       const text = event.results[0]?.transcript || '';
@@ -86,30 +86,90 @@ export default function Browser() {
     });
   }
 
+  // Web Speech API recognition ref
+  const webRecognitionRef = useRef<any>(null);
+
   const startListening = async () => {
-    if (!ExpoSpeechRecognitionModule) {
-      setLastResult('Speech recognition not available. Use test buttons below.');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setTranscript('');
+    setIsListening(true);
+    
+    // Try Web Speech API first (works in browser)
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = true;
+        recognition.continuous = false;
+        
+        recognition.onresult = (event: any) => {
+          const text = event.results[0][0].transcript;
+          setTranscript(text);
+        };
+        
+        recognition.onend = () => {
+          setIsListening(false);
+          const finalText = webRecognitionRef.current?.lastTranscript;
+          if (finalText) {
+            simulateCommand(finalText);
+          }
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.log('Web speech error:', event.error);
+          setIsListening(false);
+          if (event.error === 'not-allowed') {
+            setLastResult('Microphone access denied. Please allow microphone in browser settings.');
+          }
+        };
+        
+        webRecognitionRef.current = { recognition, lastTranscript: '' };
+        recognition.start();
+        return;
+      }
+    }
+    
+    // Try native speech recognition
+    if (ExpoSpeechRecognitionModule) {
+      try {
+        await ExpoSpeechRecognitionModule.start({
+          lang: 'en-US',
+          interimResults: true,
+          continuous: false,
+        });
+      } catch (e: any) {
+        console.error('Speech start error:', e);
+        setIsListening(false);
+        setLastResult('Could not start voice input. Check microphone permissions.');
+      }
       return;
     }
     
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setTranscript('');
-      setIsListening(true);
-      
-      await ExpoSpeechRecognitionModule.start({
-        lang: 'en-US',
-        interimResults: true,
-        continuous: false,
-      });
-    } catch (e: any) {
-      console.error('Speech start error:', e);
-      setIsListening(false);
-      setLastResult('Could not start voice input. Check microphone permissions.');
-    }
+    // No speech recognition available
+    setIsListening(false);
+    setLastResult('Speech recognition not available. Use test buttons below.');
   };
 
+  // Update transcript ref for web
+  useEffect(() => {
+    if (webRecognitionRef.current && transcript) {
+      webRecognitionRef.current.lastTranscript = transcript;
+    }
+  }, [transcript]);
+
   const stopListening = async () => {
+    // Stop web recognition
+    if (webRecognitionRef.current?.recognition) {
+      try {
+        webRecognitionRef.current.recognition.stop();
+      } catch (e) {
+        console.error('Web speech stop error:', e);
+      }
+    }
+    
+    // Stop native recognition
     if (ExpoSpeechRecognitionModule) {
       try {
         await ExpoSpeechRecognitionModule.stop();
