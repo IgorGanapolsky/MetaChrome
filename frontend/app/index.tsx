@@ -210,7 +210,7 @@ export default function Browser() {
       await new Promise(resolve => setTimeout(resolve, 300));
       
       if (cmd.includes('read')) {
-        result = "Here's Claude's response: \"I've analyzed your code and found a few issues. First, the authentication flow needs to handle edge cases better. Second, consider adding error boundaries around async operations...\"";
+        result = "Here's Claude's response: \"I've analyzed your code and found a few issues...\"";
       } else if (cmd.includes('scroll')) {
         result = cmd.includes('up') ? 'Scrolled up' : 'Scrolled down';
       } else if (cmd.includes('switch') || cmd.includes('github')) {
@@ -219,6 +219,34 @@ export default function Browser() {
         if (tab) {
           setActiveTab(tab.id);
           result = `Switched to ${tab.name}`;
+        } else {
+          result = `Tab not found`;
+        }
+      } else if (cmd.includes('tabs')) {
+        result = `You have ${tabs.length} tabs: ${tabs.map(t => t.name).join(', ')}`;
+      } else {
+        result = `Command received: ${command}`;
+      }
+      
+      setLastResult(result);
+      addCommandLog({
+        command,
+        action: 'executed',
+        result,
+      });
+      
+      // Show alert so user can clearly see the result
+      Alert.alert('Command Result', result);
+      
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (e: any) {
+      setLastResult(`Error: ${e.message}`);
+      Alert.alert('Error', e.message);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [tabs, setActiveTab, addCommandLog]);
         } else {
           result = `Tab not found`;
         }
