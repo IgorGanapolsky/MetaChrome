@@ -1,178 +1,240 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  RefreshControl,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
-import axios from 'axios';
+import * as Haptics from 'expo-haptics';
+import { useBrowser } from '../src/context/BrowserContext';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
-
-interface CommandLog {
-  id: string;
-  original_command: string;
-  action: string;
-  target_tab: string | null;
-  response_text: string;
-  status: string;
-  timestamp: string;
-}
-
-export default function Dashboard() {
+export default function Browser() {
   const router = useRouter();
+  const {
+    tabs,
+    activeTabId,
+    setActiveTab,
+    removeTab,
+    executeCommand,
+    addCommandLog,
+    commandHistory,
+  } = useBrowser();
+  
+  const webViewRef = useRef<WebView>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
-  const [activeTab, setActiveTab] = useState('Claude Code');
-  const [commandLogs, setCommandLogs] = useState<CommandLog[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [customCommandCount, setCustomCommandCount] = useState(0);
+  const [lastResult, setLastResult] = useState<string | null>(null);
+  const [showLogs, setShowLogs] = useState(false);
 
-  const fetchLogs = async () => {
+  const activeTab = tabs.find(t => t.id === activeTabId);
+
+  const handleTabPress = useCallback((tabId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setActiveTab(tabId);
+    setLastResult(null);
+  }, [setActiveTab]);
+
+  const handleCloseTab = useCallback((tabId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    removeTab(tabId);
+  }, [removeTab]);
+
+  // Simulated command execution (in real app, this comes from glasses)
+  const simulateCommand = useCallback(async (command: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsLoading(true);
+    
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/chrome-history?limit=10`);
-      setCommandLogs(response.data);
-    } catch (e) {
-      console.error('Failed to fetch logs:', e);
+      const result = await executeCommand(command);
+      setLastResult(result);
+      addCommandLog({
+        command,
+        action: 'executed',
+        result,
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (e: any) {
+      setLastResult(`Error: ${e.message}`);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [executeCommand, addCommandLog]);
 
-  const fetchCommandCount = async () => {
+  const handleMessage = useCallback((event: any) => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/custom-commands`);
-      setCustomCommandCount(response.data.length);
+      const data = JSON.parse(event.nativeEvent.data);
+      console.log('WebView message:', data);
     } catch (e) {
-      console.error('Failed to fetch commands:', e);
+      console.log('WebView raw message:', event.nativeEvent.data);
     }
-  };
-
-  useEffect(() => {
-    fetchLogs();
-    fetchCommandCount();
   }, []);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    Haptics.selectionAsync();
-    Promise.all([fetchLogs(), fetchCommandCount()]).finally(() => setRefreshing(false));
-  }, []);
-
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMs / 3600000);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString();
-  };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <MaterialCommunityIcons name="google-chrome" size={28} color="#4285F4" />
+          <Ionicons name="glasses-outline" size={24} color="#8B5CF6" />
           <Text style={styles.headerTitle}>Meta Chrome</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <View style={[styles.statusDot, isConnected ? styles.connected : styles.disconnected]} />
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => setShowLogs(!showLogs)}
+          >
+            <Ionicons name="terminal-outline" size={22} color="#71717A" />
+          </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView
-        style={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8B5CF6" />
-        }
-      >
-        {/* Connection Status */}
-        <View style={styles.statusCard}>
-          <View style={styles.statusRow}>
-            <Ionicons name="glasses-outline" size={24} color="#8B5CF6" />
-            <View style={styles.statusInfo}>
-              <Text style={styles.statusTitle}>Ray-Ban Meta</Text>
-              <Text style={[styles.statusText, isConnected ? styles.connected : styles.disconnected]}>
-                {isConnected ? 'Connected • Voice ready' : 'Disconnected'}
+      {/* Tab Bar */}
+      <View style={styles.tabBar}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
+          {tabs.map(tab => (
+            <TouchableOpacity
+              key={tab.id}
+              style={[styles.tab, activeTabId === tab.id && styles.tabActive]}
+              onPress={() => handleTabPress(tab.id)}
+              onLongPress={() => handleCloseTab(tab.id)}
+            >
+              <Ionicons
+                name={tab.icon as any}
+                size={16}
+                color={activeTabId === tab.id ? '#8B5CF6' : '#71717A'}
+              />
+              <Text
+                style={[styles.tabText, activeTabId === tab.id && styles.tabTextActive]}
+                numberOfLines={1}
+              >
+                {tab.name}
               </Text>
-            </View>
-            <View style={[styles.statusDot, isConnected ? styles.dotGreen : styles.dotRed]} />
-          </View>
-        </View>
+              {tabs.length > 1 && (
+                <TouchableOpacity
+                  style={styles.tabClose}
+                  onPress={() => handleCloseTab(tab.id)}
+                >
+                  <Ionicons name="close" size={14} color="#52525B" />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            style={styles.addTab}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/add-tab');
+            }}
+          >
+            <Ionicons name="add" size={20} color="#71717A" />
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
 
-        {/* Active Tab */}
-        <View style={styles.activeTabCard}>
-          <Text style={styles.cardLabel}>ACTIVE BROWSER TAB</Text>
-          <View style={styles.activeTabRow}>
-            <View style={styles.tabIcon}>
-              <MaterialCommunityIcons name="message-processing" size={28} color="#4285F4" />
-            </View>
-            <View style={styles.tabInfo}>
-              <Text style={styles.tabName}>{activeTab}</Text>
-              <Text style={styles.tabUrl}>claude.ai</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Custom Commands Card */}
-        <TouchableOpacity
-          style={styles.commandsCard}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push('/commands');
-          }}
-        >
-          <View style={styles.commandsHeader}>
-            <View style={styles.commandsLeft}>
-              <Ionicons name="list" size={24} color="#8B5CF6" />
-              <View>
-                <Text style={styles.commandsTitle}>Custom Commands</Text>
-                <Text style={styles.commandsSubtitle}>
-                  {customCommandCount} command{customCommandCount !== 1 ? 's' : ''} configured
-                </Text>
+      {/* WebView Browser */}
+      <View style={styles.browserContainer}>
+        {activeTab ? (
+          <WebView
+            ref={webViewRef}
+            source={{ uri: activeTab.url }}
+            style={styles.webview}
+            onLoadStart={() => setIsLoading(true)}
+            onLoadEnd={() => setIsLoading(false)}
+            onMessage={handleMessage}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            allowsInlineMediaPlayback={true}
+            mediaPlaybackRequiresUserAction={false}
+            injectedJavaScript={`
+              window.onerror = function(msg) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({type: 'error', msg: msg}));
+              };
+              true;
+            `}
+            renderLoading={() => (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="large" color="#8B5CF6" />
               </View>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#71717A" />
+            )}
+          />
+        ) : (
+          <View style={styles.noTab}>
+            <Ionicons name="globe-outline" size={48} color="#3F3F46" />
+            <Text style={styles.noTabText}>No tab selected</Text>
           </View>
-          <Text style={styles.commandsHint}>
-            Define voice commands for your glasses to control Chrome
-          </Text>
-        </TouchableOpacity>
+        )}
+        
+        {isLoading && (
+          <View style={styles.loadingBar}>
+            <View style={styles.loadingProgress} />
+          </View>
+        )}
+      </View>
 
-        {/* Command Log */}
-        <View style={styles.logSection}>
-          <Text style={styles.cardLabel}>RECENT COMMANDS</Text>
-          {commandLogs.length === 0 ? (
-            <View style={styles.emptyLog}>
-              <Ionicons name="mic-outline" size={32} color="#3F3F46" />
-              <Text style={styles.emptyText}>No commands yet</Text>
-              <Text style={styles.emptyHint}>Say "Hey Meta" to your glasses</Text>
+      {/* Command Result / Logs */}
+      {(lastResult || showLogs) && (
+        <View style={styles.resultPanel}>
+          {lastResult && !showLogs && (
+            <View style={styles.resultContent}>
+              <Ionicons name="chatbubble" size={16} color="#22C55E" />
+              <Text style={styles.resultText} numberOfLines={3}>{lastResult}</Text>
+              <TouchableOpacity onPress={() => setLastResult(null)}>
+                <Ionicons name="close" size={18} color="#71717A" />
+              </TouchableOpacity>
             </View>
-          ) : (
-            commandLogs.map((log) => (
-              <View key={log.id} style={styles.logItem}>
-                <View style={styles.logLeft}>
-                  <View style={[styles.logDot, log.status === 'success' ? styles.dotGreen : styles.dotRed]} />
-                  <View>
-                    <Text style={styles.logCommand}>"{log.original_command}"</Text>
-                    <Text style={styles.logResponse}>{log.response_text}</Text>
+          )}
+          {showLogs && (
+            <ScrollView style={styles.logsScroll}>
+              <View style={styles.logsHeader}>
+                <Text style={styles.logsTitle}>Command Log</Text>
+                <TouchableOpacity onPress={() => setShowLogs(false)}>
+                  <Ionicons name="close" size={20} color="#71717A" />
+                </TouchableOpacity>
+              </View>
+              {commandHistory.length === 0 ? (
+                <Text style={styles.noLogs}>No commands yet</Text>
+              ) : (
+                commandHistory.map(log => (
+                  <View key={log.id} style={styles.logItem}>
+                    <Text style={styles.logCommand}>"{log.command}"</Text>
+                    <Text style={styles.logResult}>{log.result}</Text>
                   </View>
-                </View>
-                <Text style={styles.logTime}>{formatTime(log.timestamp)}</Text>
-              </View>
-            ))
+                ))
+              )}
+            </ScrollView>
           )}
         </View>
-      </ScrollView>
+      )}
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Ionicons name="mic" size={16} color="#52525B" />
-        <Text style={styles.footerText}>Say "Hey Meta" to your glasses to start</Text>
+      {/* Quick Commands (for testing - remove in production) */}
+      <View style={styles.quickCommands}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {[
+            'Read last response',
+            'Scroll down',
+            'Switch to GitHub',
+            'What tabs do I have',
+          ].map(cmd => (
+            <TouchableOpacity
+              key={cmd}
+              style={styles.quickCmd}
+              onPress={() => simulateCommand(cmd)}
+              disabled={isLoading}
+            >
+              <Text style={styles.quickCmdText}>{cmd}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        <Text style={styles.quickHint}>Test commands (simulates glasses input)</Text>
       </View>
     </SafeAreaView>
   );
@@ -187,198 +249,193 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#1F1F28',
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     color: '#FAFAFA',
   },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  statusCard: {
-    backgroundColor: '#1F1F28',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  statusTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FAFAFA',
-  },
-  statusText: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  connected: {
-    color: '#22C55E',
-  },
-  disconnected: {
-    color: '#EF4444',
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  dotGreen: {
-    backgroundColor: '#22C55E',
-  },
-  dotRed: {
-    backgroundColor: '#EF4444',
-  },
-  activeTabCard: {
-    backgroundColor: '#1F1F28',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#71717A',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-  },
-  activeTabRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tabIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#0A0A0F',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabInfo: {
-    marginLeft: 12,
-  },
-  tabName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FAFAFA',
-  },
-  tabUrl: {
-    fontSize: 13,
-    color: '#71717A',
-    marginTop: 2,
-  },
-  commandsCard: {
-    backgroundColor: '#1F1F28',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  commandsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  commandsLeft: {
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  commandsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FAFAFA',
-  },
-  commandsSubtitle: {
-    fontSize: 13,
-    color: '#71717A',
-    marginTop: 2,
-  },
-  commandsHint: {
-    fontSize: 13,
-    color: '#52525B',
-    marginTop: 12,
-  },
-  logSection: {
-    marginTop: 8,
-  },
-  emptyLog: {
-    backgroundColor: '#1F1F28',
-    borderRadius: 16,
-    padding: 32,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#71717A',
-    marginTop: 12,
-  },
-  emptyHint: {
-    fontSize: 13,
-    color: '#52525B',
-    marginTop: 4,
-  },
-  logItem: {
-    backgroundColor: '#1F1F28',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  logLeft: {
-    flexDirection: 'row',
-    flex: 1,
-    gap: 10,
-  },
-  logDot: {
+  statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginTop: 6,
   },
-  logCommand: {
-    fontSize: 14,
+  connected: {
+    backgroundColor: '#22C55E',
+  },
+  disconnected: {
+    backgroundColor: '#EF4444',
+  },
+  headerButton: {
+    padding: 4,
+  },
+  tabBar: {
+    backgroundColor: '#1F1F28',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2A35',
+  },
+  tabScroll: {
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0A0A0F',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginRight: 6,
+  },
+  tabActive: {
+    backgroundColor: '#2A2A35',
+    borderWidth: 1,
+    borderColor: '#8B5CF6',
+  },
+  tabText: {
+    fontSize: 13,
+    color: '#71717A',
+    maxWidth: 80,
+  },
+  tabTextActive: {
     color: '#FAFAFA',
     fontWeight: '500',
   },
-  logResponse: {
-    fontSize: 13,
-    color: '#71717A',
-    marginTop: 4,
+  tabClose: {
+    marginLeft: 4,
+    padding: 2,
   },
-  logTime: {
-    fontSize: 11,
-    color: '#52525B',
-  },
-  footer: {
-    flexDirection: 'row',
+  addTab: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#0A0A0F',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderTopWidth: 1,
-    borderTopColor: '#1F1F28',
   },
-  footerText: {
+  browserContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
+  },
+  webview: {
+    flex: 1,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#0A0A0F',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#1F1F28',
+  },
+  loadingProgress: {
+    height: '100%',
+    width: '30%',
+    backgroundColor: '#8B5CF6',
+  },
+  noTab: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0A0A0F',
+  },
+  noTabText: {
+    color: '#52525B',
+    fontSize: 16,
+    marginTop: 12,
+  },
+  resultPanel: {
+    backgroundColor: '#1F1F28',
+    maxHeight: 200,
+  },
+  resultContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+  },
+  resultText: {
+    flex: 1,
+    color: '#FAFAFA',
+    fontSize: 14,
+  },
+  logsScroll: {
+    padding: 12,
+  },
+  logsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  logsTitle: {
+    color: '#FAFAFA',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  noLogs: {
     color: '#52525B',
     fontSize: 13,
+  },
+  logItem: {
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2A35',
+  },
+  logCommand: {
+    color: '#8B5CF6',
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  logResult: {
+    color: '#A1A1AA',
+    fontSize: 12,
+  },
+  quickCommands: {
+    backgroundColor: '#1F1F28',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#2A2A35',
+  },
+  quickCmd: {
+    backgroundColor: '#2A2A35',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  quickCmdText: {
+    color: '#FAFAFA',
+    fontSize: 13,
+  },
+  quickHint: {
+    color: '#52525B',
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 8,
   },
 });
