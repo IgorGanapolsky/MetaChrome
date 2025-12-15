@@ -170,16 +170,63 @@ export default function Browser() {
       <View style={styles.browserContainer}>
         {activeTab ? (
           Platform.OS === 'web' ? (
-            <View style={styles.webPreview}>
-              <Ionicons name="phone-portrait-outline" size={48} color="#8B5CF6" />
-              <Text style={styles.webPreviewTitle}>Mobile App</Text>
-              <Text style={styles.webPreviewText}>
-                This browser runs on iOS/Android.{'\n'}
-                Use Expo Go to test on your phone.
-              </Text>
-              <View style={styles.webPreviewUrl}>
-                <Text style={styles.webPreviewUrlText}>{activeTab.url}</Text>
+            <View style={styles.simulatedBrowser}>
+              {/* Simulated browser chrome */}
+              <View style={styles.browserUrlBar}>
+                <Ionicons name="lock-closed" size={12} color="#22C55E" />
+                <Text style={styles.browserUrl}>{activeTab.url}</Text>
               </View>
+              {/* Simulated page content */}
+              <ScrollView style={styles.simulatedContent}>
+                {activeTab.name === 'Claude' && (
+                  <View style={styles.chatSimulation}>
+                    <View style={styles.chatMessage}>
+                      <View style={styles.userBubble}>
+                        <Text style={styles.chatText}>How do I implement authentication in React Native?</Text>
+                      </View>
+                    </View>
+                    <View style={styles.chatMessage}>
+                      <View style={styles.assistantBubble}>
+                        <Text style={styles.chatText}>I'll help you implement authentication in React Native. Here are the key steps:{'\n\n'}1. Choose an auth provider (Firebase, Auth0, or custom){'\n'}2. Install required packages{'\n'}3. Set up secure token storage{'\n'}4. Create auth context{'\n'}5. Implement login/logout flows{'\n\n'}Would you like me to show you the code for any of these steps?</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+                {activeTab.name === 'GitHub' && (
+                  <View style={styles.githubSimulation}>
+                    <View style={styles.repoHeader}>
+                      <Ionicons name="logo-github" size={24} color="#FAFAFA" />
+                      <Text style={styles.repoName}>user/meta-chrome-app</Text>
+                    </View>
+                    <View style={styles.repoStats}>
+                      <View style={styles.stat}><Ionicons name="star" size={14} color="#F59E0B" /><Text style={styles.statText}>128</Text></View>
+                      <View style={styles.stat}><Ionicons name="git-branch" size={14} color="#71717A" /><Text style={styles.statText}>12</Text></View>
+                      <View style={styles.stat}><Ionicons name="eye" size={14} color="#71717A" /><Text style={styles.statText}>45</Text></View>
+                    </View>
+                    <View style={styles.fileList}>
+                      <View style={styles.fileItem}><Ionicons name="folder" size={16} color="#8B5CF6" /><Text style={styles.fileName}>src/</Text></View>
+                      <View style={styles.fileItem}><Ionicons name="folder" size={16} color="#8B5CF6" /><Text style={styles.fileName}>app/</Text></View>
+                      <View style={styles.fileItem}><Ionicons name="document" size={16} color="#71717A" /><Text style={styles.fileName}>package.json</Text></View>
+                      <View style={styles.fileItem}><Ionicons name="document" size={16} color="#71717A" /><Text style={styles.fileName}>README.md</Text></View>
+                    </View>
+                  </View>
+                )}
+                {activeTab.name === 'Cursor' && (
+                  <View style={styles.cursorSimulation}>
+                    <Text style={styles.cursorTitle}>Cursor AI Assistant</Text>
+                    <Text style={styles.cursorText}>Working on: meta-chrome-app/src/index.tsx</Text>
+                    <View style={styles.codeBlock}>
+                      <Text style={styles.codeText}>{'const App = () => {\n  return (\n    <BrowserProvider>\n      <TabBar />\n      <WebView />\n    </BrowserProvider>\n  );\n}'}</Text>
+                    </View>
+                  </View>
+                )}
+                {!['Claude', 'GitHub', 'Cursor'].includes(activeTab.name) && (
+                  <View style={styles.genericPage}>
+                    <Text style={styles.genericTitle}>{activeTab.name}</Text>
+                    <Text style={styles.genericUrl}>{activeTab.url}</Text>
+                  </View>
+                )}
+              </ScrollView>
             </View>
           ) : (
             <WebView
