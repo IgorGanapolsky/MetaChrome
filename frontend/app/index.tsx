@@ -390,9 +390,30 @@ export default function Browser() {
         </View>
       )}
 
-      {/* Quick Commands (for testing - remove in production) */}
-      <View style={styles.quickCommands}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      {/* Voice Input Section */}
+      <View style={styles.voiceSection}>
+        {/* Voice Button */}
+        <TouchableOpacity
+          style={styles.voiceButtonContainer}
+          onPress={isListening ? stopListening : startListening}
+          activeOpacity={0.8}
+        >
+          <Animated.View style={[styles.voiceButton, isListening && styles.voiceButtonActive, { transform: [{ scale: pulseAnim }] }]}>
+            <Ionicons 
+              name={isListening ? 'mic' : 'mic-outline'} 
+              size={28} 
+              color="#FFF" 
+            />
+          </Animated.View>
+        </TouchableOpacity>
+        
+        {/* Status Text */}
+        <Text style={styles.voiceStatus}>
+          {isListening ? (transcript || 'Listening...') : 'Tap mic to speak a command'}
+        </Text>
+
+        {/* Quick Command Buttons */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickScroll}>
           {[
             'Read last response',
             'Scroll down',
@@ -409,7 +430,6 @@ export default function Browser() {
             </TouchableOpacity>
           ))}
         </ScrollView>
-        <Text style={styles.quickHint}>Test commands (simulates glasses input)</Text>
       </View>
     </SafeAreaView>
   );
