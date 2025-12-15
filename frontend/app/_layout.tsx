@@ -17,7 +17,8 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" />
-          <Stack.Screen name="tabs" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="commands" />
+          <Stack.Screen name="command-editor" options={{ presentation: 'modal' }} />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

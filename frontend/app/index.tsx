@@ -5,12 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  TextInput,
-  ActivityIndicator,
-  Platform,
-  Animated,
-  Keyboard,
-  KeyboardAvoidingView,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,297 +15,165 @@ import axios from 'axios';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
-interface CommandResponse {
+interface CommandLog {
   id: string;
   original_command: string;
   action: string;
   target_tab: string | null;
   response_text: string;
-  status: 'success' | 'pending' | 'error';
+  status: string;
   timestamp: string;
 }
 
-interface BrowserTab {
-  id: string;
-  name: string;
-  icon: string;
-  url: string;
-  active: boolean;
-  hasUnread: boolean;
-}
-
-// Simulated browser tabs
-const mockTabs: BrowserTab[] = [
-  { id: '1', name: 'Claude Code', icon: 'message-processing', url: 'claude.ai', active: true, hasUnread: true },
-  { id: '2', name: 'Cursor Assistant', icon: 'cursor-default-click', url: 'cursor.com', active: false, hasUnread: false },
-  { id: '3', name: 'GitHub', icon: 'github', url: 'github.com', active: false, hasUnread: true },
-  { id: '4', name: 'ChatGPT', icon: 'robot', url: 'chat.openai.com', active: false, hasUnread: false },
-  { id: '5', name: 'Google Search', icon: 'google', url: 'google.com', active: false, hasUnread: false },
-];
-
-const quickCommands = [
-  { text: 'Open Claude Code tab', icon: 'message-processing' },
-  { text: 'Read Claude\'s last response', icon: 'text-to-speech' },
-  { text: 'Reply: go ahead and proceed', icon: 'send' },
-  { text: 'Switch to GitHub tab', icon: 'github' },
-  { text: 'Open new tab with Cursor', icon: 'cursor-default-click' },
-  { text: 'Close current tab', icon: 'close-box' },
-];
-
-export default function MetaChrome() {
+export default function Dashboard() {
   const router = useRouter();
-  const [inputText, setInputText] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [lastResponse, setLastResponse] = useState<CommandResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [tabs, setTabs] = useState<BrowserTab[]>(mockTabs);
   const [isConnected, setIsConnected] = useState(true);
-  
-  // Animation
-  const fadeAnim = useState(new Animated.Value(0))[0];
-  const pulseAnim = useState(new Animated.Value(1))[0];
-  
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-    
-    // Pulse animation for connection indicator
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.2, duration: 1000, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
+  const [activeTab, setActiveTab] = useState('Claude Code');
+  const [commandLogs, setCommandLogs] = useState<CommandLog[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [customCommandCount, setCustomCommandCount] = useState(0);
 
-  const triggerHaptic = useCallback((type: 'light' | 'medium' | 'success' | 'error') => {
-    switch (type) {
-      case 'light': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); break;
-      case 'medium': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); break;
-      case 'success': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); break;
-      case 'error': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); break;
-    }
-  }, []);
-
-  const processCommand = async (command: string) => {
-    if (!command.trim()) return;
-    
-    setIsProcessing(true);
-    setError(null);
-    triggerHaptic('light');
-    
+  const fetchLogs = async () => {
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/chrome-command`, {
-        command: command.trim(),
-      });
-      
-      const data: CommandResponse = response.data;
-      setLastResponse(data);
-      triggerHaptic('success');
-      
-      // Simulate tab switching if needed
-      if (data.target_tab) {
-        setTabs(prev => prev.map(tab => ({
-          ...tab,
-          active: tab.name.toLowerCase().includes(data.target_tab!.toLowerCase())
-        })));
-      }
-    } catch (err: any) {
-      console.error('Error:', err);
-      setError(err.response?.data?.detail || 'Command failed');
-      triggerHaptic('error');
-    } finally {
-      setIsProcessing(false);
-      setInputText('');
+      const response = await axios.get(`${BACKEND_URL}/api/chrome-history?limit=10`);
+      setCommandLogs(response.data);
+    } catch (e) {
+      console.error('Failed to fetch logs:', e);
     }
   };
 
-  const handleSubmit = () => {
-    Keyboard.dismiss();
-    processCommand(inputText);
+  const fetchCommandCount = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/custom-commands`);
+      setCustomCommandCount(response.data.length);
+    } catch (e) {
+      console.error('Failed to fetch commands:', e);
+    }
   };
 
-  const handleQuickCommand = (command: string) => {
-    triggerHaptic('light');
-    processCommand(command);
-  };
+  useEffect(() => {
+    fetchLogs();
+    fetchCommandCount();
+  }, []);
 
-  const handleTabPress = (tab: BrowserTab) => {
-    triggerHaptic('light');
-    setTabs(prev => prev.map(t => ({ ...t, active: t.id === tab.id })));
-    processCommand(`Switch to ${tab.name} tab`);
-  };
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    Haptics.selectionAsync();
+    Promise.all([fetchLogs(), fetchCommandCount()]).finally(() => setRefreshing(false));
+  }, []);
 
-  const activeTab = tabs.find(t => t.active);
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMs / 3600000);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <MaterialCommunityIcons name="google-chrome" size={28} color="#4285F4" />
+          <Text style={styles.headerTitle}>Meta Chrome</Text>
+        </View>
+      </View>
+
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8B5CF6" />
+        }
       >
-        {/* Header */}
-        <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-          <View style={styles.headerLeft}>
-            <MaterialCommunityIcons name="google-chrome" size={28} color="#4285F4" />
-            <Text style={styles.headerTitle}>Meta Chrome</Text>
+        {/* Connection Status */}
+        <View style={styles.statusCard}>
+          <View style={styles.statusRow}>
+            <Ionicons name="glasses-outline" size={24} color="#8B5CF6" />
+            <View style={styles.statusInfo}>
+              <Text style={styles.statusTitle}>Ray-Ban Meta</Text>
+              <Text style={[styles.statusText, isConnected ? styles.connected : styles.disconnected]}>
+                {isConnected ? 'Connected • Voice ready' : 'Disconnected'}
+              </Text>
+            </View>
+            <View style={[styles.statusDot, isConnected ? styles.dotGreen : styles.dotRed]} />
           </View>
-          <View style={styles.headerRight}>
-            <Animated.View style={[styles.connectionDot, { transform: [{ scale: pulseAnim }] }]}>
-              <View style={[styles.dot, isConnected ? styles.dotConnected : styles.dotDisconnected]} />
-            </Animated.View>
-            <TouchableOpacity 
-              style={styles.headerButton}
-              onPress={() => {
-                triggerHaptic('light');
-                router.push('/tabs');
-              }}
-            >
-              <Ionicons name="layers-outline" size={24} color="#A1A1AA" />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Glasses Connection Status */}
-        <View style={styles.connectionBar}>
-          <View style={styles.connectionInfo}>
-            <Ionicons name="glasses-outline" size={18} color="#8B5CF6" />
-            <Text style={styles.connectionText}>Ray-Ban Meta Connected</Text>
-          </View>
-          <Text style={styles.connectionHint}>Voice commands ready</Text>
         </View>
 
-        <ScrollView 
-          style={styles.content}
-          contentContainerStyle={styles.contentContainer}
-          keyboardShouldPersistTaps="handled"
+        {/* Active Tab */}
+        <View style={styles.activeTabCard}>
+          <Text style={styles.cardLabel}>ACTIVE BROWSER TAB</Text>
+          <View style={styles.activeTabRow}>
+            <View style={styles.tabIcon}>
+              <MaterialCommunityIcons name="message-processing" size={28} color="#4285F4" />
+            </View>
+            <View style={styles.tabInfo}>
+              <Text style={styles.tabName}>{activeTab}</Text>
+              <Text style={styles.tabUrl}>claude.ai</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Custom Commands Card */}
+        <TouchableOpacity
+          style={styles.commandsCard}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push('/commands');
+          }}
         >
-          {/* Active Tab Display */}
-          <View style={styles.activeTabCard}>
-            <View style={styles.activeTabHeader}>
-              <Text style={styles.activeTabLabel}>ACTIVE TAB</Text>
-              <View style={styles.tabCount}>
-                <Text style={styles.tabCountText}>{tabs.length} tabs</Text>
+          <View style={styles.commandsHeader}>
+            <View style={styles.commandsLeft}>
+              <Ionicons name="list" size={24} color="#8B5CF6" />
+              <View>
+                <Text style={styles.commandsTitle}>Custom Commands</Text>
+                <Text style={styles.commandsSubtitle}>
+                  {customCommandCount} command{customCommandCount !== 1 ? 's' : ''} configured
+                </Text>
               </View>
             </View>
-            {activeTab && (
-              <View style={styles.activeTabContent}>
-                <View style={styles.activeTabIcon}>
-                  <MaterialCommunityIcons name={activeTab.icon as any} size={32} color="#4285F4" />
-                </View>
-                <View style={styles.activeTabInfo}>
-                  <Text style={styles.activeTabName}>{activeTab.name}</Text>
-                  <Text style={styles.activeTabUrl}>{activeTab.url}</Text>
-                </View>
-                {activeTab.hasUnread && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadText}>NEW</Text>
+            <Ionicons name="chevron-forward" size={24} color="#71717A" />
+          </View>
+          <Text style={styles.commandsHint}>
+            Define voice commands for your glasses to control Chrome
+          </Text>
+        </TouchableOpacity>
+
+        {/* Command Log */}
+        <View style={styles.logSection}>
+          <Text style={styles.cardLabel}>RECENT COMMANDS</Text>
+          {commandLogs.length === 0 ? (
+            <View style={styles.emptyLog}>
+              <Ionicons name="mic-outline" size={32} color="#3F3F46" />
+              <Text style={styles.emptyText}>No commands yet</Text>
+              <Text style={styles.emptyHint}>Say "Hey Meta" to your glasses</Text>
+            </View>
+          ) : (
+            commandLogs.map((log) => (
+              <View key={log.id} style={styles.logItem}>
+                <View style={styles.logLeft}>
+                  <View style={[styles.logDot, log.status === 'success' ? styles.dotGreen : styles.dotRed]} />
+                  <View>
+                    <Text style={styles.logCommand}>"{log.original_command}"</Text>
+                    <Text style={styles.logResponse}>{log.response_text}</Text>
                   </View>
-                )}
-              </View>
-            )}
-          </View>
-
-          {/* Tab Bar */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar}>
-            {tabs.map((tab) => (
-              <TouchableOpacity
-                key={tab.id}
-                style={[styles.tabItem, tab.active && styles.tabItemActive]}
-                onPress={() => handleTabPress(tab)}
-              >
-                <MaterialCommunityIcons 
-                  name={tab.icon as any} 
-                  size={20} 
-                  color={tab.active ? '#4285F4' : '#71717A'} 
-                />
-                {tab.hasUnread && <View style={styles.tabDot} />}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* Command Input */}
-          <View style={styles.inputSection}>
-            <Text style={styles.inputLabel}>VOICE COMMAND</Text>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mic" size={20} color="#8B5CF6" style={styles.inputIcon} />
-              <TextInput
-                style={styles.textInput}
-                placeholder="Type or speak a command..."
-                placeholderTextColor="#52525B"
-                value={inputText}
-                onChangeText={setInputText}
-                onSubmitEditing={handleSubmit}
-                returnKeyType="send"
-              />
-              <TouchableOpacity 
-                style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
-                onPress={handleSubmit}
-                disabled={!inputText.trim() || isProcessing}
-              >
-                {isProcessing ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Ionicons name="arrow-forward" size={18} color="#fff" />
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Error */}
-          {error && (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={18} color="#EF4444" />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          {/* Last Response */}
-          {lastResponse && (
-            <View style={styles.responseCard}>
-              <View style={styles.responseHeader}>
-                <View style={[styles.statusDot, 
-                  lastResponse.status === 'success' && styles.statusSuccess,
-                  lastResponse.status === 'error' && styles.statusError,
-                ]} />
-                <Text style={styles.responseAction}>{lastResponse.action}</Text>
-              </View>
-              <Text style={styles.responseText}>{lastResponse.response_text}</Text>
-              {lastResponse.target_tab && (
-                <View style={styles.targetTab}>
-                  <Ionicons name="arrow-forward" size={14} color="#4285F4" />
-                  <Text style={styles.targetTabText}>{lastResponse.target_tab}</Text>
                 </View>
-              )}
-            </View>
+                <Text style={styles.logTime}>{formatTime(log.timestamp)}</Text>
+              </View>
+            ))
           )}
-
-          {/* Quick Commands */}
-          <View style={styles.quickSection}>
-            <Text style={styles.quickTitle}>Quick Commands</Text>
-            <View style={styles.quickGrid}>
-              {quickCommands.map((cmd, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={styles.quickItem}
-                  onPress={() => handleQuickCommand(cmd.text)}
-                >
-                  <MaterialCommunityIcons name={cmd.icon as any} size={20} color="#8B5CF6" />
-                  <Text style={styles.quickText} numberOfLines={2}>{cmd.text}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Say "Hey Meta" to your glasses to start</Text>
         </View>
-      </KeyboardAvoidingView>
+      </ScrollView>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Ionicons name="mic" size={16} color="#52525B" />
+        <Text style={styles.footerText}>Say "Hey Meta" to your glasses to start</Text>
+      </View>
     </SafeAreaView>
   );
 }
@@ -320,15 +183,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0A0A0F',
   },
-  keyboardView: {
-    flex: 1,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#1F1F28',
   },
@@ -338,294 +198,187 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: '#FAFAFA',
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  connectionDot: {
-    padding: 4,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  dotConnected: {
-    backgroundColor: '#22C55E',
-  },
-  dotDisconnected: {
-    backgroundColor: '#EF4444',
-  },
-  headerButton: {
-    padding: 8,
-  },
-  connectionBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#1F1F28',
-  },
-  connectionInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  connectionText: {
-    color: '#A1A1AA',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  connectionHint: {
-    color: '#22C55E',
-    fontSize: 12,
-  },
   content: {
     flex: 1,
-  },
-  contentContainer: {
     padding: 16,
+  },
+  statusCard: {
+    backgroundColor: '#1F1F28',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  statusTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FAFAFA',
+  },
+  statusText: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  connected: {
+    color: '#22C55E',
+  },
+  disconnected: {
+    color: '#EF4444',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  dotGreen: {
+    backgroundColor: '#22C55E',
+  },
+  dotRed: {
+    backgroundColor: '#EF4444',
   },
   activeTabCard: {
     backgroundColor: '#1F1F28',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
-  },
-  activeTabHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 12,
   },
-  activeTabLabel: {
+  cardLabel: {
     fontSize: 11,
     fontWeight: '600',
     color: '#71717A',
     letterSpacing: 0.5,
+    marginBottom: 12,
   },
-  tabCount: {
-    backgroundColor: '#2A2A35',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  tabCountText: {
-    fontSize: 11,
-    color: '#A1A1AA',
-  },
-  activeTabContent: {
+  activeTabRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  activeTabIcon: {
-    width: 56,
-    height: 56,
+  tabIcon: {
+    width: 52,
+    height: 52,
     borderRadius: 12,
     backgroundColor: '#0A0A0F',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  activeTabInfo: {
-    flex: 1,
+  tabInfo: {
     marginLeft: 12,
   },
-  activeTabName: {
+  tabName: {
     fontSize: 18,
     fontWeight: '600',
     color: '#FAFAFA',
   },
-  activeTabUrl: {
+  tabUrl: {
     fontSize: 13,
     color: '#71717A',
     marginTop: 2,
   },
-  unreadBadge: {
-    backgroundColor: '#8B5CF6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  unreadText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  tabBar: {
-    marginBottom: 16,
-  },
-  tabItem: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  commandsCard: {
     backgroundColor: '#1F1F28',
-    justifyContent: 'center',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  commandsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginRight: 8,
-    position: 'relative',
   },
-  tabItemActive: {
-    backgroundColor: '#2A2A35',
-    borderWidth: 2,
-    borderColor: '#4285F4',
+  commandsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  tabDot: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#8B5CF6',
-  },
-  inputSection: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 11,
+  commandsTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#71717A',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1F1F28',
-    borderRadius: 14,
-    paddingLeft: 14,
-  },
-  inputIcon: {
-    marginRight: 8,
-  },
-  textInput: {
-    flex: 1,
     color: '#FAFAFA',
-    fontSize: 15,
-    paddingVertical: 14,
   },
-  sendButton: {
-    backgroundColor: '#4285F4',
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 4,
-  },
-  sendButtonDisabled: {
-    backgroundColor: '#3F3F46',
-  },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: '#EF4444',
+  commandsSubtitle: {
     fontSize: 13,
-    flex: 1,
+    color: '#71717A',
+    marginTop: 2,
   },
-  responseCard: {
+  commandsHint: {
+    fontSize: 13,
+    color: '#52525B',
+    marginTop: 12,
+  },
+  logSection: {
+    marginTop: 8,
+  },
+  emptyLog: {
     backgroundColor: '#1F1F28',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
-  },
-  responseHeader: {
-    flexDirection: 'row',
+    borderRadius: 16,
+    padding: 32,
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
   },
-  statusDot: {
+  emptyText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#71717A',
+    marginTop: 12,
+  },
+  emptyHint: {
+    fontSize: 13,
+    color: '#52525B',
+    marginTop: 4,
+  },
+  logItem: {
+    backgroundColor: '#1F1F28',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  logLeft: {
+    flexDirection: 'row',
+    flex: 1,
+    gap: 10,
+  },
+  logDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#F59E0B',
+    marginTop: 6,
   },
-  statusSuccess: {
-    backgroundColor: '#22C55E',
-  },
-  statusError: {
-    backgroundColor: '#EF4444',
-  },
-  responseAction: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#A1A1AA',
-    textTransform: 'uppercase',
-  },
-  responseText: {
-    fontSize: 15,
+  logCommand: {
+    fontSize: 14,
     color: '#FAFAFA',
-    lineHeight: 22,
-  },
-  targetTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
-    backgroundColor: '#0A0A0F',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  targetTabText: {
-    fontSize: 12,
-    color: '#4285F4',
     fontWeight: '500',
   },
-  quickSection: {
-    marginTop: 8,
-  },
-  quickTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#71717A',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  quickGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  quickItem: {
-    width: '48.5%',
-    backgroundColor: '#1F1F28',
-    borderRadius: 12,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  quickText: {
-    flex: 1,
+  logResponse: {
     fontSize: 13,
-    color: '#FAFAFA',
+    color: '#71717A',
+    marginTop: 4,
+  },
+  logTime: {
+    fontSize: 11,
+    color: '#52525B',
   },
   footer: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
     borderTopWidth: 1,
     borderTopColor: '#1F1F28',
   },
   footerText: {
     color: '#52525B',
-    fontSize: 12,
+    fontSize: 13,
   },
 });
