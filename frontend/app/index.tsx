@@ -46,40 +46,38 @@ export default function Browser() {
     removeTab(tabId);
   }, [removeTab]);
 
+  // Check if we're on web platform
+  const isWeb = Platform.OS === 'web';
+
   // Simulated command execution (in real app, this comes from glasses)
   const simulateCommand = useCallback(async (command: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsLoading(true);
     
+    const cmd = command.toLowerCase();
+    let result = '';
+
+    // Always use local simulation for test buttons
     try {
-      let result: string;
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // On web, simulate responses since WebView doesn't work
-      if (Platform.OS === 'web') {
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-        const cmd = command.toLowerCase();
-        
-        if (cmd.includes('read')) {
-          result = "Here's Claude's response: \"I've analyzed your code and found a few issues. First, the authentication flow needs to handle edge cases better. Second, consider adding error boundaries around async operations...\"";
-        } else if (cmd.includes('scroll')) {
-          result = cmd.includes('up') ? 'Scrolled up' : 'Scrolled down';
-        } else if (cmd.includes('switch') || cmd.includes('github')) {
-          const tabName = cmd.includes('github') ? 'GitHub' : cmd.includes('claude') ? 'Claude' : 'Cursor';
-          const tab = tabs.find(t => t.name.toLowerCase().includes(tabName.toLowerCase()));
-          if (tab) {
-            setActiveTab(tab.id);
-            result = `Switched to ${tab.name}`;
-          } else {
-            result = `Tab not found`;
-          }
-        } else if (cmd.includes('tabs')) {
-          result = `You have ${tabs.length} tabs: ${tabs.map(t => t.name).join(', ')}`;
+      if (cmd.includes('read')) {
+        result = "Here's Claude's response: \"I've analyzed your code and found a few issues. First, the authentication flow needs to handle edge cases better. Second, consider adding error boundaries around async operations...\"";
+      } else if (cmd.includes('scroll')) {
+        result = cmd.includes('up') ? 'Scrolled up' : 'Scrolled down';
+      } else if (cmd.includes('switch') || cmd.includes('github')) {
+        const tabName = cmd.includes('github') ? 'GitHub' : cmd.includes('claude') ? 'Claude' : 'Cursor';
+        const tab = tabs.find(t => t.name.toLowerCase().includes(tabName.toLowerCase()));
+        if (tab) {
+          setActiveTab(tab.id);
+          result = `Switched to ${tab.name}`;
         } else {
-          result = `Simulated: ${command}`;
+          result = `Tab not found`;
         }
+      } else if (cmd.includes('tabs')) {
+        result = `You have ${tabs.length} tabs: ${tabs.map(t => t.name).join(', ')}`;
       } else {
-        // On mobile, use actual WebView
-        result = await executeCommand(command);
+        result = `Command received: ${command}`;
       }
       
       setLastResult(result);
@@ -95,7 +93,7 @@ export default function Browser() {
     } finally {
       setIsLoading(false);
     }
-  }, [executeCommand, addCommandLog, tabs, setActiveTab]);
+  }, [tabs, setActiveTab, addCommandLog]);
 
   const handleMessage = useCallback((event: any) => {
     try {
