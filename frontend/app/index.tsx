@@ -13,150 +13,87 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import * as Speech from 'expo-speech';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
-const SETTINGS_KEY = '@voice_assistant_settings';
 
 interface CommandResponse {
   id: string;
   original_command: string;
-  interpreted_action: string;
-  action_type: string;
+  action: string;
+  target_tab: string | null;
   response_text: string;
-  simulated: boolean;
+  status: 'success' | 'pending' | 'error';
   timestamp: string;
 }
 
-interface AppSettings {
-  hapticsEnabled: boolean;
-  autoSpeak: boolean;
-  speechRate: number;
+interface BrowserTab {
+  id: string;
+  name: string;
+  icon: string;
+  url: string;
+  active: boolean;
+  hasUnread: boolean;
 }
 
-const defaultSettings: AppSettings = {
-  hapticsEnabled: true,
-  autoSpeak: true,
-  speechRate: 0.75,
-};
-
-// Command categories with icons
-const commandCategories = [
-  { 
-    id: 'browser', 
-    label: 'Browser', 
-    icon: 'globe-outline',
-    color: '#3B82F6',
-    examples: ['Open Chrome with Claude Code', 'Go to my Gmail tab']
-  },
-  { 
-    id: 'apps', 
-    label: 'Apps', 
-    icon: 'apps-outline',
-    color: '#10B981',
-    examples: ['Open Google Keep', 'Launch Spotify']
-  },
-  { 
-    id: 'ai', 
-    label: 'AI Query', 
-    icon: 'sparkles-outline',
-    color: '#F59E0B',
-    examples: ['Ask Grok to review my repo', 'Ask Claude about this code']
-  },
-  { 
-    id: 'read', 
-    label: 'Reading', 
-    icon: 'book-outline',
-    color: '#EC4899',
-    examples: ['Read the last paragraph', 'Summarize this page']
-  },
+// Simulated browser tabs
+const mockTabs: BrowserTab[] = [
+  { id: '1', name: 'Claude Code', icon: 'message-processing', url: 'claude.ai', active: true, hasUnread: true },
+  { id: '2', name: 'Cursor Assistant', icon: 'cursor-default-click', url: 'cursor.com', active: false, hasUnread: false },
+  { id: '3', name: 'GitHub', icon: 'github', url: 'github.com', active: false, hasUnread: true },
+  { id: '4', name: 'ChatGPT', icon: 'robot', url: 'chat.openai.com', active: false, hasUnread: false },
+  { id: '5', name: 'Google Search', icon: 'google', url: 'google.com', active: false, hasUnread: false },
 ];
 
-export default function VoiceAssistant() {
+const quickCommands = [
+  { text: 'Open Claude Code tab', icon: 'message-processing' },
+  { text: 'Read Claude\'s last response', icon: 'text-to-speech' },
+  { text: 'Reply: go ahead and proceed', icon: 'send' },
+  { text: 'Switch to GitHub tab', icon: 'github' },
+  { text: 'Open new tab with Cursor', icon: 'cursor-default-click' },
+  { text: 'Close current tab', icon: 'close-box' },
+];
+
+export default function MetaChrome() {
   const router = useRouter();
-  const [isListening, setIsListening] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastResponse, setLastResponse] = useState<CommandResponse | null>(null);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [tabs, setTabs] = useState<BrowserTab[]>(mockTabs);
+  const [isConnected, setIsConnected] = useState(true);
   
-  // Animation values
-  const pulseAnim = useState(new Animated.Value(1))[0];
+  // Animation
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const pulseAnim = useState(new Animated.Value(1))[0];
   
-  // Load settings on mount
   useEffect(() => {
-    loadSettings();
-    // Fade in animation
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 500,
+      duration: 400,
       useNativeDriver: true,
     }).start();
+    
+    // Pulse animation for connection indicator
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.2, duration: 1000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+      ])
+    ).start();
   }, []);
 
-  const loadSettings = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(SETTINGS_KEY);
-      if (stored) {
-        setSettings(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error('Failed to load settings:', e);
-    }
-  };
-
-  // Haptic feedback helper
-  const triggerHaptic = useCallback((type: 'light' | 'medium' | 'success' | 'error' | 'selection') => {
-    if (!settings.hapticsEnabled) return;
-    
+  const triggerHaptic = useCallback((type: 'light' | 'medium' | 'success' | 'error') => {
     switch (type) {
-      case 'light':
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        break;
-      case 'medium':
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        break;
-      case 'success':
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        break;
-      case 'error':
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        break;
-      case 'selection':
-        Haptics.selectionAsync();
-        break;
+      case 'light': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); break;
+      case 'medium': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); break;
+      case 'success': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); break;
+      case 'error': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); break;
     }
-  }, [settings.hapticsEnabled]);
-  
-  useEffect(() => {
-    if (isListening) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.15,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    } else {
-      pulseAnim.setValue(1);
-    }
-  }, [isListening]);
+  }, []);
 
   const processCommand = async (command: string) => {
     if (!command.trim()) return;
@@ -166,73 +103,28 @@ export default function VoiceAssistant() {
     triggerHaptic('light');
     
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/command`, {
+      const response = await axios.post(`${BACKEND_URL}/api/chrome-command`, {
         command: command.trim(),
-        context: null,
       });
       
       const data: CommandResponse = response.data;
       setLastResponse(data);
       triggerHaptic('success');
       
-      // Auto-speak if enabled
-      if (settings.autoSpeak) {
-        speakResponse(data.response_text);
+      // Simulate tab switching if needed
+      if (data.target_tab) {
+        setTabs(prev => prev.map(tab => ({
+          ...tab,
+          active: tab.name.toLowerCase().includes(data.target_tab!.toLowerCase())
+        })));
       }
     } catch (err: any) {
-      console.error('Error processing command:', err);
-      setError(err.response?.data?.detail || 'Failed to process command');
+      console.error('Error:', err);
+      setError(err.response?.data?.detail || 'Command failed');
       triggerHaptic('error');
     } finally {
       setIsProcessing(false);
       setInputText('');
-      setSelectedCategory(null);
-    }
-  };
-
-  const speakResponse = async (text: string) => {
-    const cleanText = text.replace(/\[SIMULATED\]/g, 'Simulated:').replace(/\n/g, ' ').trim();
-    
-    if (!cleanText) return;
-    
-    setIsSpeaking(true);
-    
-    try {
-      await Speech.stop();
-      
-      Speech.speak(cleanText, {
-        language: 'en',
-        pitch: 1.0,
-        rate: settings.speechRate,
-        onStart: () => console.log('[TTS] Started'),
-        onDone: () => setIsSpeaking(false),
-        onStopped: () => setIsSpeaking(false),
-        onError: () => setIsSpeaking(false),
-      });
-    } catch (e) {
-      console.error('[TTS] Failed:', e);
-      setIsSpeaking(false);
-    }
-  };
-
-  const stopSpeaking = async () => {
-    try {
-      await Speech.stop();
-    } catch (e) {
-      console.error('[TTS] Stop failed:', e);
-    }
-    setIsSpeaking(false);
-  };
-
-  const toggleListening = () => {
-    triggerHaptic('medium');
-    if (isListening) {
-      setIsListening(false);
-    } else {
-      setIsListening(true);
-      setTimeout(() => {
-        setIsListening(false);
-      }, 5000);
     }
   };
 
@@ -241,27 +133,18 @@ export default function VoiceAssistant() {
     processCommand(inputText);
   };
 
-  const handleCategoryPress = (categoryId: string) => {
-    triggerHaptic('selection');
-    setSelectedCategory(selectedCategory === categoryId ? null : categoryId);
-  };
-
-  const handleExamplePress = (example: string) => {
+  const handleQuickCommand = (command: string) => {
     triggerHaptic('light');
-    setInputText(example);
+    processCommand(command);
   };
 
-  const getActionIcon = (actionType: string): string => {
-    switch (actionType) {
-      case 'browser_control': return 'globe-outline';
-      case 'app_control': return 'apps-outline';
-      case 'ai_query': return 'sparkles-outline';
-      case 'device_control': return 'phone-portrait-outline';
-      case 'note_taking': return 'document-text-outline';
-      case 'reading': return 'book-outline';
-      default: return 'chatbox-outline';
-    }
+  const handleTabPress = (tab: BrowserTab) => {
+    triggerHaptic('light');
+    setTabs(prev => prev.map(t => ({ ...t, active: t.id === tab.id })));
+    processCommand(`Switch to ${tab.name} tab`);
   };
+
+  const activeTab = tabs.find(t => t.active);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -272,214 +155,160 @@ export default function VoiceAssistant() {
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
           <View style={styles.headerLeft}>
-            <Ionicons name="glasses-outline" size={28} color="#8B5CF6" />
-            <Text style={styles.headerTitle}>Voice Command AI</Text>
+            <MaterialCommunityIcons name="google-chrome" size={28} color="#4285F4" />
+            <Text style={styles.headerTitle}>Meta Chrome</Text>
           </View>
           <View style={styles.headerRight}>
+            <Animated.View style={[styles.connectionDot, { transform: [{ scale: pulseAnim }] }]}>
+              <View style={[styles.dot, isConnected ? styles.dotConnected : styles.dotDisconnected]} />
+            </Animated.View>
             <TouchableOpacity 
               style={styles.headerButton}
               onPress={() => {
                 triggerHaptic('light');
-                router.push('/history');
+                router.push('/tabs');
               }}
             >
-              <Ionicons name="time-outline" size={24} color="#A1A1AA" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.headerButton}
-              onPress={() => {
-                triggerHaptic('light');
-                router.push('/settings');
-              }}
-            >
-              <Ionicons name="settings-outline" size={24} color="#A1A1AA" />
+              <Ionicons name="layers-outline" size={24} color="#A1A1AA" />
             </TouchableOpacity>
           </View>
         </Animated.View>
+
+        {/* Glasses Connection Status */}
+        <View style={styles.connectionBar}>
+          <View style={styles.connectionInfo}>
+            <Ionicons name="glasses-outline" size={18} color="#8B5CF6" />
+            <Text style={styles.connectionText}>Ray-Ban Meta Connected</Text>
+          </View>
+          <Text style={styles.connectionHint}>Voice commands ready</Text>
+        </View>
 
         <ScrollView 
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Integration Badges */}
-          <Animated.View style={[styles.badgeContainer, { opacity: fadeAnim }]}>
-            <View style={styles.badge}>
-              <Ionicons name="glasses" size={16} color="#8B5CF6" />
-              <Text style={styles.badgeText}>Ray-Ban Meta</Text>
+          {/* Active Tab Display */}
+          <View style={styles.activeTabCard}>
+            <View style={styles.activeTabHeader}>
+              <Text style={styles.activeTabLabel}>ACTIVE TAB</Text>
+              <View style={styles.tabCount}>
+                <Text style={styles.tabCountText}>{tabs.length} tabs</Text>
+              </View>
             </View>
-            <View style={styles.badge}>
-              <Ionicons name="logo-google" size={16} color="#34A853" />
-              <Text style={styles.badgeText}>Assistant</Text>
-            </View>
-            <View style={styles.badge}>
-              <Ionicons name="logo-apple" size={16} color="#A1A1AA" />
-              <Text style={styles.badgeText}>Control</Text>
-            </View>
-          </Animated.View>
+            {activeTab && (
+              <View style={styles.activeTabContent}>
+                <View style={styles.activeTabIcon}>
+                  <MaterialCommunityIcons name={activeTab.icon as any} size={32} color="#4285F4" />
+                </View>
+                <View style={styles.activeTabInfo}>
+                  <Text style={styles.activeTabName}>{activeTab.name}</Text>
+                  <Text style={styles.activeTabUrl}>{activeTab.url}</Text>
+                </View>
+                {activeTab.hasUnread && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadText}>NEW</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
 
-          {/* Main Voice Button */}
-          <View style={styles.voiceSection}>
-            <Animated.View style={[styles.voiceButtonOuter, { transform: [{ scale: pulseAnim }] }]}>
+          {/* Tab Bar */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar}>
+            {tabs.map((tab) => (
               <TouchableOpacity
-                style={[styles.voiceButton, isListening && styles.voiceButtonActive]}
-                onPress={toggleListening}
-                disabled={isProcessing}
-                activeOpacity={0.8}
+                key={tab.id}
+                style={[styles.tabItem, tab.active && styles.tabItemActive]}
+                onPress={() => handleTabPress(tab)}
+              >
+                <MaterialCommunityIcons 
+                  name={tab.icon as any} 
+                  size={20} 
+                  color={tab.active ? '#4285F4' : '#71717A'} 
+                />
+                {tab.hasUnread && <View style={styles.tabDot} />}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Command Input */}
+          <View style={styles.inputSection}>
+            <Text style={styles.inputLabel}>VOICE COMMAND</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mic" size={20} color="#8B5CF6" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Type or speak a command..."
+                placeholderTextColor="#52525B"
+                value={inputText}
+                onChangeText={setInputText}
+                onSubmitEditing={handleSubmit}
+                returnKeyType="send"
+              />
+              <TouchableOpacity 
+                style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+                onPress={handleSubmit}
+                disabled={!inputText.trim() || isProcessing}
               >
                 {isProcessing ? (
-                  <ActivityIndicator size="large" color="#fff" />
+                  <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Ionicons 
-                    name={isListening ? 'mic' : 'mic-outline'} 
-                    size={48} 
-                    color="#fff" 
-                  />
+                  <Ionicons name="arrow-forward" size={18} color="#fff" />
                 )}
               </TouchableOpacity>
-            </Animated.View>
-            <Text style={styles.voiceHint}>
-              {isListening ? 'Listening...' : isProcessing ? 'Processing...' : 'Tap to speak or type below'}
-            </Text>
+            </View>
           </View>
 
-          {/* Text Input */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Type your command here..."
-              placeholderTextColor="#71717A"
-              value={inputText}
-              onChangeText={setInputText}
-              onSubmitEditing={handleSubmit}
-              returnKeyType="send"
-              multiline
-            />
-            <TouchableOpacity 
-              style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
-              onPress={handleSubmit}
-              disabled={!inputText.trim() || isProcessing}
-            >
-              <Ionicons name="send" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Error Display */}
+          {/* Error */}
           {error && (
             <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={20} color="#EF4444" />
+              <Ionicons name="alert-circle" size={18} color="#EF4444" />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
 
           {/* Last Response */}
           {lastResponse && (
-            <Animated.View style={[styles.responseCard, { opacity: fadeAnim }]}>
+            <View style={styles.responseCard}>
               <View style={styles.responseHeader}>
-                <View style={styles.responseHeaderLeft}>
-                  <Ionicons 
-                    name={getActionIcon(lastResponse.action_type) as any} 
-                    size={20} 
-                    color="#8B5CF6" 
-                  />
-                  <Text style={styles.actionType}>
-                    {lastResponse.action_type.replace('_', ' ').toUpperCase()}
-                  </Text>
-                </View>
-                {isSpeaking ? (
-                  <TouchableOpacity onPress={stopSpeaking}>
-                    <Ionicons name="stop-circle" size={24} color="#EF4444" />
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity onPress={() => speakResponse(lastResponse.response_text)}>
-                    <Ionicons name="volume-high" size={24} color="#8B5CF6" />
-                  </TouchableOpacity>
-                )}
+                <View style={[styles.statusDot, 
+                  lastResponse.status === 'success' && styles.statusSuccess,
+                  lastResponse.status === 'error' && styles.statusError,
+                ]} />
+                <Text style={styles.responseAction}>{lastResponse.action}</Text>
               </View>
-              
-              <Text style={styles.originalCommand}>
-                "{lastResponse.original_command}"
-              </Text>
-              
-              <View style={styles.responseBody}>
-                <Text style={styles.responseText}>{lastResponse.response_text}</Text>
-              </View>
-              
-              {lastResponse.simulated && (
-                <View style={styles.simulatedBadge}>
-                  <Ionicons name="flask" size={14} color="#F59E0B" />
-                  <Text style={styles.simulatedText}>Demo Mode</Text>
-                </View>
-              )}
-            </Animated.View>
-          )}
-
-          {/* Command Categories */}
-          {!lastResponse && (
-            <View style={styles.categoriesSection}>
-              <Text style={styles.sectionTitle}>Command Categories</Text>
-              <View style={styles.categoriesGrid}>
-                {commandCategories.map((cat) => (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[
-                      styles.categoryCard,
-                      selectedCategory === cat.id && styles.categoryCardActive,
-                    ]}
-                    onPress={() => handleCategoryPress(cat.id)}
-                  >
-                    <View style={[styles.categoryIcon, { backgroundColor: `${cat.color}20` }]}>
-                      <Ionicons name={cat.icon as any} size={22} color={cat.color} />
-                    </View>
-                    <Text style={styles.categoryLabel}>{cat.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Examples for selected category */}
-              {selectedCategory && (
-                <View style={styles.examplesSection}>
-                  <Text style={styles.examplesTitle}>Try saying:</Text>
-                  {commandCategories
-                    .find((c) => c.id === selectedCategory)
-                    ?.examples.map((example, idx) => (
-                      <TouchableOpacity
-                        key={idx}
-                        style={styles.exampleItem}
-                        onPress={() => handleExamplePress(example)}
-                      >
-                        <Ionicons name="chatbubble-outline" size={16} color="#8B5CF6" />
-                        <Text style={styles.exampleText}>{example}</Text>
-                      </TouchableOpacity>
-                    ))}
-                </View>
-              )}
-
-              {/* Quick examples when no category selected */}
-              {!selectedCategory && (
-                <View style={styles.examplesSection}>
-                  <Text style={styles.examplesTitle}>Quick Examples:</Text>
-                  {['Open Chrome with Claude Code', 'Open Google Keep notes', 'Ask Grok about my repo'].map((example, idx) => (
-                    <TouchableOpacity
-                      key={idx}
-                      style={styles.exampleItem}
-                      onPress={() => handleExamplePress(example)}
-                    >
-                      <Ionicons name="chatbubble-outline" size={16} color="#8B5CF6" />
-                      <Text style={styles.exampleText}>{example}</Text>
-                    </TouchableOpacity>
-                  ))}
+              <Text style={styles.responseText}>{lastResponse.response_text}</Text>
+              {lastResponse.target_tab && (
+                <View style={styles.targetTab}>
+                  <Ionicons name="arrow-forward" size={14} color="#4285F4" />
+                  <Text style={styles.targetTabText}>{lastResponse.target_tab}</Text>
                 </View>
               )}
             </View>
           )}
+
+          {/* Quick Commands */}
+          <View style={styles.quickSection}>
+            <Text style={styles.quickTitle}>Quick Commands</Text>
+            <View style={styles.quickGrid}>
+              {quickCommands.map((cmd, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.quickItem}
+                  onPress={() => handleQuickCommand(cmd.text)}
+                >
+                  <MaterialCommunityIcons name={cmd.icon as any} size={20} color="#8B5CF6" />
+                  <Text style={styles.quickText} numberOfLines={2}>{cmd.text}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </ScrollView>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Powered by GPT-4o • Demo Mode
-          </Text>
+          <Text style={styles.footerText}>Say "Hey Meta" to your glasses to start</Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -499,7 +328,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#1F1F28',
   },
@@ -515,87 +344,181 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     flexDirection: 'row',
-    gap: 4,
+    alignItems: 'center',
+    gap: 12,
+  },
+  connectionDot: {
+    padding: 4,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  dotConnected: {
+    backgroundColor: '#22C55E',
+  },
+  dotDisconnected: {
+    backgroundColor: '#EF4444',
   },
   headerButton: {
     padding: 8,
+  },
+  connectionBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#1F1F28',
+  },
+  connectionInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  connectionText: {
+    color: '#A1A1AA',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  connectionHint: {
+    color: '#22C55E',
+    fontSize: 12,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
+    padding: 16,
   },
-  badgeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  activeTabCard: {
     backgroundColor: '#1F1F28',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  badgeText: {
-    color: '#A1A1AA',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  voiceSection: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  voiceButtonOuter: {
+    borderRadius: 16,
+    padding: 16,
     marginBottom: 16,
   },
-  voiceButton: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#8B5CF6',
+  activeTabHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  activeTabLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#71717A',
+    letterSpacing: 0.5,
+  },
+  tabCount: {
+    backgroundColor: '#2A2A35',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  tabCountText: {
+    fontSize: 11,
+    color: '#A1A1AA',
+  },
+  activeTabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  activeTabIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: '#0A0A0F',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
   },
-  voiceButtonActive: {
-    backgroundColor: '#7C3AED',
+  activeTabInfo: {
+    flex: 1,
+    marginLeft: 12,
   },
-  voiceHint: {
+  activeTabName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FAFAFA',
+  },
+  activeTabUrl: {
+    fontSize: 13,
     color: '#71717A',
-    fontSize: 14,
+    marginTop: 2,
+  },
+  unreadBadge: {
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  unreadText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  tabBar: {
+    marginBottom: 16,
+  },
+  tabItem: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#1F1F28',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    position: 'relative',
+  },
+  tabItemActive: {
+    backgroundColor: '#2A2A35',
+    borderWidth: 2,
+    borderColor: '#4285F4',
+  },
+  tabDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#8B5CF6',
+  },
+  inputSection: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#71717A',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    marginLeft: 4,
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: '#1F1F28',
-    borderRadius: 16,
-    padding: 8,
-    marginBottom: 16,
+    borderRadius: 14,
+    paddingLeft: 14,
+  },
+  inputIcon: {
+    marginRight: 8,
   },
   textInput: {
     flex: 1,
     color: '#FAFAFA',
-    fontSize: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    maxHeight: 100,
+    fontSize: 15,
+    paddingVertical: 14,
   },
   sendButton: {
-    backgroundColor: '#8B5CF6',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    backgroundColor: '#4285F4',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    margin: 4,
   },
   sendButtonDisabled: {
     backgroundColor: '#3F3F46',
@@ -611,119 +534,89 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#EF4444',
-    fontSize: 14,
+    fontSize: 13,
     flex: 1,
   },
   responseCard: {
     backgroundColor: '#1F1F28',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    padding: 14,
     marginBottom: 16,
   },
   responseHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  responseHeaderLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 8,
   },
-  actionType: {
-    color: '#8B5CF6',
-    fontSize: 12,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F59E0B',
+  },
+  statusSuccess: {
+    backgroundColor: '#22C55E',
+  },
+  statusError: {
+    backgroundColor: '#EF4444',
+  },
+  responseAction: {
+    fontSize: 13,
     fontWeight: '600',
-  },
-  originalCommand: {
-    color: '#71717A',
-    fontSize: 14,
-    fontStyle: 'italic',
-    marginBottom: 12,
-  },
-  responseBody: {
-    backgroundColor: '#0A0A0F',
-    padding: 12,
-    borderRadius: 12,
+    color: '#A1A1AA',
+    textTransform: 'uppercase',
   },
   responseText: {
-    color: '#FAFAFA',
     fontSize: 15,
+    color: '#FAFAFA',
     lineHeight: 22,
   },
-  simulatedBadge: {
+  targetTab: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 12,
+    marginTop: 10,
+    backgroundColor: '#0A0A0F',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
-  simulatedText: {
-    color: '#F59E0B',
+  targetTabText: {
     fontSize: 12,
-  },
-  categoriesSection: {
-    marginTop: 8,
-  },
-  sectionTitle: {
-    color: '#A1A1AA',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 16,
-  },
-  categoryCard: {
-    width: '47%',
-    backgroundColor: '#1F1F28',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  categoryCardActive: {
-    borderColor: '#8B5CF6',
-  },
-  categoryIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  categoryLabel: {
-    color: '#FAFAFA',
-    fontSize: 14,
+    color: '#4285F4',
     fontWeight: '500',
   },
-  examplesSection: {
+  quickSection: {
     marginTop: 8,
   },
-  examplesTitle: {
-    color: '#A1A1AA',
-    fontSize: 14,
+  quickTitle: {
+    fontSize: 11,
     fontWeight: '600',
+    color: '#71717A',
+    letterSpacing: 0.5,
     marginBottom: 12,
+    marginLeft: 4,
   },
-  exampleItem: {
+  quickGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  quickItem: {
+    width: '48.5%',
+    backgroundColor: '#1F1F28',
+    borderRadius: 12,
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#1F1F28',
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 8,
   },
-  exampleText: {
-    color: '#FAFAFA',
-    fontSize: 14,
+  quickText: {
     flex: 1,
+    fontSize: 13,
+    color: '#FAFAFA',
   },
   footer: {
     paddingVertical: 12,
