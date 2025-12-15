@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,18 @@ import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useBrowser } from '../src/context/BrowserContext';
+
+// Speech recognition - works on Web, needs dev build for mobile
+let ExpoSpeechRecognitionModule: any = null;
+let useSpeechRecognitionEvent: any = null;
+
+try {
+  const speechModule = require('@jamsch/expo-speech-recognition');
+  ExpoSpeechRecognitionModule = speechModule.ExpoSpeechRecognitionModule;
+  useSpeechRecognitionEvent = speechModule.useSpeechRecognitionEvent;
+} catch (e) {
+  console.log('Speech recognition not available');
+}
 
 export default function Browser() {
   const router = useRouter();
