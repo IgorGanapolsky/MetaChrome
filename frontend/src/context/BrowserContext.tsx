@@ -68,6 +68,11 @@ export function BrowserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const injectScript = useCallback((script: string): Promise<string> => {
+    // On web, WebView doesn't exist - return mock response
+    if (Platform.OS === 'web') {
+      return Promise.resolve('Web preview - use mobile for real browser');
+    }
+    
     return new Promise((resolve) => {
       scriptResultRef.current = resolve;
       const wrappedScript = `
