@@ -170,18 +170,17 @@ export default function Browser() {
       <View style={styles.browserContainer}>
         {activeTab ? (
           Platform.OS === 'web' ? (
-            <View style={styles.webFallback}>
-              <Ionicons name="phone-portrait-outline" size={48} color="#8B5CF6" />
-              <Text style={styles.webFallbackTitle}>Open on Mobile</Text>
-              <Text style={styles.webFallbackText}>
-                The in-app browser works on iOS and Android.{'\n'}
-                Scan the QR code with Expo Go to test.
-              </Text>
-              <View style={styles.webFallbackUrl}>
-                <Ionicons name="link" size={16} color="#71717A" />
-                <Text style={styles.webFallbackUrlText}>{activeTab.url}</Text>
-              </View>
-            </View>
+            <iframe
+              src={activeTab.url}
+              style={{
+                flex: 1,
+                width: '100%',
+                height: '100%',
+                border: 'none',
+              }}
+              title={activeTab.name}
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            />
           ) : (
             <WebView
               ref={webViewRef}
