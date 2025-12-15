@@ -762,10 +762,40 @@ const styles = StyleSheet.create({
     color: '#FAFAFA',
     fontSize: 13,
   },
-  quickHint: {
-    color: '#52525B',
-    fontSize: 11,
+  voiceSection: {
+    backgroundColor: '#1F1F28',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#2A2A35',
+    alignItems: 'center',
+  },
+  voiceButtonContainer: {
+    marginBottom: 12,
+  },
+  voiceButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  voiceButtonActive: {
+    backgroundColor: '#7C3AED',
+  },
+  voiceStatus: {
+    color: '#A1A1AA',
+    fontSize: 13,
+    marginBottom: 12,
     textAlign: 'center',
-    marginTop: 8,
+  },
+  quickScroll: {
+    maxHeight: 40,
   },
 });
