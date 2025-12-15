@@ -454,36 +454,140 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 12,
   },
-  webPreview: {
+  simulatedBrowser: {
+    flex: 1,
+    backgroundColor: '#0A0A0F',
+  },
+  browserUrlBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1F1F28',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginHorizontal: 8,
+    marginTop: 8,
+    borderRadius: 8,
+  },
+  browserUrl: {
+    color: '#A1A1AA',
+    fontSize: 12,
+  },
+  simulatedContent: {
+    flex: 1,
+    padding: 12,
+  },
+  chatSimulation: {
+    flex: 1,
+  },
+  chatMessage: {
+    marginBottom: 16,
+  },
+  userBubble: {
+    backgroundColor: '#8B5CF6',
+    padding: 12,
+    borderRadius: 16,
+    borderBottomRightRadius: 4,
+    alignSelf: 'flex-end',
+    maxWidth: '85%',
+  },
+  assistantBubble: {
+    backgroundColor: '#1F1F28',
+    padding: 12,
+    borderRadius: 16,
+    borderBottomLeftRadius: 4,
+    alignSelf: 'flex-start',
+    maxWidth: '85%',
+  },
+  chatText: {
+    color: '#FAFAFA',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  githubSimulation: {
+    flex: 1,
+  },
+  repoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  repoName: {
+    color: '#FAFAFA',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  repoStats: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 20,
+  },
+  stat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statText: {
+    color: '#A1A1AA',
+    fontSize: 13,
+  },
+  fileList: {
+    backgroundColor: '#1F1F28',
+    borderRadius: 12,
+    padding: 8,
+  },
+  fileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2A35',
+  },
+  fileName: {
+    color: '#FAFAFA',
+    fontSize: 14,
+  },
+  cursorSimulation: {
+    flex: 1,
+  },
+  cursorTitle: {
+    color: '#FAFAFA',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  cursorText: {
+    color: '#71717A',
+    fontSize: 13,
+    marginBottom: 16,
+  },
+  codeBlock: {
+    backgroundColor: '#1F1F28',
+    padding: 12,
+    borderRadius: 8,
+  },
+  codeText: {
+    color: '#22C55E',
+    fontSize: 12,
+    fontFamily: 'monospace',
+  },
+  genericPage: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0A0A0F',
-    padding: 32,
   },
-  webPreviewTitle: {
+  genericTitle: {
     color: '#FAFAFA',
     fontSize: 20,
     fontWeight: '600',
-    marginTop: 16,
   },
-  webPreviewText: {
+  genericUrl: {
     color: '#71717A',
     fontSize: 14,
-    textAlign: 'center',
     marginTop: 8,
-    lineHeight: 22,
-  },
-  webPreviewUrl: {
-    backgroundColor: '#1F1F28',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginTop: 20,
-  },
-  webPreviewUrlText: {
-    color: '#8B5CF6',
-    fontSize: 13,
   },
   resultPanel: {
     backgroundColor: '#1F1F28',
