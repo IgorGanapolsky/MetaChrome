@@ -407,38 +407,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 12,
   },
-  webFallback: {
+  webPreview: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#0A0A0F',
     padding: 32,
   },
-  webFallbackTitle: {
+  webPreviewTitle: {
     color: '#FAFAFA',
     fontSize: 20,
     fontWeight: '600',
     marginTop: 16,
   },
-  webFallbackText: {
+  webPreviewText: {
     color: '#71717A',
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 22,
   },
-  webFallbackUrl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  webPreviewUrl: {
     backgroundColor: '#1F1F28',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
-    marginTop: 24,
+    marginTop: 20,
   },
-  webFallbackUrlText: {
-    color: '#A1A1AA',
+  webPreviewUrlText: {
+    color: '#8B5CF6',
     fontSize: 13,
   },
   resultPanel: {
