@@ -744,13 +744,6 @@ const styles = StyleSheet.create({
     color: '#A1A1AA',
     fontSize: 12,
   },
-  quickCommands: {
-    backgroundColor: '#1F1F28',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#2A2A35',
-  },
   quickCmd: {
     backgroundColor: '#2A2A35',
     paddingHorizontal: 14,
