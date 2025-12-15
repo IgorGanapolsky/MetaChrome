@@ -142,30 +142,45 @@ export default function Browser() {
       {/* WebView Browser */}
       <View style={styles.browserContainer}>
         {activeTab ? (
-          <WebView
-            ref={webViewRef}
-            source={{ uri: activeTab.url }}
-            style={styles.webview}
-            onLoadStart={() => setIsLoading(true)}
-            onLoadEnd={() => setIsLoading(false)}
-            onMessage={handleMessage}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            startInLoadingState={true}
-            allowsInlineMediaPlayback={true}
-            mediaPlaybackRequiresUserAction={false}
-            injectedJavaScript={`
-              window.onerror = function(msg) {
-                window.ReactNativeWebView.postMessage(JSON.stringify({type: 'error', msg: msg}));
-              };
-              true;
-            `}
-            renderLoading={() => (
-              <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color="#8B5CF6" />
+          Platform.OS === 'web' ? (
+            <View style={styles.webFallback}>
+              <Ionicons name="phone-portrait-outline" size={48} color="#8B5CF6" />
+              <Text style={styles.webFallbackTitle}>Open on Mobile</Text>
+              <Text style={styles.webFallbackText}>
+                The in-app browser works on iOS and Android.{'\n'}
+                Scan the QR code with Expo Go to test.
+              </Text>
+              <View style={styles.webFallbackUrl}>
+                <Ionicons name="link" size={16} color="#71717A" />
+                <Text style={styles.webFallbackUrlText}>{activeTab.url}</Text>
               </View>
-            )}
-          />
+            </View>
+          ) : (
+            <WebView
+              ref={webViewRef}
+              source={{ uri: activeTab.url }}
+              style={styles.webview}
+              onLoadStart={() => setIsLoading(true)}
+              onLoadEnd={() => setIsLoading(false)}
+              onMessage={handleMessage}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              startInLoadingState={true}
+              allowsInlineMediaPlayback={true}
+              mediaPlaybackRequiresUserAction={false}
+              injectedJavaScript={`
+                window.onerror = function(msg) {
+                  window.ReactNativeWebView.postMessage(JSON.stringify({type: 'error', msg: msg}));
+                };
+                true;
+              `}
+              renderLoading={() => (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color="#8B5CF6" />
+                </View>
+              )}
+            />
+          )
         ) : (
           <View style={styles.noTab}>
             <Ionicons name="globe-outline" size={48} color="#3F3F46" />
@@ -173,7 +188,7 @@ export default function Browser() {
           </View>
         )}
         
-        {isLoading && (
+        {isLoading && Platform.OS !== 'web' && (
           <View style={styles.loadingBar}>
             <View style={styles.loadingProgress} />
           </View>
