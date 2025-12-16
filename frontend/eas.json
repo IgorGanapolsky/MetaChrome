@@ -15,7 +15,7 @@
         "withoutCredentials": true
       },
       "ios": {
-        "simulator": true
+        "simulator": false
       }
     },
     "preview": {
@@ -29,7 +29,7 @@
         "withoutCredentials": true
       },
       "ios": {
-        "simulator": true
+        "simulator": false
       }
     },
     "production": {
