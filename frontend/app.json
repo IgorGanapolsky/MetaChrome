@@ -45,7 +45,8 @@
         "BLUETOOTH_ADMIN",
         "BLUETOOTH_CONNECT",
         "BLUETOOTH_SCAN",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "SYSTEM_ALERT_WINDOW"
       ]
     },
     "web": {
@@ -81,7 +82,9 @@
             "newArchEnabled": false
           }
         }
-      ]
+      ],
+      "./plugins/withMetaChrome.js",
+      "./plugins/withAccessibilityService.js"
     ],
     "experiments": {
       "typedRoutes": true

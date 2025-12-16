@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { useCommandStore } from '@/entities/command';
 import { useCustomCommandStore, CustomVoiceCommand } from '@/entities/custom-command';
 import { useTabStore } from '@/entities/tab';
 import { useHaptics, trackEvent, AnalyticsEvents } from '@/shared/lib';
 import { useBrowserControls } from '@/features/browser-controls';
 import { createCommandHandlers } from './commandHandlers';
+import { androidAccessibilityService } from '@/services/accessibility';
 
 // Helper to generate unique tab IDs
 const generateTabId = () => `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -21,7 +22,7 @@ const createTab = (name: string, url: string) => ({
 export function useVoiceCommands() {
   const { addCommandLog } = useCommandStore();
   const { findMatchingCommand, metaRayBanSettings } = useCustomCommandStore();
-  const { tabs, activeTabId, addTab, setActiveTab } = useTabStore();
+  const { tabs, activeTabId, addTab } = useTabStore();
   const { impact, notification } = useHaptics();
   const { injectScript } = useBrowserControls();
 
@@ -142,6 +143,60 @@ export function useVoiceCommands() {
   );
 
   /**
+   * Check if command should use Android AccessibilityService
+   */
+  const isExternalAppCommand = useCallback((cmd: string): boolean => {
+    const externalCommands = [
+      'open chrome',
+      'chrome tab',
+      'switch chrome',
+      'navigate chrome',
+      'type in chrome',
+      'read chrome',
+      'click',
+      'tap',
+      'press back',
+      'press home',
+      'go back',
+      'go home',
+    ];
+    return externalCommands.some((c) => cmd.includes(c));
+  }, []);
+
+  /**
+   * Execute command using Android AccessibilityService
+   */
+  const executeAccessibilityCommand = useCallback(
+    async (command: string): Promise<string> => {
+      if (Platform.OS !== 'android') {
+        return 'External app control is only available on Android';
+      }
+
+      // Check if accessibility service is available
+      const isAvailable = await androidAccessibilityService.isAvailable();
+      if (!isAvailable) {
+        // Prompt user to enable the service
+        Alert.alert(
+          'Enable Accessibility Service',
+          'To control Chrome and other apps, please enable MetaChrome in Accessibility Settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open Settings',
+              onPress: () => androidAccessibilityService.openSettings(),
+            },
+          ]
+        );
+        return 'Accessibility service not enabled. Please enable it in Settings.';
+      }
+
+      // Execute the command using the accessibility service
+      return androidAccessibilityService.executeCommand(command);
+    },
+    []
+  );
+
+  /**
    * Main command execution function
    */
   const executeCommand = useCallback(
@@ -157,6 +212,31 @@ export function useVoiceCommands() {
 
       try {
         await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Check if this is an external app command (Android only)
+        if (Platform.OS === 'android' && isExternalAppCommand(cmd)) {
+          result = await executeAccessibilityCommand(command);
+          addCommandLog({
+            command,
+            action: 'accessibility',
+            result,
+          });
+
+          trackEvent({
+            name: AnalyticsEvents.VOICE_COMMAND_EXECUTED,
+            properties: {
+              command,
+              type: 'accessibility',
+              platform: 'android',
+            },
+          });
+
+          if (metaRayBanSettings.voiceFeedbackEnabled) {
+            Alert.alert('Voice Command', result);
+          }
+          notification('success');
+          return result;
+        }
 
         // Check for "type" or "send" commands for web agents
         if (cmd.startsWith('type ') || cmd.startsWith('send ') || cmd.startsWith('ask ')) {
@@ -300,6 +380,8 @@ export function useVoiceCommands() {
       speakResponse,
       addTab,
       activeTabId,
+      isExternalAppCommand,
+      executeAccessibilityCommand,
     ]
   );
 
@@ -308,5 +390,6 @@ export function useVoiceCommands() {
     executeCustomCommand,
     typeIntoWebAgent,
     speakResponse,
+    executeAccessibilityCommand,
   };
 }
