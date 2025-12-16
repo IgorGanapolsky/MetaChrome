@@ -9,15 +9,20 @@ module.exports = {
     scheme: 'metachrome',
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
+    owner: 'igorganapolsky',
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.metachrome.app',
       buildNumber: process.env.IOS_BUILD_NUMBER || '1',
       infoPlist: {
-        NSMicrophoneUsageDescription:
-          'MetaChrome needs microphone access for voice commands with Meta Ray-Ban glasses.',
+        NSMicrophoneUsageDescription: 'MetaChrome needs microphone access for voice commands',
         NSSpeechRecognitionUsageDescription:
-          'MetaChrome uses speech recognition for voice commands.',
+          'MetaChrome uses speech recognition for hands-free browsing',
+        NSBluetoothAlwaysUsageDescription:
+          'MetaChrome connects to Meta Ray-Ban glasses via Bluetooth',
+        NSBluetoothPeripheralUsageDescription:
+          'MetaChrome connects to Meta Ray-Ban glasses via Bluetooth',
+        ITSAppUsesNonExemptEncryption: false,
       },
     },
     android: {
@@ -31,7 +36,16 @@ module.exports = {
       statusBar: {
         backgroundColor: '#000000',
       },
-      permissions: ['INTERNET', 'RECORD_AUDIO'],
+      permissions: [
+        'INTERNET',
+        'RECORD_AUDIO',
+        'BLUETOOTH',
+        'BLUETOOTH_ADMIN',
+        'BLUETOOTH_CONNECT',
+        'BLUETOOTH_SCAN',
+        'ACCESS_FINE_LOCATION',
+        'SYSTEM_ALERT_WINDOW',
+      ],
     },
     web: {
       bundler: 'metro',
@@ -49,15 +63,26 @@ module.exports = {
           backgroundColor: '#000',
         },
       ],
-      // Sentry plugin - configure with DSN
-      // [
-      //   'sentry-expo',
-      //   {
-      //     organization: 'your-org',
-      //     project: 'metachrome',
-      //     authToken: process.env.SENTRY_AUTH_TOKEN,
-      //   },
-      // ],
+      [
+        '@jamsch/expo-speech-recognition',
+        {
+          microphonePermission: 'MetaChrome needs microphone access for voice commands',
+          speechRecognitionPermission: 'MetaChrome uses speech recognition for hands-free browsing',
+        },
+      ],
+      [
+        'expo-build-properties',
+        {
+          ios: {
+            newArchEnabled: true,
+          },
+          android: {
+            newArchEnabled: true,
+          },
+        },
+      ],
+      './plugins/withMetaChrome.js',
+      './plugins/withAccessibilityService.js',
     ],
     experiments: {
       typedRoutes: true,
