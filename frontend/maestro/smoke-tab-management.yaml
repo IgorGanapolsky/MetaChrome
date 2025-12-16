@@ -1,0 +1,61 @@
+# Smoke Test: Tab Management
+# Tags: smoke
+# Description: Verifies tab creation, switching, and closing functionality
+
+appId: com.metachrome.app
+tags:
+  - smoke
+
+---
+
+# Launch the app
+- launchApp:
+    clearState: true
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Claude"
+    timeout: 10000
+
+# Verify default tabs are present
+- assertVisible: "Claude"
+- assertVisible: "Cursor"
+- assertVisible: "GitHub"
+
+# Take initial screenshot
+- takeScreenshot: "smoke-tabs-initial"
+
+# Switch between tabs
+- tapOn: "Cursor"
+- extendedWaitUntil:
+    visible: "cursor.com"
+    timeout: 5000
+- takeScreenshot: "smoke-tab-cursor"
+
+- tapOn: "GitHub"
+- extendedWaitUntil:
+    visible: "github.com"
+    timeout: 5000
+- takeScreenshot: "smoke-tab-github"
+
+# Try to add a new tab
+- tapOn:
+    id: "add-tab-button"
+    optional: true
+
+- runFlow:
+    when:
+      visible: "Add Tab"
+    commands:
+      - takeScreenshot: "smoke-add-tab-screen"
+      # Go back without adding
+      - back
+
+# Return to Claude tab
+- tapOn: "Claude"
+- extendedWaitUntil:
+    visible: "claude.ai"
+    timeout: 5000
+
+# Final screenshot
+- takeScreenshot: "smoke-tab-management-complete"

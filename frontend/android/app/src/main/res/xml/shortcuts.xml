@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!-- Voice browsing capability - "Hey Google, start voice browsing on MetaChrome" -->
+  <capability android:name="actions.intent.OPEN_APP_FEATURE">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:targetPackage="com.metachrome"
+      android:targetClass="com.metachrome.MainActivity">
+      <parameter
+        android:name="feature"
+        android:key="feature" />
+    </intent>
+  </capability>
+
+  <!-- Search capability - "Hey Google, search for X on MetaChrome" -->
+  <capability android:name="actions.intent.SEARCH">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:targetPackage="com.metachrome"
+      android:targetClass="com.metachrome.MainActivity">
+      <parameter
+        android:name="query"
+        android:key="query" />
+      <url-template android:value="metachrome://search?q={query}" />
+    </intent>
+  </capability>
+
+  <!-- Static shortcut: Voice Mode -->
+  <shortcut
+    android:shortcutId="voice_mode"
+    android:enabled="true"
+    android:icon="@drawable/ic_mic"
+    android:shortcutShortLabel="@string/shortcut_voice_mode"
+    android:shortcutLongLabel="@string/shortcut_voice_mode_long">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:data="metachrome://voice" />
+    <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+      <parameter-binding
+        android:key="feature"
+        android:value="voice browsing|voice mode|hands free" />
+    </capability-binding>
+  </shortcut>
+
+  <!-- Static shortcut: New Tab -->
+  <shortcut
+    android:shortcutId="new_tab"
+    android:enabled="true"
+    android:icon="@drawable/ic_add"
+    android:shortcutShortLabel="@string/shortcut_new_tab"
+    android:shortcutLongLabel="@string/shortcut_new_tab_long">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:data="metachrome://newtab" />
+    <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+      <parameter-binding
+        android:key="feature"
+        android:value="new tab|open tab" />
+    </capability-binding>
+  </shortcut>
+
+  <!-- Static shortcut: Read Page -->
+  <shortcut
+    android:shortcutId="read_page"
+    android:enabled="true"
+    android:icon="@drawable/ic_volume"
+    android:shortcutShortLabel="@string/shortcut_read_page"
+    android:shortcutLongLabel="@string/shortcut_read_page_long">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:data="metachrome://read" />
+    <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+      <parameter-binding
+        android:key="feature"
+        android:value="read page|read aloud|text to speech" />
+    </capability-binding>
+  </shortcut>
+
+  <!-- Static shortcut: Connect Glasses -->
+  <shortcut
+    android:shortcutId="connect_glasses"
+    android:enabled="true"
+    android:icon="@drawable/ic_glasses"
+    android:shortcutShortLabel="@string/shortcut_connect_glasses"
+    android:shortcutLongLabel="@string/shortcut_connect_glasses_long">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:data="metachrome://settings/glasses" />
+    <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+      <parameter-binding
+        android:key="feature"
+        android:value="connect glasses|meta rayban|bluetooth" />
+    </capability-binding>
+  </shortcut>
+
+</shortcuts>

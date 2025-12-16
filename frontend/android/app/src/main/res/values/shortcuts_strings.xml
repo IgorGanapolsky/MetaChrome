@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Actions Shortcut Strings -->
+    <string name="shortcut_voice_mode">Voice Mode</string>
+    <string name="shortcut_voice_mode_long">Start voice browsing with MetaChrome</string>
+    
+    <string name="shortcut_new_tab">New Tab</string>
+    <string name="shortcut_new_tab_long">Open a new browser tab</string>
+    
+    <string name="shortcut_read_page">Read Page</string>
+    <string name="shortcut_read_page_long">Read the current page aloud</string>
+    
+    <string name="shortcut_connect_glasses">Connect Glasses</string>
+    <string name="shortcut_connect_glasses_long">Connect Meta Ray-Ban glasses</string>
+</resources>
