@@ -22,6 +22,11 @@ export function useAddTab() {
         name: finalName,
       });
 
+      trackEvent({
+        name: AnalyticsEvents.TAB_ADDED,
+        properties: { url: normalizedUrl, name: finalName },
+      });
+
       router.back();
     },
     [addTab, router, impact]

@@ -1,5 +1,20 @@
 import '@testing-library/jest-native/extend-expect';
 
+// Fix for jest-expo React 19 compatibility
+// Ensure React is properly initialized before jest-expo tries to modify it
+const React = require('react');
+if (typeof React !== 'undefined' && !React.version) {
+  try {
+    Object.defineProperty(React, 'version', {
+      value: '19.0.0',
+      writable: false,
+      configurable: true,
+    });
+  } catch (e) {
+    // Ignore if already defined
+  }
+}
+
 // Mock React Native modules before expo
 jest.mock('react-native', () => {
   const RN = jest.requireActual('react-native');

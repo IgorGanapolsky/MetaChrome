@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useTabStore } from '@/entities/tab';
-import { useHaptics } from '@/shared/lib';
+import { useHaptics, trackEvent, AnalyticsEvents } from '@/shared/lib';
 
 export function useTabActions() {
   const { setActiveTab, removeTab, tabs } = useTabStore();
@@ -10,6 +10,10 @@ export function useTabActions() {
     (tabId: string) => {
       impact('light');
       setActiveTab(tabId);
+      trackEvent({
+        name: AnalyticsEvents.TAB_SWITCHED,
+        properties: { tabId },
+      });
     },
     [setActiveTab, impact]
   );
@@ -19,6 +23,10 @@ export function useTabActions() {
       if (tabs.length > 1) {
         impact('medium');
         removeTab(tabId);
+        trackEvent({
+          name: AnalyticsEvents.TAB_REMOVED,
+          properties: { tabId },
+        });
       }
     },
     [removeTab, tabs.length, impact]

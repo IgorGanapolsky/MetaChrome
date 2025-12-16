@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import { useCommandStore } from '@/entities/command';
 import { useCustomCommandStore, CustomVoiceCommand } from '@/entities/custom-command';
-import { useHaptics } from '@/shared/lib';
+import { useHaptics, trackEvent, AnalyticsEvents } from '@/shared/lib';
 import { useBrowserControls } from '@/features/browser-controls';
 import { createCommandHandlers } from './commandHandlers';
 
@@ -79,6 +79,15 @@ export function useVoiceCommands() {
             result,
           });
 
+          trackEvent({
+            name: AnalyticsEvents.VOICE_COMMAND_EXECUTED,
+            properties: {
+              command,
+              type: 'custom',
+              actionType: customCommand.actionType,
+            },
+          });
+
           // Show feedback
           if (metaRayBanSettings.voiceFeedbackEnabled) {
             Alert.alert('Voice Command', result);
@@ -101,6 +110,15 @@ export function useVoiceCommands() {
         }
 
         addCommandLog({ command, action: 'executed', result });
+
+        trackEvent({
+          name: AnalyticsEvents.VOICE_COMMAND_EXECUTED,
+          properties: {
+            command,
+            type: 'builtin',
+            result: result.substring(0, 50), // Truncate long results
+          },
+        });
 
         if (metaRayBanSettings.voiceFeedbackEnabled) {
           Alert.alert('Voice Command', result);

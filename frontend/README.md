@@ -1,50 +1,185 @@
-# Welcome to your Expo app 👋
+# MetaChrome
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A voice-controlled browser app designed for Meta Ray-Ban smart glasses.
 
-## Get started
+## Features
 
-1. Install dependencies
+- 🎤 **Voice Control** - Hands-free browsing with Meta Ray-Ban integration
+- 🌐 **Smart Tabs** - Multiple browser tabs with easy management
+- ⚡ **Performance** - Optimized for smart glasses
+- 🎯 **Customization** - Create your own voice commands
+- 🌙 **Dark Theme** - Optimized dark theme for extended use
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+- **Framework**: React Native with Expo
+- **Navigation**: Expo Router (file-based routing)
+- **State Management**: Zustand
+- **Architecture**: Feature-Sliced Design (FSD)
+- **Testing**: Jest + React Native Testing Library + Maestro (E2E)
+- **Error Tracking**: Sentry
+- **Code Quality**: ESLint + Prettier + Husky
 
-   ```bash
-   npx expo start
-   ```
+## Getting Started
 
-In the output, you'll find options to open the app in a
+### Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node.js 18+
+- Yarn
+- Expo CLI
+- iOS Simulator / Android Emulator (or physical device)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### Installation
 
 ```bash
-npm run reset-project
+# Install dependencies
+yarn install
+
+# Start development server
+yarn start
+
+# Run on iOS
+yarn ios
+
+# Run on Android
+yarn android
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Development
 
-## Learn more
+### Project Structure
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+frontend/
+├── app/              # Expo Router routes
+├── src/
+│   ├── pages/       # Page components
+│   ├── widgets/     # Complex UI components
+│   ├── features/    # Business logic features
+│   ├── entities/    # Business entities (stores)
+│   ├── shared/      # Shared utilities, hooks, UI
+│   ├── theme/       # Design tokens
+│   └── types/       # TypeScript types
+├── maestro/         # E2E test flows
+└── scripts/         # Build and utility scripts
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Scripts
 
-## Join the community
+```bash
+# Development
+yarn start              # Start Expo dev server
+yarn ios                # Run on iOS
+yarn android            # Run on Android
 
-Join our community of developers creating universal apps.
+# Code Quality
+yarn lint               # Run ESLint
+yarn lint:fix           # Fix ESLint errors
+yarn format             # Format with Prettier
+yarn typecheck          # Type check with TypeScript
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Testing
+yarn test               # Run unit tests
+yarn test:watch         # Watch mode
+yarn test:coverage      # Coverage report
+yarn uat                # Run E2E tests (Maestro)
+
+# Production
+yarn build:production   # Build for production (EAS)
+```
+
+## Testing
+
+### Unit Tests
+```bash
+yarn test
+```
+
+### E2E Tests
+```bash
+# Install Maestro CLI first
+curl -Ls "https://get.maestro.mobile.dev" | bash
+
+# Run tests
+yarn uat
+```
+
+### Manual UAT
+See [UAT_CHECKLIST.md](./UAT_CHECKLIST.md) for comprehensive testing checklist.
+
+## Building for Production
+
+### Prerequisites
+- EAS account (expo.dev)
+- Sentry account (for error tracking)
+
+### Setup
+
+1. **Configure EAS**
+   ```bash
+   eas login
+   eas init
+   ```
+
+2. **Set Environment Variables**
+   ```bash
+   cp .env.production.example .env.production
+   # Edit .env.production with your values
+   ```
+
+3. **Build**
+   ```bash
+   yarn build:production
+   ```
+
+## Architecture
+
+This project follows **Feature-Sliced Design (FSD)** methodology:
+
+- **app/** - Expo Router routes (entry points)
+- **pages/** - Full page compositions
+- **widgets/** - Complex UI components
+- **features/** - Business logic features
+- **entities/** - Business entities (Zustand stores)
+- **shared/** - Shared utilities, hooks, UI components
+
+### Import Rules
+
+- ✅ `pages` can import from `widgets`, `features`, `entities`, `shared`
+- ✅ `widgets` can import from `features`, `entities`, `shared`
+- ✅ `features` can import from `entities`, `shared`
+- ✅ `entities` can import from `shared`
+- ❌ No circular dependencies
+- ❌ No imports from higher layers
+
+## Production Readiness
+
+See [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) for detailed status.
+
+**Current Status: 75% Ready**
+
+- ✅ Architecture: Excellent
+- ✅ Code Quality: Good
+- ⚠️ Tests: Infrastructure issue (tests written, blocked by jest-expo)
+- ✅ Documentation: Complete
+- ⚠️ Configuration: Needs Sentry/EAS setup
+
+## Release Process
+
+See [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) for step-by-step release guide.
+
+## Contributing
+
+1. Follow Feature-Sliced Design principles
+2. Write tests for new features
+3. Run `yarn lint` and `yarn format` before committing
+4. Follow TypeScript strict mode
+5. Update documentation as needed
+
+## License
+
+Private - All rights reserved
+
+## Support
+
+For issues and questions, please contact through the app store listing.

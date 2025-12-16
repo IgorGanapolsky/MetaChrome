@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from '@/shared/ui';
 import { colors } from '@/theme';
+import { initMonitoring, initAnalytics, trackEvent, AnalyticsEvents } from '@/shared/lib';
 
 export default function RootLayout() {
+  useEffect(() => {
+    // Initialize monitoring and analytics
+    initMonitoring();
+    initAnalytics();
+    trackEvent({ name: AnalyticsEvents.APP_OPENED });
+  }, []);
+
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
