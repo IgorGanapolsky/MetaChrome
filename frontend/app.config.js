@@ -67,7 +67,7 @@ module.exports = {
         origin: false,
       },
       eas: {
-        projectId: process.env.EAS_PROJECT_ID || '04975b9f-98b0-4dd1-9038-ee96259801ac',
+        projectId: process.env.EAS_PROJECT_ID || 'e85c8a8a-0436-41d8-aad1-f6872a6527bd',
       },
     },
   },
