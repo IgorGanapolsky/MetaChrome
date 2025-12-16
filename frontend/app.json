@@ -7,8 +7,8 @@
     "icon": "./assets/images/icon.png",
     "scheme": "metachrome",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
-    "owner": "igorganopolsky",
+    "newArchEnabled": true,
+    "owner": "igorganapolsky",
     "extra": {
       "eas": {},
       "router": {
@@ -79,7 +79,7 @@
             "newArchEnabled": false
           },
           "android": {
-            "newArchEnabled": false
+            "newArchEnabled": true
           }
         }
       ],
