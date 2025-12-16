@@ -166,35 +166,32 @@ export function useVoiceCommands() {
   /**
    * Execute command using Android AccessibilityService
    */
-  const executeAccessibilityCommand = useCallback(
-    async (command: string): Promise<string> => {
-      if (Platform.OS !== 'android') {
-        return 'External app control is only available on Android';
-      }
+  const executeAccessibilityCommand = useCallback(async (command: string): Promise<string> => {
+    if (Platform.OS !== 'android') {
+      return 'External app control is only available on Android';
+    }
 
-      // Check if accessibility service is available
-      const isAvailable = await androidAccessibilityService.isAvailable();
-      if (!isAvailable) {
-        // Prompt user to enable the service
-        Alert.alert(
-          'Enable Accessibility Service',
-          'To control Chrome and other apps, please enable MetaChrome in Accessibility Settings.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Open Settings',
-              onPress: () => androidAccessibilityService.openSettings(),
-            },
-          ]
-        );
-        return 'Accessibility service not enabled. Please enable it in Settings.';
-      }
+    // Check if accessibility service is available
+    const isAvailable = await androidAccessibilityService.isAvailable();
+    if (!isAvailable) {
+      // Prompt user to enable the service
+      Alert.alert(
+        'Enable Accessibility Service',
+        'To control Chrome and other apps, please enable MetaChrome in Accessibility Settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => androidAccessibilityService.openSettings(),
+          },
+        ]
+      );
+      return 'Accessibility service not enabled. Please enable it in Settings.';
+    }
 
-      // Execute the command using the accessibility service
-      return androidAccessibilityService.executeCommand(command);
-    },
-    []
-  );
+    // Execute the command using the accessibility service
+    return androidAccessibilityService.executeCommand(command);
+  }, []);
 
   /**
    * Main command execution function

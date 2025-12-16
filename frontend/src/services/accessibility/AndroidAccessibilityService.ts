@@ -149,7 +149,9 @@ class AndroidAccessibilityService {
    */
   async initialize(): Promise<boolean> {
     if (Platform.OS !== 'android') {
-      useAccessibilityStore.getState().setError('AccessibilityService is only available on Android');
+      useAccessibilityStore
+        .getState()
+        .setError('AccessibilityService is only available on Android');
       return false;
     }
 
@@ -498,13 +500,19 @@ export function useAndroidAccessibility() {
     openSettings: androidAccessibilityService.openSettings.bind(androidAccessibilityService),
     isAvailable: androidAccessibilityService.isAvailable.bind(androidAccessibilityService),
     openChrome: androidAccessibilityService.openChrome.bind(androidAccessibilityService),
-    getScreenContent: androidAccessibilityService.getScreenContent.bind(androidAccessibilityService),
+    getScreenContent: androidAccessibilityService.getScreenContent.bind(
+      androidAccessibilityService
+    ),
     scroll: androidAccessibilityService.scroll.bind(androidAccessibilityService),
     typeText: androidAccessibilityService.typeText.bind(androidAccessibilityService),
     clickByText: androidAccessibilityService.clickByText.bind(androidAccessibilityService),
     executeCommand: androidAccessibilityService.executeCommand.bind(androidAccessibilityService),
-    getChromeTabCount: androidAccessibilityService.getChromeTabCount.bind(androidAccessibilityService),
+    getChromeTabCount: androidAccessibilityService.getChromeTabCount.bind(
+      androidAccessibilityService
+    ),
     switchChromeTab: androidAccessibilityService.switchChromeTab.bind(androidAccessibilityService),
-    navigateChromeTo: androidAccessibilityService.navigateChromeTo.bind(androidAccessibilityService),
+    navigateChromeTo: androidAccessibilityService.navigateChromeTo.bind(
+      androidAccessibilityService
+    ),
   };
 }
