@@ -1,0 +1,22 @@
+# Maestro E2E Test Configuration
+# https://maestro.mobile.dev/
+
+appId: com.metachrome.app
+
+# Environment variables for tests
+env:
+  TEST_MODE: "true"
+
+# Default settings
+onFlowStart:
+  - launchApp
+
+onFlowComplete:
+  - stopApp
+
+# Tags for organizing tests
+tags:
+  smoke: "Quick smoke tests for CI"
+  regression: "Full regression suite"
+  voice: "Voice command tests"
+  bluetooth: "Bluetooth/glasses tests"

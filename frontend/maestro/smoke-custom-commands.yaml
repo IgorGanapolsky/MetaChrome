@@ -1,0 +1,72 @@
+# Smoke Test: Custom Voice Commands
+# Tags: smoke, voice
+# Description: Verifies custom voice command creation and management
+
+appId: com.metachrome.app
+tags:
+  - smoke
+  - voice
+
+---
+
+# Launch the app
+- launchApp:
+    clearState: true
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Claude"
+    timeout: 10000
+
+# Navigate to Meta Ray-Ban settings (where custom commands are)
+- tapOn:
+    id: "glasses-button"
+    optional: true
+
+# Wait for settings page
+- extendedWaitUntil:
+    visible: "Meta Ray-Ban"
+    timeout: 5000
+
+# Scroll to find Custom Commands section
+- scroll:
+    direction: DOWN
+
+# Look for Add button or Custom Commands section
+- assertVisible:
+    text: ".*Custom.*Command.*"
+    optional: true
+
+# Try to add a new command
+- runFlow:
+    when:
+      visible:
+        text: "Add"
+    commands:
+      - tapOn: "Add"
+      - extendedWaitUntil:
+          visible: "Trigger Phrase"
+          timeout: 3000
+      - takeScreenshot: "smoke-add-command-modal"
+      
+      # Fill in command details
+      - tapOn:
+          id: "trigger-phrase-input"
+          optional: true
+      - inputText: "open email"
+      
+      # Close modal
+      - tapOn:
+          text: "Cancel"
+          optional: true
+
+# Take final screenshot
+- takeScreenshot: "smoke-custom-commands-complete"
+
+# Navigate back
+- back
+
+# Verify we're back on main screen
+- extendedWaitUntil:
+    visible: "Claude"
+    timeout: 5000

@@ -1,0 +1,49 @@
+# Smoke Test: App Launch and Basic Navigation
+# Tags: smoke
+# Description: Verifies the app launches correctly and basic UI elements are visible
+
+appId: com.metachrome.app
+tags:
+  - smoke
+
+---
+
+# Launch the app
+- launchApp:
+    clearState: true
+
+# Wait for app to fully load
+- extendedWaitUntil:
+    visible: "Claude"
+    timeout: 10000
+
+# Verify main UI elements are present
+- assertVisible: "Claude"
+- assertVisible: "Cursor"
+- assertVisible: "GitHub"
+
+# Verify voice controls section is visible
+- assertVisible:
+    id: "voice-button"
+    optional: true
+
+# Take a screenshot for visual verification
+- takeScreenshot: "smoke-app-launch"
+
+# Test tab switching
+- tapOn: "Cursor"
+- extendedWaitUntil:
+    visible: "cursor.com"
+    timeout: 5000
+
+- tapOn: "Claude"
+- extendedWaitUntil:
+    visible: "claude.ai"
+    timeout: 5000
+
+# Verify settings navigation
+- tapOn:
+    id: "settings-button"
+    optional: true
+
+- takeScreenshot: "smoke-navigation-complete"

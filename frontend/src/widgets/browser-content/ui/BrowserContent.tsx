@@ -1,17 +1,75 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { WebView } from 'react-native-webview';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { useTabStore } from '@/entities/tab';
 import { useBrowserControls } from '@/features/browser-controls';
+import { webAgentService, WEB_AGENTS } from '@/services';
+
+// Store WebView ref globally for voice commands to access
+let globalWebViewRef: React.RefObject<WebView | null> | null = null;
+
+export function getWebViewRef(): React.RefObject<WebView | null> | null {
+  return globalWebViewRef;
+}
 
 export function BrowserContent() {
-  const { tabs, activeTabId } = useTabStore();
+  const { tabs, activeTabId, updateTab } = useTabStore();
   const { handleWebViewMessage } = useBrowserControls();
   const webViewRef = useRef<WebView>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentAgent, setCurrentAgent] = useState<string | null>(null);
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
+
+  // Update global ref and web agent service when WebView is available
+  useEffect(() => {
+    if (webViewRef.current) {
+      globalWebViewRef = webViewRef;
+      webAgentService.setWebViewRef(webViewRef);
+    }
+  }, [webViewRef.current]);
+
+  // Detect web agent when URL changes
+  useEffect(() => {
+    if (activeTab?.url) {
+      const agent = webAgentService.detectAgent(activeTab.url);
+      setCurrentAgent(agent.name !== 'Generic Chat' ? agent.name : null);
+    }
+  }, [activeTab?.url]);
+
+  // Handle messages from WebView (including web agent responses)
+  const onWebViewMessage = useCallback((event: WebViewMessageEvent) => {
+    // First, let web agent service handle it
+    webAgentService.handleMessage(event);
+    
+    // Then pass to browser controls for other handling
+    handleWebViewMessage(event);
+  }, [handleWebViewMessage]);
+
+  // Inject web agent script when page loads
+  const onLoadEnd = useCallback(() => {
+    setIsLoading(false);
+    
+    // Inject the web agent script for AI chat interfaces
+    if (webViewRef.current && activeTab?.url) {
+      const agent = webAgentService.detectAgent(activeTab.url);
+      if (agent.name !== 'Generic Chat') {
+        const script = webAgentService.getInjectionScript();
+        webViewRef.current.injectJavaScript(script);
+      }
+    }
+  }, [activeTab?.url]);
+
+  // Handle navigation state changes
+  const onNavigationStateChange = useCallback((navState: any) => {
+    if (activeTab && navState.url !== activeTab.url) {
+      updateTab(activeTab.id, { 
+        url: navState.url,
+        name: navState.title || activeTab.name,
+      });
+    }
+  }, [activeTab, updateTab]);
 
   if (!activeTab) {
     return (
@@ -22,12 +80,18 @@ export function BrowserContent() {
     );
   }
 
+  // Web platform simulation (for development)
   if (Platform.OS === 'web') {
     return (
       <View style={styles.simulatedBrowser}>
         <View style={styles.browserUrlBar}>
           <Ionicons name="lock-closed" size={12} color="#22C55E" />
           <Text style={styles.browserUrl}>{activeTab.url}</Text>
+          {currentAgent && (
+            <View style={styles.agentBadge}>
+              <Text style={styles.agentBadgeText}>{currentAgent}</Text>
+            </View>
+          )}
         </View>
         <ScrollView style={styles.simulatedContent}>
           {activeTab.name === 'Claude' && (
@@ -76,17 +140,42 @@ export function BrowserContent() {
     );
   }
 
+  // Real WebView for mobile
   return (
-    <WebView
-      ref={webViewRef}
-      source={{ uri: activeTab.url }}
-      style={styles.webview}
-      onLoadStart={() => setIsLoading(true)}
-      onLoadEnd={() => setIsLoading(false)}
-      onMessage={handleWebViewMessage}
-      javaScriptEnabled={true}
-      domStorageEnabled={true}
-    />
+    <View style={styles.browserContainer}>
+      {currentAgent && (
+        <View style={styles.agentIndicator}>
+          <Ionicons name="chatbubbles" size={14} color="#8B5CF6" />
+          <Text style={styles.agentIndicatorText}>
+            {currentAgent} detected - Voice typing enabled
+          </Text>
+        </View>
+      )}
+      <WebView
+        ref={webViewRef}
+        source={{ uri: activeTab.url }}
+        style={styles.webview}
+        onLoadStart={() => setIsLoading(true)}
+        onLoadEnd={onLoadEnd}
+        onMessage={onWebViewMessage}
+        onNavigationStateChange={onNavigationStateChange}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        allowsInlineMediaPlayback={true}
+        mediaPlaybackRequiresUserAction={false}
+        // Allow microphone access for voice features
+        mediaCapturePermissionGrantType="grant"
+        // Enable file access for uploads
+        allowFileAccess={true}
+        // User agent to ensure desktop-like experience
+        userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+      />
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -109,6 +198,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 12,
   },
+  agentIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1F1F28',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  agentIndicatorText: {
+    color: '#A1A1AA',
+    fontSize: 12,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#1F1F28',
+    padding: 8,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#A1A1AA',
+    fontSize: 12,
+  },
   simulatedBrowser: {
     flex: 1,
     backgroundColor: '#0A0A0F',
@@ -127,6 +241,18 @@ const styles = StyleSheet.create({
   browserUrl: {
     color: '#A1A1AA',
     fontSize: 12,
+    flex: 1,
+  },
+  agentBadge: {
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  agentBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '600',
   },
   simulatedContent: {
     flex: 1,

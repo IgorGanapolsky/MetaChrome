@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,50 +8,98 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  FlatList,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCustomCommandStore } from '@/entities/custom-command';
 import { useHaptics } from '@/shared/lib';
+import { 
+  bluetoothAudioManager, 
+  useBluetoothStore,
+  siriShortcutsService,
+  useSiriShortcutsStore,
+  BluetoothDevice,
+} from '@/services';
 
 export function MetaRayBanSettings() {
   const { metaRayBanSettings, updateMetaRayBanSettings, connectMetaRayBan, disconnectMetaRayBan } =
     useCustomCommandStore();
   const { impact, notification } = useHaptics();
-  const [isConnecting, setIsConnecting] = useState(false);
+  const bluetoothState = useBluetoothStore();
+  const siriState = useSiriShortcutsStore();
+  
+  const [isScanning, setIsScanning] = useState(false);
+  const [showDeviceList, setShowDeviceList] = useState(false);
   const [editingWakeWord, setEditingWakeWord] = useState(false);
   const [tempWakeWord, setTempWakeWord] = useState(metaRayBanSettings.customWakeWord);
 
-  const handleConnect = async () => {
+  // Initialize Bluetooth on mount
+  useEffect(() => {
+    bluetoothAudioManager.initialize();
+    
+    // Initialize Siri shortcuts on iOS
+    if (Platform.OS === 'ios') {
+      siriShortcutsService.initialize();
+      siriShortcutsService.donateDefaultShortcuts();
+    }
+  }, []);
+
+  // Scan for Bluetooth devices
+  const handleScan = async () => {
     impact('medium');
-    setIsConnecting(true);
-
-    // Simulate Bluetooth connection process
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // In a real implementation, this would use the Bluetooth API
-    // to scan for and connect to Meta Ray-Ban glasses
-    connectMetaRayBan('Ray-Ban Meta Smart Glasses');
-    notification('success');
-    setIsConnecting(false);
-
-    Alert.alert(
-      'Connected!',
-      'Your Meta Ray-Ban glasses are now connected. Voice commands will be processed through the glasses.',
-      [{ text: 'OK' }]
-    );
+    setIsScanning(true);
+    setShowDeviceList(true);
+    
+    try {
+      await bluetoothAudioManager.startScan(15000); // 15 second scan
+    } catch (error) {
+      Alert.alert('Scan Error', `Failed to scan: ${error}`);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
+  // Connect to a device
+  const handleConnectDevice = async (device: BluetoothDevice) => {
+    impact('medium');
+    setIsScanning(false);
+    
+    try {
+      const success = await bluetoothAudioManager.connect(device.id);
+      
+      if (success) {
+        // Update app state
+        connectMetaRayBan(device.name || 'Meta Ray-Ban Glasses');
+        notification('success');
+        setShowDeviceList(false);
+        
+        Alert.alert(
+          'Connected!',
+          `${device.name} is now connected. Voice commands will be processed through the device.`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Connection Failed', 'Could not connect to the device. Please try again.');
+      }
+    } catch (error) {
+      Alert.alert('Connection Error', `Failed to connect: ${error}`);
+    }
+  };
+
+  // Disconnect from device
   const handleDisconnect = () => {
     impact('light');
     Alert.alert(
-      'Disconnect Glasses',
-      'Are you sure you want to disconnect your Meta Ray-Ban glasses?',
+      'Disconnect Device',
+      'Are you sure you want to disconnect?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Disconnect',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            await bluetoothAudioManager.disconnect();
             disconnectMetaRayBan();
             notification('warning');
           },
@@ -68,80 +116,172 @@ export function MetaRayBanSettings() {
     }
   };
 
+  // Add Siri shortcut
+  const handleAddSiriShortcut = async () => {
+    if (Platform.OS !== 'ios') {
+      Alert.alert('iOS Only', 'Siri Shortcuts are only available on iOS devices.');
+      return;
+    }
+
+    const shortcut = siriShortcutsService.createVoiceModeShortcut();
+    await siriShortcutsService.presentShortcut(shortcut, (data) => {
+      if (data.status === 'added') {
+        notification('success');
+        Alert.alert('Shortcut Added', 'You can now use Siri to start voice browsing!');
+      }
+    });
+  };
+
+  // Render a discovered device
+  const renderDevice = ({ item }: { item: BluetoothDevice }) => (
+    <TouchableOpacity
+      style={[styles.deviceItem, item.isMetaGlasses && styles.deviceItemMeta]}
+      onPress={() => handleConnectDevice(item)}
+    >
+      <View style={styles.deviceInfo}>
+        <Ionicons
+          name={item.isMetaGlasses ? 'glasses-outline' : 'bluetooth'}
+          size={24}
+          color={item.isMetaGlasses ? '#10B981' : '#8B5CF6'}
+        />
+        <View style={styles.deviceText}>
+          <Text style={styles.deviceName}>{item.name || 'Unknown Device'}</Text>
+          <Text style={styles.deviceId}>
+            {item.isMetaGlasses ? 'Meta Ray-Ban Glasses' : 'Bluetooth Device'}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.deviceSignal}>
+        <Ionicons
+          name="cellular"
+          size={16}
+          color={item.rssi && item.rssi > -60 ? '#10B981' : '#71717A'}
+        />
+      </View>
+    </TouchableOpacity>
+  );
+
+  // Check if connected
+  const isConnected = bluetoothState.connectedDevice?.isConnected || metaRayBanSettings.isConnected;
+  const connectedDeviceName = bluetoothState.connectedDevice?.name || metaRayBanSettings.deviceName;
+
   return (
     <View style={styles.container}>
       {/* Connection Status Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <View style={styles.glassesIcon}>
+          <View style={[styles.glassesIcon, isConnected && styles.glassesIconConnected]}>
             <Ionicons
               name="glasses-outline"
               size={32}
-              color={metaRayBanSettings.isConnected ? '#10B981' : '#71717A'}
+              color={isConnected ? '#10B981' : '#71717A'}
             />
           </View>
           <View style={styles.connectionInfo}>
             <Text style={styles.connectionTitle}>
-              {metaRayBanSettings.isConnected
-                ? metaRayBanSettings.deviceName
-                : 'Meta Ray-Ban Glasses'}
+              {isConnected ? connectedDeviceName : 'Meta Ray-Ban Glasses'}
             </Text>
             <View style={styles.statusRow}>
               <View
                 style={[
                   styles.statusDot,
-                  metaRayBanSettings.isConnected
-                    ? styles.statusConnected
-                    : styles.statusDisconnected,
+                  isConnected ? styles.statusConnected : styles.statusDisconnected,
                 ]}
               />
               <Text style={styles.statusText}>
-                {metaRayBanSettings.isConnected ? 'Connected' : 'Not Connected'}
+                {isConnected ? 'Connected' : bluetoothState.isBluetoothEnabled ? 'Not Connected' : 'Bluetooth Off'}
               </Text>
             </View>
           </View>
-          {metaRayBanSettings.isConnected && metaRayBanSettings.batteryLevel && (
-            <View style={styles.batteryContainer}>
-              <Ionicons
-                name={
-                  metaRayBanSettings.batteryLevel > 50
-                    ? 'battery-full'
-                    : metaRayBanSettings.batteryLevel > 20
-                    ? 'battery-half'
-                    : 'battery-dead'
-                }
-                size={24}
-                color={metaRayBanSettings.batteryLevel > 20 ? '#10B981' : '#EF4444'}
-              />
-              <Text style={styles.batteryText}>{metaRayBanSettings.batteryLevel}%</Text>
+          {isConnected && bluetoothState.isAudioRouted && (
+            <View style={styles.audioIndicator}>
+              <Ionicons name="volume-high" size={16} color="#10B981" />
+              <Text style={styles.audioText}>Audio</Text>
             </View>
           )}
         </View>
 
-        <TouchableOpacity
-          style={[
-            styles.connectButton,
-            metaRayBanSettings.isConnected && styles.disconnectButton,
-          ]}
-          onPress={metaRayBanSettings.isConnected ? handleDisconnect : handleConnect}
-          disabled={isConnecting}
-        >
-          {isConnecting ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <>
-              <Ionicons
-                name={metaRayBanSettings.isConnected ? 'bluetooth' : 'bluetooth-outline'}
-                size={20}
-                color="#FFF"
-              />
-              <Text style={styles.connectButtonText}>
-                {metaRayBanSettings.isConnected ? 'Disconnect' : 'Connect Glasses'}
+        {/* Device List (when scanning) */}
+        {showDeviceList && (
+          <View style={styles.deviceList}>
+            <View style={styles.deviceListHeader}>
+              <Text style={styles.deviceListTitle}>
+                {isScanning ? 'Scanning...' : 'Available Devices'}
               </Text>
-            </>
-          )}
-        </TouchableOpacity>
+              {isScanning && <ActivityIndicator size="small" color="#8B5CF6" />}
+            </View>
+            
+            {bluetoothState.discoveredDevices.length > 0 ? (
+              <FlatList
+                data={bluetoothState.discoveredDevices}
+                renderItem={renderDevice}
+                keyExtractor={(item) => item.id}
+                style={styles.deviceFlatList}
+              />
+            ) : (
+              <Text style={styles.noDevicesText}>
+                {isScanning ? 'Looking for devices...' : 'No devices found'}
+              </Text>
+            )}
+            
+            <TouchableOpacity
+              style={styles.cancelScanButton}
+              onPress={() => {
+                bluetoothAudioManager.stopScan();
+                setShowDeviceList(false);
+                setIsScanning(false);
+              }}
+            >
+              <Text style={styles.cancelScanText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Connect/Disconnect Button */}
+        {!showDeviceList && (
+          <TouchableOpacity
+            style={[styles.connectButton, isConnected && styles.disconnectButton]}
+            onPress={isConnected ? handleDisconnect : handleScan}
+            disabled={isScanning}
+          >
+            {isScanning ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <>
+                <Ionicons
+                  name={isConnected ? 'bluetooth' : 'search'}
+                  size={20}
+                  color="#FFF"
+                />
+                <Text style={styles.connectButtonText}>
+                  {isConnected ? 'Disconnect' : 'Scan for Devices'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {/* Bluetooth error message */}
+        {bluetoothState.lastError && (
+          <Text style={styles.errorText}>{bluetoothState.lastError}</Text>
+        )}
       </View>
+
+      {/* Siri Shortcuts (iOS only) */}
+      {Platform.OS === 'ios' && (
+        <TouchableOpacity style={styles.siriCard} onPress={handleAddSiriShortcut}>
+          <View style={styles.siriIcon}>
+            <Ionicons name="mic-circle" size={28} color="#FF2D55" />
+          </View>
+          <View style={styles.siriInfo}>
+            <Text style={styles.siriTitle}>Add Siri Shortcut</Text>
+            <Text style={styles.siriDescription}>
+              Say "Hey Siri, start voice browsing" to open MetaChrome
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#71717A" />
+        </TouchableOpacity>
+      )}
 
       {/* Settings Section */}
       <View style={styles.settingsSection}>
@@ -209,7 +349,7 @@ export function MetaRayBanSettings() {
             <View style={styles.settingText}>
               <Text style={styles.settingLabel}>Voice Feedback</Text>
               <Text style={styles.settingDescription}>
-                Speak responses through glasses
+                Speak responses through device
               </Text>
             </View>
           </View>
@@ -249,8 +389,9 @@ export function MetaRayBanSettings() {
       <View style={styles.infoBanner}>
         <Ionicons name="information-circle-outline" size={20} color="#8B5CF6" />
         <Text style={styles.infoText}>
-          Custom voice commands work with Meta Ray-Ban glasses via Bluetooth audio. The glasses'
-          microphone captures your voice, and responses are played through the speakers.
+          Connect your Meta Ray-Ban glasses via Bluetooth. Voice commands are captured through the 
+          glasses' microphone and responses are played through the speakers. Works with Claude, 
+          Cursor, ChatGPT, and other web agents.
         </Text>
       </View>
     </View>
@@ -267,7 +408,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1F1F28',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 24,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#2A2A35',
   },
@@ -284,6 +425,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+  },
+  glassesIconConnected: {
+    backgroundColor: '#10B98120',
   },
   connectionInfo: {
     flex: 1,
@@ -314,14 +458,83 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#A1A1AA',
   },
-  batteryContainer: {
+  audioIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: '#10B98120',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  batteryText: {
+  audioText: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '500',
+  },
+  deviceList: {
+    marginBottom: 16,
+  },
+  deviceListHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  deviceListTitle: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#A1A1AA',
+  },
+  deviceFlatList: {
+    maxHeight: 200,
+  },
+  deviceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#2A2A35',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  deviceItemMeta: {
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  deviceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  deviceText: {
+    flex: 1,
+  },
+  deviceName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FAFAFA',
+  },
+  deviceId: {
+    fontSize: 12,
+    color: '#71717A',
+  },
+  deviceSignal: {
+    padding: 4,
+  },
+  noDevicesText: {
+    textAlign: 'center',
+    color: '#71717A',
+    fontSize: 14,
+    paddingVertical: 20,
+  },
+  cancelScanButton: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  cancelScanText: {
+    color: '#EF4444',
+    fontSize: 14,
     fontWeight: '500',
   },
   connectButton: {
@@ -341,11 +554,43 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFF',
   },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  siriCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F1F28',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A35',
+  },
+  siriIcon: {
+    marginRight: 12,
+  },
+  siriInfo: {
+    flex: 1,
+  },
+  siriTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FAFAFA',
+    marginBottom: 2,
+  },
+  siriDescription: {
+    fontSize: 12,
+    color: '#71717A',
+  },
   settingsSection: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#71717A',
     marginBottom: 12,
