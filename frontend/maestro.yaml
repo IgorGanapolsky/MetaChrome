@@ -1,9 +1,0 @@
-appId: com.frontend
-name: Smoke Tests
-tags:
-  - smoke
-  - critical
-
-includes:
-  - flows/browser-basic.yaml
-  - flows/add-tab.yaml
