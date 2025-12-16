@@ -142,7 +142,9 @@ function compareConfigs(appJson, appConfigJs) {
     const jsValue = getNestedValue(jsExpo, field);
 
     if (jsonValue && jsValue && jsonValue !== jsValue) {
-      warnings.push(`Field mismatch for '${field}': app.json="${jsonValue}" vs app.config.js="${jsValue}"`);
+      warnings.push(
+        `Field mismatch for '${field}': app.json="${jsonValue}" vs app.config.js="${jsValue}"`
+      );
     }
   }
 
