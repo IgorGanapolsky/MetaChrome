@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "metachrome",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "owner": "igorganopolsky",
     "extra": {
       "eas": {},
@@ -23,7 +23,8 @@
         "NSMicrophoneUsageDescription": "MetaChrome needs microphone access for voice commands",
         "NSSpeechRecognitionUsageDescription": "MetaChrome uses speech recognition for hands-free browsing",
         "NSBluetoothAlwaysUsageDescription": "MetaChrome connects to Meta Ray-Ban glasses via Bluetooth",
-        "NSBluetoothPeripheralUsageDescription": "MetaChrome connects to Meta Ray-Ban glasses via Bluetooth"
+        "NSBluetoothPeripheralUsageDescription": "MetaChrome connects to Meta Ray-Ban glasses via Bluetooth",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -68,6 +69,17 @@
         {
           "microphonePermission": "MetaChrome needs microphone access for voice commands",
           "speechRecognitionPermission": "MetaChrome uses speech recognition for hands-free browsing"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "newArchEnabled": false
+          },
+          "android": {
+            "newArchEnabled": false
+          }
         }
       ]
     ],
