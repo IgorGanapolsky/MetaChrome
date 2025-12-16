@@ -120,15 +120,15 @@ class BluetoothAudioManager {
     if (this.isInitialized) return true;
 
     try {
-      const state = await this.bleManager.state();
+      const state = await (this.bleManager as { state: () => Promise<State> }).state();
       
-      if (state === State.PoweredOff) {
+      if (String(state) === 'PoweredOff') {
         useBluetoothStore.getState().setError('Bluetooth is turned off');
         useBluetoothStore.getState().setBluetoothEnabled(false);
         return false;
       }
-
-      if (state === State.Unauthorized) {
+      
+      if (String(state) === 'Unauthorized') {
         useBluetoothStore.getState().setError('Bluetooth permission not granted');
         return false;
       }
@@ -221,22 +221,25 @@ class BluetoothAudioManager {
       useBluetoothStore.getState().setError(null);
 
       // Connect to the device
-      const device = await this.bleManager.connectToDevice(deviceId, {
+      const connectMethod = (this.bleManager as { connectToDevice: (id: string, options: { autoConnect: boolean }) => Promise<Device> }).connectToDevice;
+      const device = await connectMethod(deviceId, {
         autoConnect: true,
       });
 
       // Discover services
-      await device.discoverAllServicesAndCharacteristics();
+      if ((device as { discoverAllServicesAndCharacteristics: () => Promise<void> }).discoverAllServicesAndCharacteristics) {
+        await (device as { discoverAllServicesAndCharacteristics: () => Promise<void> }).discoverAllServicesAndCharacteristics();
+      }
 
       this.connectedDevice = device;
 
       const bluetoothDevice: BluetoothDevice = {
-        id: device.id,
-        name: device.name || device.localName,
-        rssi: device.rssi,
+        id: (device as Device).id || deviceId,
+        name: (device as Device).name || (device as Device).localName || null,
+        rssi: (device as { rssi?: number | null }).rssi || null,
         isConnected: true,
         batteryLevel: null,
-        isMetaGlasses: this.isMetaGlasses(device),
+        isMetaGlasses: this.isMetaGlasses(device as Device),
       };
 
       useBluetoothStore.getState().setConnectedDevice(bluetoothDevice);
@@ -251,7 +254,6 @@ class BluetoothAudioManager {
           this.connectedDevice = null;
         });
       }
-      });
 
       // Route audio to Bluetooth device
       await this.routeAudioToBluetooth();
@@ -270,7 +272,9 @@ class BluetoothAudioManager {
     if (this.connectedDevice) {
       try {
         await this.unrouteAudioFromBluetooth();
-        await this.connectedDevice.cancelConnection();
+        if ((this.connectedDevice as { cancelConnection: () => Promise<void> }).cancelConnection) {
+          await (this.connectedDevice as { cancelConnection: () => Promise<void> }).cancelConnection();
+        }
       } catch (error) {
         console.error('Disconnect error:', error);
       }
