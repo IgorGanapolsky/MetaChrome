@@ -29,7 +29,7 @@
         "withoutCredentials": true
       },
       "ios": {
-        "simulator": false
+        "simulator": true
       }
     },
     "production": {
