@@ -1,3 +1,7 @@
+import { colors } from './colors';
+import { spacing } from './spacing';
+import { typography } from './typography';
+
 export { colors } from './colors';
 export { spacing } from './spacing';
 export { typography } from './typography';

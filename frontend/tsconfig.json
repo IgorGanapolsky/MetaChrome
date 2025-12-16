@@ -4,6 +4,7 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
+      "@/*": ["src/*"],
       "@/app/*": ["app/*"],
       "@/pages/*": ["src/pages/*"],
       "@/widgets/*": ["src/widgets/*"],
@@ -11,8 +12,10 @@
       "@/entities/*": ["src/entities/*"],
       "@/shared/*": ["src/shared/*"],
       "@/services/*": ["src/services/*"],
+      "@/services": ["src/services/index.ts"],
       "@/types/*": ["src/types/*"],
-      "@/theme/*": ["src/theme/*"]
+      "@/theme/*": ["src/theme/*"],
+      "@/theme": ["src/theme/index.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
