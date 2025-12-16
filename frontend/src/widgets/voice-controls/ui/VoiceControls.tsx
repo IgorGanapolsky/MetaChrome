@@ -47,7 +47,7 @@ export function VoiceControls() {
   };
 
   const handleOpenSettings = () => {
-    router.push('/meta-rayban');
+    router.push('/meta-rayban' as any);
   };
 
   return (

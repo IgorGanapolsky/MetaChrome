@@ -14,7 +14,7 @@ export function BrowserHeader({ isConnected = true, onToggleLogs }: BrowserHeade
   const { metaRayBanSettings } = useCustomCommandStore();
 
   const handleOpenMetaRayBan = () => {
-    router.push('/meta-rayban');
+    router.push('/meta-rayban' as any);
   };
 
   return (
