@@ -8,10 +8,25 @@
     "scheme": "metachrome",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "owner": "igorganopolsky",
+    "extra": {
+      "eas": {
+        "projectId": "04975b9f-98b0-4dd1-9038-ee96259801ac"
+      },
+      "router": {
+        "origin": false
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.metachrome.app",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "MetaChrome needs microphone access for voice commands",
+        "NSSpeechRecognitionUsageDescription": "MetaChrome uses speech recognition for hands-free browsing",
+        "NSBluetoothAlwaysUsageDescription": "MetaChrome connects to Meta Ray-Ban glasses via Bluetooth",
+        "NSBluetoothPeripheralUsageDescription": "MetaChrome connects to Meta Ray-Ban glasses via Bluetooth"
+      }
     },
     "android": {
       "package": "com.metachrome.app",
@@ -26,7 +41,12 @@
       },
       "permissions": [
         "INTERNET",
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
@@ -44,20 +64,17 @@
           "resizeMode": "contain",
           "backgroundColor": "#000"
         }
+      ],
+      [
+        "@jamsch/expo-speech-recognition",
+        {
+          "microphonePermission": "MetaChrome needs microphone access for voice commands",
+          "speechRecognitionPermission": "MetaChrome uses speech recognition for hands-free browsing"
+        }
       ]
     ],
-    "extra": {
-      "router": {
-        "origin": false
-      }
-    },
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      }
     }
   }
 }
