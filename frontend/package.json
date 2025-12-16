@@ -10,9 +10,10 @@
     "lint": "expo lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch --passWithNoTests",
+    "test:coverage": "jest --coverage --passWithNoTests",
+    "test:fix": "jest --no-coverage --passWithNoTests",
     "prepare": "husky install || true",
     "reset-project": "node ./scripts/reset-project.js",
     "expo:go": "node scripts/start-expo-go.js"

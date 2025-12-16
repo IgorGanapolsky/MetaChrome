@@ -29,6 +29,7 @@ module.exports = {
     '^@/types/(.*)$': '<rootDir>/src/types/$1',
     '^@/theme/(.*)$': '<rootDir>/src/theme/$1',
   },
+  setupFiles: ['<rootDir>/jest.setup.fix.js'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'node',
   globals: {
