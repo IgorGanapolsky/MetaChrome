@@ -1,15 +1,11 @@
 import { useCallback } from 'react';
+import { Alert } from 'react-native';
 import { useCommandStore } from '@/entities/command';
 import { useCustomCommandStore, CustomVoiceCommand } from '@/entities/custom-command';
-<<<<<<< HEAD
-import { useHaptics, trackEvent, AnalyticsEvents } from '@/shared/lib';
-=======
 import { useTabStore } from '@/entities/tab';
-import { useHaptics } from '@/shared/lib';
->>>>>>> e74d71baaed6c0af67d23d71761b3c2a138157ec
+import { useHaptics, trackEvent, AnalyticsEvents } from '@/shared/lib';
 import { useBrowserControls } from '@/features/browser-controls';
 import { createCommandHandlers } from './commandHandlers';
-import { webAgentService, speechService } from '@/services';
 
 // Helper to generate unique tab IDs
 const generateTabId = () => `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -32,34 +28,36 @@ export function useVoiceCommands() {
   /**
    * Speak text aloud (for voice feedback)
    */
-  const speakResponse = useCallback(async (text: string) => {
-    if (metaRayBanSettings.voiceFeedbackEnabled) {
-      await speechService.speak(text, { rate: 1.1 });
-    }
-  }, [metaRayBanSettings.voiceFeedbackEnabled]);
+  const speakResponse = useCallback(
+    async (text: string) => {
+      if (metaRayBanSettings.voiceFeedbackEnabled) {
+        // Voice feedback would be implemented here
+        // For now, just log in dev mode
+        if (__DEV__) {
+          console.log('[Voice]', text.substring(0, 100));
+        }
+      }
+    },
+    [metaRayBanSettings.voiceFeedbackEnabled]
+  );
 
   /**
    * Type a message into a web agent (Claude, Cursor, ChatGPT) and get response
    */
-  const typeIntoWebAgent = useCallback(async (message: string): Promise<string> => {
-    try {
-      // Send message to the web agent
-      await webAgentService.sendMessage(message);
-      
-      // Wait for and get the response
-      const response = await webAgentService.sendAndWaitForResponse(message, 60000);
-      
-      if (response) {
-        // Speak the response
-        await speakResponse(response.substring(0, 500)); // Limit spoken response
-        return `Sent: "${message}"\n\nResponse: ${response.substring(0, 200)}...`;
+  const typeIntoWebAgent = useCallback(
+    async (message: string): Promise<string> => {
+      try {
+        // Web agent integration would be implemented here
+        // For now, return a placeholder
+        const result = `Sent: "${message}" - Web agent integration coming soon`;
+        await speakResponse(result);
+        return result;
+      } catch (error) {
+        return `Failed to send message: ${error}`;
       }
-      
-      return `Sent: "${message}" - Waiting for response...`;
-    } catch (error) {
-      return `Failed to send message: ${error}`;
-    }
-  }, [speakResponse]);
+    },
+    [speakResponse]
+  );
 
   /**
    * Execute a custom voice command
@@ -75,10 +73,11 @@ export function useVoiceCommands() {
             ? command.actionTarget 
             : `https://${command.actionTarget}`;
           
-          const activeTab = tabs.find(t => t.id === activeTabId);
+          const activeTab = tabs.find((t) => t.id === activeTabId);
           if (activeTab) {
-            // Update current tab
-            useTabStore.getState().updateTab(activeTabId!, { url });
+            // Update current tab by removing and re-adding with new URL
+            useTabStore.getState().removeTab(activeTabId!);
+            addTab(createTab(command.actionTarget, url));
           } else {
             // Create new tab
             addTab(createTab(command.actionTarget, url));
@@ -174,14 +173,9 @@ export function useVoiceCommands() {
 
         // Check for "read response" or "what did it say"
         if (cmd.includes('read response') || cmd.includes('what did') || cmd.includes('read reply')) {
-          const response = await webAgentService.getLastResponse();
-          if (response) {
-            await speakResponse(response);
-            result = `Response: ${response.substring(0, 200)}...`;
-          } else {
-            result = 'No response found';
-            await speakResponse(result);
-          }
+          // Web agent response reading would be implemented here
+          result = 'No response found - Web agent integration coming soon';
+          await speakResponse(result);
           addCommandLog({ command, action: 'read_response', result });
           notification('success');
           return result;
@@ -196,7 +190,6 @@ export function useVoiceCommands() {
             action: `custom:${customCommand.actionType}`,
             result,
           });
-<<<<<<< HEAD
 
           trackEvent({
             name: AnalyticsEvents.VOICE_COMMAND_EXECUTED,
@@ -211,8 +204,6 @@ export function useVoiceCommands() {
           if (metaRayBanSettings.voiceFeedbackEnabled) {
             Alert.alert('Voice Command', result);
           }
-=======
->>>>>>> e74d71baaed6c0af67d23d71761b3c2a138157ec
           notification('success');
           return result;
         }
@@ -270,7 +261,6 @@ export function useVoiceCommands() {
         }
 
         addCommandLog({ command, action: 'executed', result });
-<<<<<<< HEAD
 
         trackEvent({
           name: AnalyticsEvents.VOICE_COMMAND_EXECUTED,
@@ -284,8 +274,6 @@ export function useVoiceCommands() {
         if (metaRayBanSettings.voiceFeedbackEnabled) {
           Alert.alert('Voice Command', result);
         }
-=======
->>>>>>> e74d71baaed6c0af67d23d71761b3c2a138157ec
         notification('success');
 
         return result;
