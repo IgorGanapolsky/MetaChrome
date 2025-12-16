@@ -258,7 +258,10 @@ class BluetoothAudioManager {
     if (this.connectedDevice) {
       try {
         await this.unrouteAudioFromBluetooth();
-        if ((this.connectedDevice as unknown as { cancelConnection: () => Promise<unknown> }).cancelConnection) {
+        if (
+          (this.connectedDevice as unknown as { cancelConnection: () => Promise<unknown> })
+            .cancelConnection
+        ) {
           await (
             this.connectedDevice as unknown as { cancelConnection: () => Promise<unknown> }
           ).cancelConnection();
