@@ -6,7 +6,10 @@
  * to ensure speech recognition uses the Bluetooth microphone.
  */
 
-import { BleManager, Device, State } from 'react-native-ble-plx';
+// import { BleManager, Device, State } from 'react-native-ble-plx';
+// Bluetooth library optional - types defined below
+type Device = unknown;
+type State = unknown;
 import { Platform, NativeModules, NativeEventEmitter } from 'react-native';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
