@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Validate Expo config
+        run: yarn validate:config
+
       - name: Run ESLint
         run: yarn lint
 
