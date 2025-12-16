@@ -1,0 +1,8 @@
+appId: com.metachrome.app
+---
+- launchApp
+- assertVisible: "Meta Chrome"
+- tapOn: "Claude"
+- assertVisible: "Claude"
+- tapOn: "Cursor"
+- assertVisible: "Cursor"

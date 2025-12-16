@@ -1,5 +1,18 @@
 import '@testing-library/jest-native/extend-expect';
 
+// Mock React Native modules before expo
+jest.mock('react-native', () => {
+  const RN = jest.requireActual('react-native');
+  return {
+    ...RN,
+    Platform: {
+      ...RN.Platform,
+      OS: 'ios',
+      select: jest.fn((dict) => dict.ios),
+    },
+  };
+});
+
 // Mock expo modules
 jest.mock('expo-router', () => ({
   useRouter: () => ({
@@ -8,11 +21,18 @@ jest.mock('expo-router', () => ({
     replace: jest.fn(),
   }),
   Stack: ({ children }) => children,
+  usePathname: () => '/',
+  useSegments: () => [],
 }));
 
 jest.mock('expo-haptics', () => ({
-  impactAsync: jest.fn(),
-  notificationAsync: jest.fn(),
+  impactAsync: jest.fn(() => Promise.resolve()),
+  notificationAsync: jest.fn(() => Promise.resolve()),
+  ImpactFeedbackStyle: {
+    Light: 'light',
+    Medium: 'medium',
+    Heavy: 'heavy',
+  },
 }));
 
 jest.mock('react-native-safe-area-context', () => {

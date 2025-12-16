@@ -1,0 +1,8 @@
+appId: com.metachrome.app
+---
+- launchApp
+- tapOn: 
+    id: "glasses-outline"
+- assertVisible: "Meta Ray-Ban"
+- tapOn: "Back"
+- assertVisible: "Meta Chrome"

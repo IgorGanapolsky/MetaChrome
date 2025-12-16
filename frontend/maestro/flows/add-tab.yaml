@@ -1,0 +1,7 @@
+appId: com.metachrome.app
+---
+- launchApp
+- tapOn: "+"
+- inputText: "github.com"
+- tapOn: "Add Tab"
+- assertVisible: "GitHub"

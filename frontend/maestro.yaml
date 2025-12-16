@@ -1,0 +1,5 @@
+appId: com.metachrome.app
+---
+- include: flows/browser-basic.yaml
+- include: flows/add-tab.yaml
+- include: flows/meta-rayban.yaml
