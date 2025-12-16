@@ -39,3 +39,12 @@ export {
   DEEP_LINKS,
   type AppActionState,
 } from './appactions/GoogleAppActionsService';
+
+// Android Accessibility Service (for Chrome/app control)
+export {
+  androidAccessibilityService,
+  useAndroidAccessibility,
+  useAccessibilityStore,
+  type AccessibilityNode,
+  type AccessibilityState,
+} from './accessibility';

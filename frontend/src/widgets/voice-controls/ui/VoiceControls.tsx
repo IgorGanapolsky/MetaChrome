@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+  Platform,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSpeechRecognitionEvent } from '@jamsch/expo-speech-recognition';
@@ -11,6 +19,8 @@ import {
   speechService,
   useBluetoothStore,
   bluetoothAudioManager,
+  useAccessibilityStore,
+  androidAccessibilityService,
 } from '@/services';
 
 export function VoiceControls() {
@@ -22,15 +32,33 @@ export function VoiceControls() {
   // Speech recognition state
   const speechState = useSpeechStore();
   const bluetoothState = useBluetoothStore();
+  const accessibilityState = useAccessibilityStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastResult, setLastResult] = useState<string | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const resultFadeAnim = useRef(new Animated.Value(0)).current;
 
   // Get enabled custom commands for quick access
   const enabledCommands = commands.filter((cmd) => cmd.enabled).slice(0, 6);
 
   // Check if connected to Meta glasses
   const isGlassesConnected = bluetoothState.connectedDevice?.isMetaGlasses || false;
+
+  // Show result with animation
+  const showResult = useCallback(
+    (result: string) => {
+      setLastResult(result);
+      resultFadeAnim.setValue(1);
+      Animated.timing(resultFadeAnim, {
+        toValue: 0,
+        duration: 3000,
+        delay: 2000,
+        useNativeDriver: true,
+      }).start(() => setLastResult(null));
+    },
+    [resultFadeAnim]
+  );
 
   // Handle speech recognition results
   useSpeechRecognitionEvent('result', async (event) => {
@@ -53,14 +81,16 @@ export function VoiceControls() {
 
           if (command) {
             setIsProcessing(true);
-            await executeCommand(command);
+            const result = await executeCommand(command);
+            showResult(result);
             setIsProcessing(false);
           }
         }
       } else {
         // No wake word, execute entire transcript as command
         setIsProcessing(true);
-        await executeCommand(transcript);
+        const result = await executeCommand(transcript);
+        showResult(result);
         setIsProcessing(false);
       }
     } else {
@@ -96,7 +126,7 @@ export function VoiceControls() {
     }
   }, [speechState.isListening, pulseAnim]);
 
-  // Initialize speech service on mount
+  // Initialize speech service and check accessibility on mount
   useEffect(() => {
     speechService.initialize();
 
@@ -107,6 +137,11 @@ export function VoiceControls() {
         'hey chrome',
         'okay chrome',
       ]);
+    }
+
+    // Check Android accessibility service status
+    if (Platform.OS === 'android') {
+      androidAccessibilityService.checkStatus();
     }
   }, [metaRayBanSettings.customWakeWord]);
 
@@ -149,6 +184,24 @@ export function VoiceControls() {
   const handleOpenSettings = () => {
     router.push('/meta-rayban' as any);
   };
+
+  const handleOpenAccessibilitySettings = () => {
+    if (Platform.OS === 'android') {
+      androidAccessibilityService.openSettings();
+    }
+  };
+
+  // Execute quick command
+  const handleQuickCommand = useCallback(
+    async (command: string) => {
+      impact('light');
+      setIsProcessing(true);
+      const result = await executeCommand(command);
+      showResult(result);
+      setIsProcessing(false);
+    },
+    [executeCommand, impact, showResult]
+  );
 
   // Get status text
   const getStatusText = () => {
@@ -195,6 +248,14 @@ export function VoiceControls() {
 
   const connectionStatus = getConnectionStatus();
 
+  // Android-specific quick commands
+  const androidQuickCommands = Platform.OS === 'android' && accessibilityState.isServiceRunning
+    ? [
+        { text: 'Open Chrome', command: 'open chrome' },
+        { text: 'Read screen', command: 'read chrome' },
+      ]
+    : [];
+
   return (
     <View style={styles.voiceSection}>
       {/* Connection Status Bar */}
@@ -207,6 +268,20 @@ export function VoiceControls() {
         </View>
         <Ionicons name="chevron-forward" size={16} color="#71717A" />
       </TouchableOpacity>
+
+      {/* Android Accessibility Status */}
+      {Platform.OS === 'android' && !accessibilityState.isServiceRunning && (
+        <TouchableOpacity
+          style={styles.accessibilityBanner}
+          onPress={handleOpenAccessibilitySettings}
+        >
+          <Ionicons name="shield-checkmark-outline" size={16} color="#F59E0B" />
+          <Text style={styles.accessibilityText}>
+            Enable accessibility to control Chrome
+          </Text>
+          <Ionicons name="chevron-forward" size={14} color="#F59E0B" />
+        </TouchableOpacity>
+      )}
 
       {/* Voice Button */}
       <TouchableOpacity
@@ -240,6 +315,16 @@ export function VoiceControls() {
         {getStatusText()}
       </Text>
 
+      {/* Result Toast */}
+      {lastResult && (
+        <Animated.View style={[styles.resultToast, { opacity: resultFadeAnim }]}>
+          <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+          <Text style={styles.resultText} numberOfLines={2}>
+            {lastResult}
+          </Text>
+        </Animated.View>
+      )}
+
       {/* Speaking indicator */}
       {speechState.isSpeaking && (
         <View style={styles.speakingIndicator}>
@@ -251,20 +336,32 @@ export function VoiceControls() {
       {/* Quick Commands */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickScroll}>
         {/* Built-in quick commands */}
-        <TouchableOpacity style={styles.quickCmd} onPress={() => executeCommand('read page')}>
+        <TouchableOpacity style={styles.quickCmd} onPress={() => handleQuickCommand('read page')}>
           <Text style={styles.quickCmdText}>Read page</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickCmd} onPress={() => executeCommand('scroll down')}>
+        <TouchableOpacity style={styles.quickCmd} onPress={() => handleQuickCommand('scroll down')}>
           <Text style={styles.quickCmdText}>Scroll down</Text>
         </TouchableOpacity>
+
+        {/* Android-specific commands */}
+        {androidQuickCommands.map((cmd) => (
+          <TouchableOpacity
+            key={cmd.command}
+            style={[styles.quickCmd, styles.quickCmdAndroid]}
+            onPress={() => handleQuickCommand(cmd.command)}
+          >
+            <Ionicons name="logo-android" size={12} color="#3DDC84" style={styles.cmdIcon} />
+            <Text style={styles.quickCmdText}>{cmd.text}</Text>
+          </TouchableOpacity>
+        ))}
 
         {/* Custom commands */}
         {enabledCommands.map((cmd) => (
           <TouchableOpacity
             key={cmd.id}
             style={[styles.quickCmd, cmd.isMetaRayBan && styles.quickCmdMeta]}
-            onPress={() => executeCommand(cmd.triggerPhrase)}
+            onPress={() => handleQuickCommand(cmd.triggerPhrase)}
           >
             <Text style={styles.quickCmdText}>{cmd.triggerPhrase}</Text>
           </TouchableOpacity>
@@ -307,6 +404,22 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 13,
   },
+  accessibilityBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 12,
+    width: '100%',
+    gap: 8,
+  },
+  accessibilityText: {
+    flex: 1,
+    color: '#F59E0B',
+    fontSize: 12,
+  },
   voiceButton: {
     width: 56,
     height: 56,
@@ -338,6 +451,22 @@ const styles = StyleSheet.create({
   voiceStatusListening: {
     color: '#10B981',
   },
+  resultToast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 8,
+    maxWidth: '90%',
+    gap: 8,
+  },
+  resultText: {
+    color: '#10B981',
+    fontSize: 12,
+    flex: 1,
+  },
   speakingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -352,6 +481,8 @@ const styles = StyleSheet.create({
     maxHeight: 40,
   },
   quickCmd: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#2A2A35',
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -362,9 +493,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#10B981',
   },
+  quickCmdAndroid: {
+    borderWidth: 1,
+    borderColor: '#3DDC84',
+  },
   quickCmdText: {
     color: '#FAFAFA',
     fontSize: 13,
+  },
+  cmdIcon: {
+    marginRight: 4,
   },
   addQuickCmd: {
     flexDirection: 'row',
