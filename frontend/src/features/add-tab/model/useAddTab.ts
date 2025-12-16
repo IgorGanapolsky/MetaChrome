@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useTabStore, type BrowserTab } from '@/entities/tab';
-import { useHaptics } from '@/shared/lib';
+import { useHaptics, trackEvent, AnalyticsEvents } from '@/shared/lib';
 import { normalizeUrl, getHostname } from '@/shared/lib/utils/url';
 
 export function useAddTab() {
