@@ -20,19 +20,20 @@ export const useTabStore = create<TabStore>((set) => ({
   tabs: defaultTabs,
   activeTabId: '1',
   setTabs: (tabs) => set({ tabs }),
-  addTab: (tab) => set((state) => ({
-    tabs: [...state.tabs, tab],
-    activeTabId: tab.id,
-  })),
-  removeTab: (id) => set((state) => {
-    const newTabs = state.tabs.filter((t) => t.id !== id);
-    const newActiveTabId = state.activeTabId === id && newTabs.length > 0
-      ? newTabs[0].id
-      : state.activeTabId;
-    return {
-      tabs: newTabs,
-      activeTabId: newActiveTabId,
-    };
-  }),
+  addTab: (tab) =>
+    set((state) => ({
+      tabs: [...state.tabs, tab],
+      activeTabId: tab.id,
+    })),
+  removeTab: (id) =>
+    set((state) => {
+      const newTabs = state.tabs.filter((t) => t.id !== id);
+      const newActiveTabId =
+        state.activeTabId === id && newTabs.length > 0 ? newTabs[0].id : state.activeTabId;
+      return {
+        tabs: newTabs,
+        activeTabId: newActiveTabId,
+      };
+    }),
   setActiveTab: (id) => set({ activeTabId: id }),
 }));

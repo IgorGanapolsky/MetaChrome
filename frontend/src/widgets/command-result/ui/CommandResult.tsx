@@ -14,7 +14,9 @@ export function CommandResult({ result, onDismiss }: CommandResultProps) {
     <View style={styles.resultPanel}>
       <View style={styles.resultContent}>
         <Ionicons name="chatbubble" size={16} color="#22C55E" />
-        <Text style={styles.resultText} numberOfLines={2}>{result}</Text>
+        <Text style={styles.resultText} numberOfLines={2}>
+          {result}
+        </Text>
         <TouchableOpacity onPress={onDismiss}>
           <Ionicons name="close" size={18} color="#71717A" />
         </TouchableOpacity>

@@ -29,10 +29,14 @@ if (!appId || appId === 'bs://your-app-id-here') {
   console.log(`✅ BROWSERSTACK_APP_ID: ${appId}`);
 }
 
-if (username && accessKey && appId && 
-    username !== 'your_username' && 
-    accessKey !== 'your_access_key' && 
-    appId !== 'bs://your-app-id-here') {
+if (
+  username &&
+  accessKey &&
+  appId &&
+  username !== 'your_username' &&
+  accessKey !== 'your_access_key' &&
+  appId !== 'bs://your-app-id-here'
+) {
   console.log('\n✅ All BrowserStack config is set!');
   console.log('   Run: yarn browserstack:live\n');
 } else {

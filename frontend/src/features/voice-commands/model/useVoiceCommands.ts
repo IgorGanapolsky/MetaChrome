@@ -10,40 +10,43 @@ export function useVoiceCommands() {
   const { impact, notification } = useHaptics();
   const { injectScript } = useBrowserControls();
 
-  const executeCommand = useCallback(async (command: string): Promise<string> => {
-    impact('medium');
-    
-    const cmd = command.toLowerCase();
-    const handlers = createCommandHandlers(injectScript);
-    let result = '';
+  const executeCommand = useCallback(
+    async (command: string): Promise<string> => {
+      impact('medium');
 
-    try {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const cmd = command.toLowerCase();
+      const handlers = createCommandHandlers(injectScript);
+      let result = '';
 
-      if (cmd.includes('read')) {
-        result = await handlers.handleRead(cmd);
-      } else if (cmd.includes('switch') || cmd.includes('open') || cmd.includes('go to')) {
-        result = handlers.handleSwitchTab(cmd);
-      } else if (cmd.includes('scroll')) {
-        result = await handlers.handleScroll(cmd);
-      } else if (cmd.includes('tabs') || cmd.includes('list')) {
-        result = handlers.handleListTabs();
-      } else {
-        result = `Got: ${command}`;
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        if (cmd.includes('read')) {
+          result = await handlers.handleRead(cmd);
+        } else if (cmd.includes('switch') || cmd.includes('open') || cmd.includes('go to')) {
+          result = handlers.handleSwitchTab(cmd);
+        } else if (cmd.includes('scroll')) {
+          result = await handlers.handleScroll(cmd);
+        } else if (cmd.includes('tabs') || cmd.includes('list')) {
+          result = handlers.handleListTabs();
+        } else {
+          result = `Got: ${command}`;
+        }
+
+        addCommandLog({ command, action: 'executed', result });
+        Alert.alert('Voice Command', result);
+        notification('success');
+
+        return result;
+      } catch (e: any) {
+        const errorMsg = e.message || 'Command failed';
+        addCommandLog({ command, action: 'error', result: errorMsg });
+        Alert.alert('Error', errorMsg);
+        return errorMsg;
       }
-
-      addCommandLog({ command, action: 'executed', result });
-      Alert.alert('Voice Command', result);
-      notification('success');
-      
-      return result;
-    } catch (e: any) {
-      const errorMsg = e.message || 'Command failed';
-      addCommandLog({ command, action: 'error', result: errorMsg });
-      Alert.alert('Error', errorMsg);
-      return errorMsg;
-    }
-  }, [addCommandLog, impact, notification, injectScript]);
+    },
+    [addCommandLog, impact, notification, injectScript]
+  );
 
   return {
     executeCommand,

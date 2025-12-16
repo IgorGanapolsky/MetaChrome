@@ -34,8 +34,10 @@ async function main() {
       build.on('close', async (code) => {
         if (code === 0) {
           console.log('\n✅ Build complete!');
-          const testChoice = await ask('\nTest on:\n1. BrowserStack\n2. Firebase Test Lab\nEnter choice: ');
-          
+          const testChoice = await ask(
+            '\nTest on:\n1. BrowserStack\n2. Firebase Test Lab\nEnter choice: '
+          );
+
           if (testChoice === '1') {
             const appPath = await ask('Enter path to APK: ');
             console.log('\n📤 Uploading to BrowserStack...');

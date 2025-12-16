@@ -14,7 +14,7 @@ describe('useAddTab', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useTabStore as jest.Mock).mockReturnValue({
+    (useTabStore as unknown as jest.Mock).mockReturnValue({
       addTab: mockAddTab,
     });
     (useRouter as jest.Mock).mockReturnValue({

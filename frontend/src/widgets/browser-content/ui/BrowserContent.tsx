@@ -11,7 +11,7 @@ export function BrowserContent() {
   const webViewRef = useRef<WebView>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const activeTab = tabs.find(t => t.id === activeTabId);
+  const activeTab = tabs.find((t) => t.id === activeTabId);
 
   if (!activeTab) {
     return (
@@ -37,7 +37,8 @@ export function BrowserContent() {
               </View>
               <View style={styles.assistantBubble}>
                 <Text style={styles.chatText}>
-                  I'll help you implement authentication. Here are the steps:{'\n\n'}1. Choose provider{'\n'}2. Install packages{'\n'}3. Set up context{'\n'}4. Add login flow
+                  I'll help you implement authentication. Here are the steps:{'\n\n'}1. Choose
+                  provider{'\n'}2. Install packages{'\n'}3. Set up context{'\n'}4. Add login flow
                 </Text>
               </View>
             </View>

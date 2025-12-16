@@ -31,7 +31,7 @@ export function AddTabPage() {
   const [url, setUrl] = useState('');
   const [name, setName] = useState('');
 
-  const handleAddPreset = (preset: typeof presets[0]) => {
+  const handleAddPreset = (preset: (typeof presets)[0]) => {
     impact('light');
     addTab(preset);
   };
@@ -62,7 +62,7 @@ export function AddTabPage() {
         <ScrollView style={styles.content}>
           <Text style={styles.sectionTitle}>QUICK ADD</Text>
           <View style={styles.presetGrid}>
-            {presets.map(preset => (
+            {presets.map((preset) => (
               <TouchableOpacity
                 key={preset.url}
                 style={styles.presetCard}

@@ -9,20 +9,23 @@ export function useAddTab() {
   const { addTab } = useTabStore();
   const { impact } = useHaptics();
 
-  const handleAddTab = useCallback((tab: Omit<BrowserTab, 'id'>) => {
-    impact('medium');
-    const normalizedUrl = normalizeUrl(tab.url);
-    const finalName = tab.name.trim() || getHostname(normalizedUrl);
-    
-    addTab({
-      ...tab,
-      id: Date.now().toString(),
-      url: normalizedUrl,
-      name: finalName,
-    });
-    
-    router.back();
-  }, [addTab, router, impact]);
+  const handleAddTab = useCallback(
+    (tab: Omit<BrowserTab, 'id'>) => {
+      impact('medium');
+      const normalizedUrl = normalizeUrl(tab.url);
+      const finalName = tab.name.trim() || getHostname(normalizedUrl);
+
+      addTab({
+        ...tab,
+        id: Date.now().toString(),
+        url: normalizedUrl,
+        name: finalName,
+      });
+
+      router.back();
+    },
+    [addTab, router, impact]
+  );
 
   return {
     addTab: handleAddTab,

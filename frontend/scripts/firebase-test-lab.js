@@ -32,7 +32,7 @@ console.log(`🔧 Project: ${GCLOUD_PROJECT}\n`);
 try {
   const device = process.argv[3] || 'Pixel7';
   const osVersion = process.argv[4] || '33';
-  
+
   const command = `gcloud firebase test android run \
     --app ${APP_PATH} \
     --project ${GCLOUD_PROJECT} \
@@ -49,7 +49,6 @@ try {
   console.log('\n✅ Test completed!');
   console.log('📊 View results in Firebase Console');
   console.log(`   https://console.firebase.google.com/project/${GCLOUD_PROJECT}/testlab`);
-
 } catch (error) {
   console.error('\n❌ Error:', error.message);
   console.log('\n💡 Make sure:');

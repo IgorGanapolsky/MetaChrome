@@ -10,7 +10,7 @@ export function useBrowserControls() {
     if (Platform.OS === 'web') {
       return Promise.resolve('Web preview - use mobile for real browser');
     }
-    
+
     return new Promise((resolve) => {
       scriptResultRef.current = resolve;
       const wrappedScript = `
@@ -25,7 +25,7 @@ export function useBrowserControls() {
         true;
       `;
       webViewRef.current?.injectJavaScript(wrappedScript);
-      
+
       setTimeout(() => {
         if (scriptResultRef.current === resolve) {
           resolve('Timeout - no response');

@@ -12,8 +12,12 @@ export function TabBar() {
 
   return (
     <View style={styles.tabBar}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
-        {tabs.map(tab => (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabScroll}
+      >
+        {tabs.map((tab) => (
           <TouchableOpacity
             key={tab.id}
             style={[styles.tab, activeTabId === tab.id && styles.tabActive]}
@@ -25,12 +29,15 @@ export function TabBar() {
               size={16}
               color={activeTabId === tab.id ? '#8B5CF6' : '#71717A'}
             />
-            <Text style={[styles.tabText, activeTabId === tab.id && styles.tabTextActive]} numberOfLines={1}>
+            <Text
+              style={[styles.tabText, activeTabId === tab.id && styles.tabTextActive]}
+              numberOfLines={1}
+            >
               {tab.name}
             </Text>
           </TouchableOpacity>
         ))}
-        <TouchableOpacity style={styles.addTab} onPress={() => router.push('/add-tab')}>
+        <TouchableOpacity style={styles.addTab} onPress={() => router.push('/add-tab' as any)}>
           <Ionicons name="add" size={20} color="#71717A" />
         </TouchableOpacity>
       </ScrollView>

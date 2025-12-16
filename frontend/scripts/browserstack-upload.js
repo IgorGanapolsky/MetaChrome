@@ -17,7 +17,7 @@ if (!BROWSERSTACK_USERNAME || !BROWSERSTACK_ACCESS_KEY) {
 
 async function uploadApp() {
   const appPath = process.argv[2] || path.join(__dirname, '../build/app.apk');
-  
+
   if (!fs.existsSync(appPath)) {
     console.error(`❌ Error: App file not found at ${appPath}`);
     console.log('\n💡 Build your app first:');

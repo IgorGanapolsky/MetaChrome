@@ -39,7 +39,7 @@ export function createCommandHandlers(injectScript: (script: string) => Promise<
       const tabNames = ['claude', 'cursor', 'github', 'chatgpt', 'google'];
       for (const name of tabNames) {
         if (cmd.includes(name)) {
-          const tab = tabs.find(t => t.name.toLowerCase().includes(name));
+          const tab = tabs.find((t) => t.name.toLowerCase().includes(name));
           if (tab) {
             setActiveTab(tab.id);
             return `Switched to ${tab.name}`;
@@ -65,7 +65,7 @@ export function createCommandHandlers(injectScript: (script: string) => Promise<
 
     handleListTabs: (): string => {
       const { tabs } = getState();
-      return `${tabs.length} tabs: ${tabs.map(t => t.name).join(', ')}`;
+      return `${tabs.length} tabs: ${tabs.map((t) => t.name).join(', ')}`;
     },
   };
 }

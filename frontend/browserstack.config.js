@@ -1,9 +1,9 @@
 module.exports = {
   user: process.env.BROWSERSTACK_USERNAME,
   key: process.env.BROWSERSTACK_ACCESS_KEY,
-  
+
   app: process.env.BROWSERSTACK_APP_ID || 'bs://your-app-id',
-  
+
   build: {
     name: process.env.BROWSERSTACK_BUILD_NAME || `frontend-${new Date().toISOString()}`,
     debug: true,

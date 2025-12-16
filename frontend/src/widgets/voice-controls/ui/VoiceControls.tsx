@@ -29,12 +29,7 @@ export function VoiceControls() {
     setTranscript('Voice input requires development build. Use buttons below.');
   };
 
-  const quickCommands = [
-    'Read last response',
-    'Scroll down',
-    'Switch to GitHub',
-    'What tabs',
-  ];
+  const quickCommands = ['Read last response', 'Scroll down', 'Switch to GitHub', 'What tabs'];
 
   return (
     <View style={styles.voiceSection}>
@@ -43,9 +38,9 @@ export function VoiceControls() {
           <Ionicons name={isListening ? 'mic' : 'mic-outline'} size={28} color="#FFF" />
         </Animated.View>
       </TouchableOpacity>
-      
+
       <Text style={styles.voiceStatus}>
-        {isListening ? (transcript || 'Listening...') : 'Tap buttons to test commands'}
+        {isListening ? transcript || 'Listening...' : 'Tap buttons to test commands'}
       </Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickScroll}>

@@ -75,13 +75,13 @@ async function main() {
   try {
     console.log('🚀 Creating BrowserStack App Live session...');
     const session = await createAppLiveSession();
-    
+
     console.log('\n✅ Session created!');
     console.log(`📱 Device: ${session.device || 'Default'}`);
     console.log(`🔗 Session URL: ${session.app_url || session.browser_url}`);
-    
+
     const sessionUrl = session.app_url || session.browser_url || session.url;
-    
+
     if (sessionUrl) {
       console.log('\n✅ SUCCESS! Open this URL on your phone browser:');
       console.log(`\n   ${sessionUrl}\n`);
@@ -91,14 +91,14 @@ async function main() {
       console.log('\n⚠️  Session created but no URL returned');
       console.log('Response:', JSON.stringify(session, null, 2));
     }
-    
+
     console.log('\n⌨️  Press Ctrl+C to end the session');
-    
+
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
     });
-    
+
     rl.on('SIGINT', () => {
       console.log('\n👋 Session ended');
       rl.close();

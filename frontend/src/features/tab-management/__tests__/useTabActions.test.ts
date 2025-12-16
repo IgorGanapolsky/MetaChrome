@@ -18,7 +18,7 @@ describe('useTabActions', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useTabStore as jest.Mock).mockReturnValue({
+    (useTabStore as unknown as jest.Mock).mockReturnValue({
       tabs: mockTabs,
       setActiveTab: mockSetActiveTab,
       removeTab: mockRemoveTab,
@@ -48,7 +48,7 @@ describe('useTabActions', () => {
   });
 
   it('should not close tab if only one tab exists', () => {
-    (useTabStore as jest.Mock).mockReturnValue({
+    (useTabStore as unknown as jest.Mock).mockReturnValue({
       tabs: [{ id: '1', name: 'Tab 1', url: 'https://example.com', icon: 'globe' }],
       setActiveTab: mockSetActiveTab,
       removeTab: mockRemoveTab,

@@ -23,7 +23,7 @@ describe('TabBar', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useTabStore as jest.Mock).mockReturnValue({
+    (useTabStore as unknown as jest.Mock).mockReturnValue({
       tabs: mockTabs,
       activeTabId: '1',
     });

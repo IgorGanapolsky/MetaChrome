@@ -23,6 +23,7 @@ frontend/
 ## Running Tests
 
 ### Unit Tests
+
 ```bash
 # Run all tests
 yarn test
@@ -40,11 +41,13 @@ yarn test:ci
 ### E2E Tests (Maestro)
 
 1. Install Maestro CLI:
+
 ```bash
 curl -Ls "https://get.maestro.mobile.dev" | bash
 ```
 
 2. Run smoke tests:
+
 ```bash
 maestro test maestro/flows/browser-basic.yaml
 maestro test maestro/flows/add-tab.yaml
@@ -54,6 +57,7 @@ maestro test maestro.yaml
 ```
 
 3. Record new flows:
+
 ```bash
 maestro record maestro/flows/new-flow.yaml
 ```
@@ -61,6 +65,7 @@ maestro record maestro/flows/new-flow.yaml
 ## Test Coverage
 
 Current coverage thresholds:
+
 - Branches: 70%
 - Functions: 70%
 - Lines: 70%
@@ -69,11 +74,13 @@ Current coverage thresholds:
 ## Pre-commit Hooks
 
 Pre-commit hooks automatically run:
+
 - ESLint (with auto-fix)
 - Jest tests for changed files
 - Prettier for JSON/MD files
 
 To skip hooks (not recommended):
+
 ```bash
 git commit --no-verify
 ```
@@ -93,11 +100,11 @@ git commit --no-verify
 describe('TabStore', () => {
   it('should add a new tab', () => {
     const { result } = renderHook(() => useTabStore());
-    
+
     act(() => {
       result.current.addTab(newTab);
     });
-    
+
     expect(result.current.tabs).toHaveLength(1);
   });
 });
@@ -110,11 +117,11 @@ describe('TabStore', () => {
 describe('useTabActions', () => {
   it('should switch tab with haptic feedback', () => {
     const { result } = renderHook(() => useTabActions());
-    
+
     act(() => {
       result.current.switchTab('2');
     });
-    
+
     expect(mockSetActiveTab).toHaveBeenCalled();
   });
 });
@@ -139,9 +146,9 @@ Maestro tests are written in YAML and test the full user flow:
 ```yaml
 # maestro/flows/browser-basic.yaml
 - launchApp
-- assertVisible: "Meta Chrome"
-- tapOn: "GitHub"
-- assertVisible: "GitHub"
+- assertVisible: 'Meta Chrome'
+- tapOn: 'GitHub'
+- assertVisible: 'GitHub'
 ```
 
 ## Best Practices
@@ -156,6 +163,7 @@ Maestro tests are written in YAML and test the full user flow:
 ## CI/CD Integration
 
 Tests run automatically in CI:
+
 - Unit tests on every PR
 - Coverage reports generated
 - Maestro smoke tests on release builds

@@ -8,14 +8,15 @@ interface CommandStore {
 
 export const useCommandStore = create<CommandStore>((set) => ({
   commandHistory: [],
-  addCommandLog: (log) => set((state) => ({
-    commandHistory: [
-      {
-        ...log,
-        id: Date.now().toString(),
-        timestamp: new Date(),
-      },
-      ...state.commandHistory,
-    ].slice(0, 20),
-  })),
+  addCommandLog: (log) =>
+    set((state) => ({
+      commandHistory: [
+        {
+          ...log,
+          id: Date.now().toString(),
+          timestamp: new Date(),
+        },
+        ...state.commandHistory,
+      ].slice(0, 20),
+    })),
 }));
