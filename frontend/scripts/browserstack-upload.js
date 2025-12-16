@@ -5,6 +5,8 @@ const path = require('path');
 const https = require('https');
 const FormData = require('form-data');
 
+require('dotenv').config({ path: '.env' });
+
 const BROWSERSTACK_USERNAME = process.env.BROWSERSTACK_USERNAME;
 const BROWSERSTACK_ACCESS_KEY = process.env.BROWSERSTACK_ACCESS_KEY;
 

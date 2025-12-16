@@ -3,6 +3,8 @@
 const https = require('https');
 const readline = require('readline');
 
+require('dotenv').config({ path: '.env' });
+
 const BROWSERSTACK_USERNAME = process.env.BROWSERSTACK_USERNAME;
 const BROWSERSTACK_ACCESS_KEY = process.env.BROWSERSTACK_ACCESS_KEY;
 const BROWSERSTACK_APP_ID = process.env.BROWSERSTACK_APP_ID;
@@ -38,6 +40,9 @@ function createAppLiveSession() {
       'Content-Length': Buffer.byteLength(postData),
     },
   };
+
+  console.log(`📱 Requesting device: ${device} (${osVersion})`);
+  console.log(`🔑 Using App ID: ${BROWSERSTACK_APP_ID.substring(0, 20)}...`);
 
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {

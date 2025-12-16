@@ -8,16 +8,15 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "web:start": "node scripts/start-web.js",
+    "web:open": "node scripts/open-browser.js",
     "lint": "expo lint",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --maxWorkers=2",
     "prepare": "husky install || true",
-    "browserstack:upload": "node scripts/browserstack-upload.js",
-    "browserstack:live": "node scripts/browserstack-live.js",
-    "browserstack:live:android": "node scripts/browserstack-live.js 'Samsung Galaxy S23' '13.0'",
-    "browserstack:live:ios": "node scripts/browserstack-live.js 'iPhone 14 Pro' '16'",
+    "browserstack:check": "node scripts/check-browserstack.js",
     "browserstack:upload": "node scripts/browserstack-upload.js",
     "browserstack:live": "node scripts/browserstack-live.js",
     "browserstack:live:android": "node scripts/browserstack-live.js 'Samsung Galaxy S23' '13.0'",
@@ -74,7 +73,7 @@
     "react-test-renderer": "19.0.0",
     "typescript": "~5.8.3",
     "form-data": "^4.0.0",
-    "form-data": "^4.0.0"
+    "dotenv": "^16.4.5"
   },
   "private": true,
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
