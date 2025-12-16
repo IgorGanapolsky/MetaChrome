@@ -9,13 +9,7 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from '@jamsch/expo-speech-recognition';
-// import * as Speech from 'expo-speech';
-// expo-speech is available via @jamsch/expo-speech-recognition
-// Stub for type checking
-const Speech = {
-  speak: () => {},
-  stop: () => {},
-};
+import * as Speech from 'expo-speech';
 import { create } from 'zustand';
 import { useBluetoothStore, bluetoothAudioManager } from '../bluetooth/BluetoothAudioManager';
 

@@ -68,24 +68,27 @@ frontend/
 
 ```bash
 # Development
-yarn start              # Start Expo dev server
-yarn ios                # Run on iOS
-yarn android            # Run on Android
+yarn start                    # Start Expo dev server
+npx expo start --dev-client  # Start with dev client
+yarn ios                      # Run on iOS
+yarn android                  # Run on Android
 
 # Code Quality
-yarn lint               # Run ESLint
-yarn lint:fix           # Fix ESLint errors
-yarn format             # Format with Prettier
-yarn typecheck          # Type check with TypeScript
+yarn lint                    # Run ESLint
+yarn lint:fix                # Fix ESLint errors
+yarn format                  # Format with Prettier
+yarn typecheck               # Type check with TypeScript
 
 # Testing
-yarn test               # Run unit tests
-yarn test:watch         # Watch mode
-yarn test:coverage      # Coverage report
-yarn uat                # Run E2E tests (Maestro)
+yarn test                    # Run unit tests
+yarn test:watch              # Watch mode
+yarn test:coverage           # Coverage report
+yarn uat                     # Run E2E tests (Maestro)
 
-# Production
-yarn build:production   # Build for production (EAS)
+# Production Builds
+eas build --platform ios --profile production     # Build iOS
+eas build --platform android --profile production # Build Android
+yarn build:production                             # Build both platforms
 ```
 
 ## Testing

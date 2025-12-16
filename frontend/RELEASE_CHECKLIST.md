@@ -40,6 +40,7 @@ eas build --platform ios --profile production
 - [ ] Build succeeds
 - [ ] TestFlight upload works
 - [ ] App installs on test devices
+- [ ] EAS Project ID configured: `04975b9f-98b0-4dd1-9038-ee96259801ac`
 
 ### Android Build
 ```bash
@@ -48,6 +49,7 @@ eas build --platform android --profile production
 - [ ] Build succeeds
 - [ ] APK/AAB generated
 - [ ] App installs on test devices
+- [ ] EAS Project ID configured: `04975b9f-98b0-4dd1-9038-ee96259801ac`
 
 ## Pre-Submission
 
