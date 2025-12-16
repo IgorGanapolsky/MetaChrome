@@ -310,7 +310,7 @@ export function useSpeechRecognition() {
   });
 
   useSpeechRecognitionEvent('error', (event) => {
-      speechService.handleError(event.error as SpeechRecognitionError);
+      speechService.handleError(String(event.error || 'Unknown error'));
   });
 
   useSpeechRecognitionEvent('start', () => {

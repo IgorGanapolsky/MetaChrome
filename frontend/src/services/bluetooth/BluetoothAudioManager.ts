@@ -8,8 +8,24 @@
 
 // import { BleManager, Device, State } from 'react-native-ble-plx';
 // Bluetooth library optional - types defined below
-type Device = unknown;
-type State = unknown;
+type Device = {
+  id: string;
+  name: string | null;
+  localName?: string | null;
+  onDisconnected?: (callback: (error: unknown, device: unknown) => void) => void;
+  [key: string]: unknown;
+};
+type State = string | number;
+type BleManager = {
+  onStateChange: (callback: (state: State) => void, emitCurrentState?: boolean) => void;
+  startDeviceScan: (
+    serviceUUIDs: string[] | null,
+    options: { allowDuplicates: boolean },
+    callback: (error: unknown, device: Device | null) => void
+  ) => void;
+  stopDeviceScan: () => void;
+  [key: string]: unknown;
+};
 import { Platform, NativeModules, NativeEventEmitter } from 'react-native';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -121,8 +137,8 @@ class BluetoothAudioManager {
       this.isInitialized = true;
 
       // Listen for state changes
-      this.bleManager.onStateChange((newState) => {
-        useBluetoothStore.getState().setBluetoothEnabled(newState === State.PoweredOn);
+      this.bleManager.onStateChange((newState: State) => {
+        useBluetoothStore.getState().setBluetoothEnabled(String(newState) === 'PoweredOn');
       }, true);
 
       return true;
@@ -158,9 +174,10 @@ class BluetoothAudioManager {
       this.bleManager.startDeviceScan(
         null, // Scan for all devices
         { allowDuplicates: false },
-        (error, device) => {
+        (error: unknown, device: Device | null) => {
           if (error) {
-            useBluetoothStore.getState().setError(`Scan error: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            useBluetoothStore.getState().setError(`Scan error: ${errorMessage}`);
             useBluetoothStore.getState().setScanning(false);
             resolve();
             return;
@@ -225,11 +242,15 @@ class BluetoothAudioManager {
       useBluetoothStore.getState().setConnectedDevice(bluetoothDevice);
 
       // Set up disconnection listener
-      device.onDisconnected((error, disconnectedDevice) => {
-        console.log('Device disconnected:', disconnectedDevice?.id);
-        useBluetoothStore.getState().setConnectedDevice(null);
-        useBluetoothStore.getState().setAudioRouted(false);
-        this.connectedDevice = null;
+      if (device.onDisconnected) {
+        device.onDisconnected((error: unknown, disconnectedDevice: unknown) => {
+          const deviceId = (disconnectedDevice as Device)?.id || 'unknown';
+          console.log('Device disconnected:', deviceId);
+          useBluetoothStore.getState().setConnectedDevice(null);
+          useBluetoothStore.getState().setAudioRouted(false);
+          this.connectedDevice = null;
+        });
+      }
       });
 
       // Route audio to Bluetooth device

@@ -123,7 +123,7 @@ class SiriShortcutsService {
 
     try {
       const shortcuts = await getShortcuts();
-      const mapped = shortcuts.map(s => this.mapShortcutData(s));
+      const mapped = shortcuts.map((s: ShortcutData) => this.mapShortcutData(s));
       useSiriShortcutsStore.getState().setShortcuts(mapped);
       return mapped;
     } catch (error) {
