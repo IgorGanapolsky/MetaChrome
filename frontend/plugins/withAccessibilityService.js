@@ -6,11 +6,7 @@
  * perform actions on behalf of the user.
  */
 
-const {
-  withAndroidManifest,
-  withDangerousMod,
-  withPlugins,
-} = require('@expo/config-plugins');
+const { withAndroidManifest, withDangerousMod, withPlugins } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
@@ -89,15 +85,7 @@ function withAccessibilityConfig(config) {
     'android',
     async (config) => {
       const projectRoot = config.modRequest.projectRoot;
-      const xmlDir = path.join(
-        projectRoot,
-        'android',
-        'app',
-        'src',
-        'main',
-        'res',
-        'xml'
-      );
+      const xmlDir = path.join(projectRoot, 'android', 'app', 'src', 'main', 'res', 'xml');
 
       // Create xml directory if it doesn't exist
       if (!fs.existsSync(xmlDir)) {
@@ -117,10 +105,7 @@ function withAccessibilityConfig(config) {
     android:settingsActivity="com.metachrome.app.MainActivity" />
 `;
 
-      fs.writeFileSync(
-        path.join(xmlDir, 'accessibility_service_config.xml'),
-        accessibilityConfig
-      );
+      fs.writeFileSync(path.join(xmlDir, 'accessibility_service_config.xml'), accessibilityConfig);
 
       return config;
     },
@@ -155,10 +140,7 @@ function withAccessibilityStrings(config) {
     <string name="accessibility_service_label">MetaChrome Voice Control</string>
     <string name="accessibility_service_description">Allows MetaChrome to control other apps using voice commands from your Meta Ray-Ban glasses. This enables hands-free browsing, reading content, and interacting with apps like Chrome.</string>
 `;
-          stringsContent = stringsContent.replace(
-            '</resources>',
-            `${newStrings}</resources>`
-          );
+          stringsContent = stringsContent.replace('</resources>', `${newStrings}</resources>`);
           fs.writeFileSync(stringsPath, stringsContent);
         }
       }
@@ -178,15 +160,7 @@ function withAccessibilityServiceJava(config) {
       const projectRoot = config.modRequest.projectRoot;
       const packageName = config.android?.package || 'com.metachrome.app';
       const packagePath = packageName.replace(/\./g, '/');
-      const javaDir = path.join(
-        projectRoot,
-        'android',
-        'app',
-        'src',
-        'main',
-        'java',
-        packagePath
-      );
+      const javaDir = path.join(projectRoot, 'android', 'app', 'src', 'main', 'java', packagePath);
 
       // Create directory if it doesn't exist
       if (!fs.existsSync(javaDir)) {
@@ -473,10 +447,7 @@ public class MetaChromeAccessibilityService extends AccessibilityService {
 }
 `;
 
-      fs.writeFileSync(
-        path.join(javaDir, 'MetaChromeAccessibilityService.java'),
-        serviceCode
-      );
+      fs.writeFileSync(path.join(javaDir, 'MetaChromeAccessibilityService.java'), serviceCode);
 
       return config;
     },
@@ -493,15 +464,7 @@ function withAccessibilityNativeModule(config) {
       const projectRoot = config.modRequest.projectRoot;
       const packageName = config.android?.package || 'com.metachrome.app';
       const packagePath = packageName.replace(/\./g, '/');
-      const javaDir = path.join(
-        projectRoot,
-        'android',
-        'app',
-        'src',
-        'main',
-        'java',
-        packagePath
-      );
+      const javaDir = path.join(projectRoot, 'android', 'app', 'src', 'main', 'java', packagePath);
 
       // Create the Native Module
       const moduleCode = `package ${packageName};
@@ -683,10 +646,7 @@ public class MetaChromeAccessibilityModule extends ReactContextBaseJavaModule {
 }
 `;
 
-      fs.writeFileSync(
-        path.join(javaDir, 'MetaChromeAccessibilityModule.java'),
-        moduleCode
-      );
+      fs.writeFileSync(path.join(javaDir, 'MetaChromeAccessibilityModule.java'), moduleCode);
 
       // Create the Package file
       const packageCode = `package ${packageName};
@@ -715,10 +675,7 @@ public class MetaChromeAccessibilityPackage implements ReactPackage {
 }
 `;
 
-      fs.writeFileSync(
-        path.join(javaDir, 'MetaChromeAccessibilityPackage.java'),
-        packageCode
-      );
+      fs.writeFileSync(path.join(javaDir, 'MetaChromeAccessibilityPackage.java'), packageCode);
 
       return config;
     },

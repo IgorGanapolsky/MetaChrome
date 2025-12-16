@@ -249,12 +249,13 @@ export function VoiceControls() {
   const connectionStatus = getConnectionStatus();
 
   // Android-specific quick commands
-  const androidQuickCommands = Platform.OS === 'android' && accessibilityState.isServiceRunning
-    ? [
-        { text: 'Open Chrome', command: 'open chrome' },
-        { text: 'Read screen', command: 'read chrome' },
-      ]
-    : [];
+  const androidQuickCommands =
+    Platform.OS === 'android' && accessibilityState.isServiceRunning
+      ? [
+          { text: 'Open Chrome', command: 'open chrome' },
+          { text: 'Read screen', command: 'read chrome' },
+        ]
+      : [];
 
   return (
     <View style={styles.voiceSection}>
@@ -276,9 +277,7 @@ export function VoiceControls() {
           onPress={handleOpenAccessibilitySettings}
         >
           <Ionicons name="shield-checkmark-outline" size={16} color="#F59E0B" />
-          <Text style={styles.accessibilityText}>
-            Enable accessibility to control Chrome
-          </Text>
+          <Text style={styles.accessibilityText}>Enable accessibility to control Chrome</Text>
           <Ionicons name="chevron-forward" size={14} color="#F59E0B" />
         </TouchableOpacity>
       )}
