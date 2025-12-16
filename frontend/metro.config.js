@@ -17,7 +17,6 @@ config.resolver.alias = {
   '@/features': path.resolve(__dirname, 'src/features'),
   '@/entities': path.resolve(__dirname, 'src/entities'),
   '@/shared': path.resolve(__dirname, 'src/shared'),
-  '@/services': path.resolve(__dirname, 'src/services'),
   '@/types': path.resolve(__dirname, 'src/types'),
   '@/theme': path.resolve(__dirname, 'src/theme'),
 };

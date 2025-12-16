@@ -26,7 +26,6 @@ module.exports = {
     '^@/features/(.*)$': '<rootDir>/src/features/$1',
     '^@/entities/(.*)$': '<rootDir>/src/entities/$1',
     '^@/shared/(.*)$': '<rootDir>/src/shared/$1',
-    '^@/services/(.*)$': '<rootDir>/src/services/$1',
     '^@/types/(.*)$': '<rootDir>/src/types/$1',
     '^@/theme/(.*)$': '<rootDir>/src/theme/$1',
   },
