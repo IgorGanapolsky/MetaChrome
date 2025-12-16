@@ -36,7 +36,7 @@ export function CustomCommandsList({
         </View>
 
         <View style={styles.commandContent}>
-          <Text style={styles.triggerPhrase}>"{command.triggerPhrase}"</Text>
+          <Text style={styles.triggerPhrase}>&quot;{command.triggerPhrase}&quot;</Text>
           <Text style={styles.actionLabel}>
             {ACTION_TYPE_LABELS[command.actionType]}
           </Text>
@@ -96,7 +96,7 @@ export function CustomCommandsList({
             <Ionicons name="mic-off-outline" size={48} color="#3A3A45" />
             <Text style={styles.emptyText}>No custom commands yet</Text>
             <Text style={styles.emptySubtext}>
-              Tap "Add" to create your first voice command
+              Tap &quot;Add&quot; to create your first voice command
             </Text>
           </View>
         ) : (

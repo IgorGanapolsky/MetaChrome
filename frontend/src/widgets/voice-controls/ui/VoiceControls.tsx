@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSpeechRecognitionEvent } from '@jamsch/expo-speech-recognition';
@@ -15,7 +15,7 @@ import {
 
 export function VoiceControls() {
   const router = useRouter();
-  const { executeCommand, speakResponse } = useVoiceCommands();
+  const { executeCommand } = useVoiceCommands();
   const { commands, metaRayBanSettings } = useCustomCommandStore();
   const { impact, notification } = useHaptics();
   

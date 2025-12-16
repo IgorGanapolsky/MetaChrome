@@ -18,7 +18,6 @@ import {
   bluetoothAudioManager, 
   useBluetoothStore,
   siriShortcutsService,
-  useSiriShortcutsStore,
   BluetoothDevice,
 } from '@/services';
 
@@ -27,7 +26,6 @@ export function MetaRayBanSettings() {
     useCustomCommandStore();
   const { impact, notification } = useHaptics();
   const bluetoothState = useBluetoothStore();
-  const siriState = useSiriShortcutsStore();
   
   const [isScanning, setIsScanning] = useState(false);
   const [showDeviceList, setShowDeviceList] = useState(false);
@@ -276,7 +274,7 @@ export function MetaRayBanSettings() {
           <View style={styles.siriInfo}>
             <Text style={styles.siriTitle}>Add Siri Shortcut</Text>
             <Text style={styles.siriDescription}>
-              Say "Hey Siri, start voice browsing" to open MetaChrome
+              Say &quot;Hey Siri, start voice browsing&quot; to open MetaChrome
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#71717A" />
@@ -317,7 +315,7 @@ export function MetaRayBanSettings() {
               style={styles.wakeWordDisplay}
               onPress={() => setEditingWakeWord(true)}
             >
-              <Text style={styles.wakeWordText}>"{metaRayBanSettings.customWakeWord}"</Text>
+              <Text style={styles.wakeWordText}>&quot;{metaRayBanSettings.customWakeWord}&quot;</Text>
               <Ionicons name="pencil-outline" size={16} color="#71717A" />
             </TouchableOpacity>
           )}
@@ -390,7 +388,7 @@ export function MetaRayBanSettings() {
         <Ionicons name="information-circle-outline" size={20} color="#8B5CF6" />
         <Text style={styles.infoText}>
           Connect your Meta Ray-Ban glasses via Bluetooth. Voice commands are captured through the 
-          glasses' microphone and responses are played through the speakers. Works with Claude, 
+          glasses&apos; microphone and responses are played through the speakers. Works with Claude, 
           Cursor, ChatGPT, and other web agents.
         </Text>
       </View>

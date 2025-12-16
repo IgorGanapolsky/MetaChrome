@@ -27,7 +27,7 @@ export function CommandLog({ visible, onClose }: CommandLogProps) {
         ) : (
           commandHistory.map((log) => (
             <View key={log.id} style={styles.logItem}>
-              <Text style={styles.logCommand}>"{log.command}"</Text>
+              <Text style={styles.logCommand}>&quot;{log.command}&quot;</Text>
               <Text style={styles.logResult}>{log.result}</Text>
             </View>
           ))

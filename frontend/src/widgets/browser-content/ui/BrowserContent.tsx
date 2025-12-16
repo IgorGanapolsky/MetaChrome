@@ -101,7 +101,7 @@ export function BrowserContent() {
               </View>
               <View style={styles.assistantBubble}>
                 <Text style={styles.chatText}>
-                  I'll help you implement authentication. Here are the steps:{'\n\n'}1. Choose
+                  I&apos;ll help you implement authentication. Here are the steps:{'\n\n'}1. Choose
                   provider{'\n'}2. Install packages{'\n'}3. Set up context{'\n'}4. Add login flow
                 </Text>
               </View>

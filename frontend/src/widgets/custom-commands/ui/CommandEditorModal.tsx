@@ -144,7 +144,7 @@ export function CommandEditorModal({
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Trigger Phrase</Text>
               <Text style={styles.hint}>
-                What you'll say to activate this command
+                What you&apos;ll say to activate this command
               </Text>
               <TextInput
                 style={styles.input}
