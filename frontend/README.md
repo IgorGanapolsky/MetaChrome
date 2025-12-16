@@ -94,11 +94,13 @@ yarn build:production                             # Build both platforms
 ## Testing
 
 ### Unit Tests
+
 ```bash
 yarn test
 ```
 
 ### E2E Tests
+
 ```bash
 # Install Maestro CLI first
 curl -Ls "https://get.maestro.mobile.dev" | bash
@@ -108,23 +110,27 @@ yarn uat
 ```
 
 ### Manual UAT
+
 See [UAT_CHECKLIST.md](./UAT_CHECKLIST.md) for comprehensive testing checklist.
 
 ## Building for Production
 
 ### Prerequisites
+
 - EAS account (expo.dev)
 - Sentry account (for error tracking)
 
 ### Setup
 
 1. **Configure EAS**
+
    ```bash
    eas login
    eas init
    ```
 
 2. **Set Environment Variables**
+
    ```bash
    cp .env.production.example .env.production
    # Edit .env.production with your values

@@ -1,6 +1,6 @@
 /**
  * SpeechRecognitionService
- * 
+ *
  * Handles speech recognition with support for Bluetooth audio input.
  * Uses @jamsch/expo-speech-recognition for on-device speech-to-text.
  */
@@ -20,7 +20,7 @@ export interface SpeechState {
   isSpeaking: boolean;
   error: string | null;
   wakeWordDetected: boolean;
-  
+
   // Actions
   setListening: (listening: boolean) => void;
   setTranscript: (transcript: string) => void;
@@ -45,12 +45,13 @@ export const useSpeechStore = create<SpeechState>((set) => ({
   setSpeaking: (speaking) => set({ isSpeaking: speaking }),
   setError: (error) => set({ error }),
   setWakeWordDetected: (detected) => set({ wakeWordDetected: detected }),
-  reset: () => set({ 
-    transcript: '', 
-    partialTranscript: '', 
-    error: null, 
-    wakeWordDetected: false 
-  }),
+  reset: () =>
+    set({
+      transcript: '',
+      partialTranscript: '',
+      error: null,
+      wakeWordDetected: false,
+    }),
 }));
 
 // Default wake words
@@ -81,7 +82,7 @@ class SpeechRecognitionService {
         // If getStateAsync fails, assume it's available and let it fail later if not
         isAvailable = true;
       }
-      
+
       if (!isAvailable) {
         useSpeechStore.getState().setError('Speech recognition not available on this device');
         return false;
@@ -89,7 +90,7 @@ class SpeechRecognitionService {
 
       // Request permissions
       const permission = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      
+
       if (!permission.granted) {
         useSpeechStore.getState().setError('Microphone permission not granted');
         return false;
@@ -107,7 +108,7 @@ class SpeechRecognitionService {
    * Set custom wake words
    */
   setWakeWords(words: string[]): void {
-    this.wakeWords = words.map(w => w.toLowerCase().trim());
+    this.wakeWords = words.map((w) => w.toLowerCase().trim());
   }
 
   /**
@@ -122,7 +123,7 @@ class SpeechRecognitionService {
    */
   private checkForWakeWord(transcript: string): { found: boolean; command: string } {
     const lowerTranscript = transcript.toLowerCase().trim();
-    
+
     for (const wakeWord of this.wakeWords) {
       if (lowerTranscript.includes(wakeWord)) {
         // Extract command after wake word
@@ -131,7 +132,7 @@ class SpeechRecognitionService {
         return { found: true, command };
       }
     }
-    
+
     return { found: false, command: '' };
   }
 
@@ -166,7 +167,6 @@ class SpeechRecognitionService {
         continuous: continuous,
         contextualStrings: this.wakeWords, // Help recognition with wake words
       });
-
     } catch (error) {
       useSpeechStore.getState().setError(`Failed to start listening: ${error}`);
       useSpeechStore.getState().setListening(false);
@@ -192,13 +192,13 @@ class SpeechRecognitionService {
   handleResult(transcript: string, isFinal: boolean): void {
     if (isFinal) {
       useSpeechStore.getState().setTranscript(transcript);
-      
+
       // Check for wake word
       const { found, command } = this.checkForWakeWord(transcript);
-      
+
       if (found) {
         useSpeechStore.getState().setWakeWordDetected(true);
-        
+
         if (command && this.onCommandCallback) {
           this.onCommandCallback(command);
         }
@@ -236,11 +236,14 @@ class SpeechRecognitionService {
   /**
    * Speak text aloud (Text-to-Speech)
    */
-  async speak(text: string, options?: {
-    language?: string;
-    pitch?: number;
-    rate?: number;
-  }): Promise<void> {
+  async speak(
+    text: string,
+    options?: {
+      language?: string;
+      pitch?: number;
+      rate?: number;
+    }
+  ): Promise<void> {
     const { language = 'en-US', pitch = 1.0, rate = 1.0 } = options || {};
 
     try {
@@ -304,7 +307,7 @@ export function useSpeechRecognition() {
   });
 
   useSpeechRecognitionEvent('error', (event) => {
-      speechService.handleError(String(event.error || 'Unknown error'));
+    speechService.handleError(String(event.error || 'Unknown error'));
   });
 
   useSpeechRecognitionEvent('start', () => {

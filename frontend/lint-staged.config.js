@@ -16,18 +16,11 @@ module.exports = {
   ],
 
   // JavaScript files (config files, etc.)
-  '*.{js,jsx}': [
-    'eslint --fix --max-warnings 0',
-    'prettier --write',
-  ],
+  '*.{js,jsx}': ['eslint --fix --max-warnings 0', 'prettier --write'],
 
   // JSON files
-  '*.json': [
-    'prettier --write',
-  ],
+  '*.json': ['prettier --write'],
 
   // Markdown files
-  '*.md': [
-    'prettier --write',
-  ],
+  '*.md': ['prettier --write'],
 };

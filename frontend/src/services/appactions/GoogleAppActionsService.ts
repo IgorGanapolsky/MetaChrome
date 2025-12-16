@@ -1,9 +1,9 @@
 /**
  * GoogleAppActionsService
- * 
+ *
  * Handles Google Assistant App Actions integration for Android.
  * App Actions allow users to say "Hey Google, [action] on MetaChrome"
- * 
+ *
  * Note: This service manages the JavaScript side. The actual App Actions
  * are defined in android/app/src/main/res/xml/shortcuts.xml
  */
@@ -38,7 +38,7 @@ export interface AppActionState {
   isAvailable: boolean;
   lastDeepLink: string | null;
   lastParams: Record<string, string> | null;
-  
+
   // Actions
   setLastDeepLink: (link: string | null, params: Record<string, string> | null) => void;
 }
@@ -112,7 +112,7 @@ class GoogleAppActionsService {
     try {
       const parsed = new URL(url);
       const scheme = `${parsed.protocol}//${parsed.host}`;
-      
+
       // Parse query parameters
       const params: Record<string, string> = {};
       parsed.searchParams.forEach((value, key) => {

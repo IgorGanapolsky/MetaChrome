@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Switch,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   useCustomCommandStore,
@@ -20,10 +13,7 @@ interface CustomCommandsListProps {
   onAddCommand?: () => void;
 }
 
-export function CustomCommandsList({
-  onEditCommand,
-  onAddCommand,
-}: CustomCommandsListProps) {
+export function CustomCommandsList({ onEditCommand, onAddCommand }: CustomCommandsListProps) {
   const { commands, toggleCommand, deleteCommand } = useCustomCommandStore();
 
   const renderCommandItem = (command: CustomVoiceCommand) => {
@@ -37,9 +27,7 @@ export function CustomCommandsList({
 
         <View style={styles.commandContent}>
           <Text style={styles.triggerPhrase}>&quot;{command.triggerPhrase}&quot;</Text>
-          <Text style={styles.actionLabel}>
-            {ACTION_TYPE_LABELS[command.actionType]}
-          </Text>
+          <Text style={styles.actionLabel}>{ACTION_TYPE_LABELS[command.actionType]}</Text>
           <Text style={styles.actionTarget} numberOfLines={1}>
             {command.actionTarget}
           </Text>
@@ -54,17 +42,11 @@ export function CustomCommandsList({
           />
 
           <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => onEditCommand?.(command)}
-            >
+            <TouchableOpacity style={styles.actionButton} onPress={() => onEditCommand?.(command)}>
               <Ionicons name="pencil-outline" size={18} color="#A1A1AA" />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => deleteCommand(command.id)}
-            >
+            <TouchableOpacity style={styles.actionButton} onPress={() => deleteCommand(command.id)}>
               <Ionicons name="trash-outline" size={18} color="#EF4444" />
             </TouchableOpacity>
           </View>

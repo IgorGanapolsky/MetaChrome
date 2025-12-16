@@ -1,6 +1,6 @@
 /**
  * Expo Config Plugin for MetaChrome
- * 
+ *
  * This plugin configures native iOS and Android settings for:
  * - Bluetooth permissions (for Meta Ray-Ban glasses)
  * - Microphone permissions (for voice commands)
@@ -9,7 +9,11 @@
  * - Deep linking
  */
 
-const { withAndroidManifest, withInfoPlist, withEntitlementsPlist } = require('@expo/config-plugins');
+const {
+  withAndroidManifest,
+  withInfoPlist,
+  withEntitlementsPlist,
+} = require('@expo/config-plugins');
 
 /**
  * Configure Android manifest for Bluetooth and App Actions
@@ -34,9 +38,7 @@ function withAndroidConfig(config) {
     }
 
     permissions.forEach((permission) => {
-      const exists = manifest['uses-permission'].some(
-        (p) => p.$['android:name'] === permission
-      );
+      const exists = manifest['uses-permission'].some((p) => p.$['android:name'] === permission);
       if (!exists) {
         manifest['uses-permission'].push({
           $: { 'android:name': permission },
@@ -63,9 +65,7 @@ function withAndroidConfig(config) {
 
     // Add deep link intent filter to main activity
     const application = manifest.application[0];
-    const mainActivity = application.activity?.find(
-      (a) => a.$['android:name'] === '.MainActivity'
-    );
+    const mainActivity = application.activity?.find((a) => a.$['android:name'] === '.MainActivity');
 
     if (mainActivity) {
       if (!mainActivity['intent-filter']) {
@@ -79,13 +79,11 @@ function withAndroidConfig(config) {
           { $: { 'android:name': 'android.intent.category.DEFAULT' } },
           { $: { 'android:name': 'android.intent.category.BROWSABLE' } },
         ],
-        data: [
-          { $: { 'android:scheme': 'metachrome' } },
-        ],
+        data: [{ $: { 'android:scheme': 'metachrome' } }],
       };
 
-      const hasDeepLink = mainActivity['intent-filter'].some(
-        (f) => f.data?.some((d) => d.$['android:scheme'] === 'metachrome')
+      const hasDeepLink = mainActivity['intent-filter'].some((f) =>
+        f.data?.some((d) => d.$['android:scheme'] === 'metachrome')
       );
 
       if (!hasDeepLink) {
@@ -143,8 +141,8 @@ function withIOSConfig(config) {
       config.modResults.CFBundleURLTypes = [];
     }
 
-    const hasScheme = config.modResults.CFBundleURLTypes.some(
-      (type) => type.CFBundleURLSchemes?.includes('metachrome')
+    const hasScheme = config.modResults.CFBundleURLTypes.some((type) =>
+      type.CFBundleURLSchemes?.includes('metachrome')
     );
 
     if (!hasScheme) {

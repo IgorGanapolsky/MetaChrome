@@ -5,6 +5,7 @@
 ### ✅ Core Functionality
 
 #### Browser Tabs
+
 - [ ] Can open new tab
 - [ ] Can switch between tabs
 - [ ] Can close tabs (except last one)
@@ -13,6 +14,7 @@
 - [ ] Tab names are readable
 
 #### Voice Commands
+
 - [ ] Voice button responds to taps
 - [ ] Quick command buttons work
 - [ ] Command execution shows feedback
@@ -21,6 +23,7 @@
 - [ ] Custom commands execute correctly
 
 #### Meta Ray-Ban Integration
+
 - [ ] Settings page opens
 - [ ] Connection status displays
 - [ ] Wake word can be configured
@@ -29,6 +32,7 @@
 - [ ] Custom commands can be managed
 
 #### Navigation
+
 - [ ] Browser page loads correctly
 - [ ] Add tab modal opens/closes
 - [ ] Meta Ray-Ban settings modal opens/closes
@@ -64,12 +68,14 @@
 ### ✅ Platform Specific
 
 #### iOS
+
 - [ ] Safe area insets respected
 - [ ] Status bar styling correct
 - [ ] Haptic feedback works
 - [ ] Voice permissions requested
 
 #### Android
+
 - [ ] Edge-to-edge display works
 - [ ] Status bar color correct
 - [ ] Back button works
@@ -95,11 +101,13 @@
 ## Test Devices
 
 ### iOS
+
 - [ ] iPhone 14 Pro (latest iOS)
 - [ ] iPhone SE (small screen)
 - [ ] iPad (tablet)
 
 ### Android
+
 - [ ] Pixel 7 (latest Android)
 - [ ] Samsung Galaxy S23
 - [ ] Tablet device
@@ -111,6 +119,6 @@
 - [ ] UI/UX approved
 - [ ] Ready for production release
 
-**Tested by:** _________________  
-**Date:** _________________  
-**Approved:** _________________
+**Tested by:** ********\_********  
+**Date:** ********\_********  
+**Approved:** ********\_********

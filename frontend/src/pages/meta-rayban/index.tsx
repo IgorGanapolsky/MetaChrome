@@ -29,10 +29,7 @@ export function MetaRayBanPage() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <MetaRayBanSettings />
         <View style={styles.divider} />
-        <CustomCommandsList
-          onAddCommand={handleAddCommand}
-          onEditCommand={handleEditCommand}
-        />
+        <CustomCommandsList onAddCommand={handleAddCommand} onEditCommand={handleEditCommand} />
       </ScrollView>
 
       <CommandEditorModal

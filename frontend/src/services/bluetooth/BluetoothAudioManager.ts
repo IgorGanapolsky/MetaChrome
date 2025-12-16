@@ -1,6 +1,6 @@
 /**
  * BluetoothAudioManager
- * 
+ *
  * Manages Bluetooth audio connections for Meta Ray-Ban smart glasses.
  * Handles the Android SCO (Synchronous Connection-Oriented) workaround
  * to ensure speech recognition uses the Bluetooth microphone.
@@ -18,11 +18,7 @@ const META_RAYBAN_SERVICE_UUIDS = [
   '0000180a-0000-1000-8000-00805f9b34fb', // Device Information
 ];
 
-const META_DEVICE_NAME_PATTERNS = [
-  'Ray-Ban',
-  'Meta',
-  'Oakley',
-];
+const META_DEVICE_NAME_PATTERNS = ['Ray-Ban', 'Meta', 'Oakley'];
 
 export interface BluetoothDevice {
   id: string;
@@ -40,7 +36,7 @@ export interface BluetoothAudioState {
   discoveredDevices: BluetoothDevice[];
   isAudioRouted: boolean;
   lastError: string | null;
-  
+
   // Actions
   setScanning: (scanning: boolean) => void;
   setBluetoothEnabled: (enabled: boolean) => void;
@@ -66,7 +62,7 @@ export const useBluetoothStore = create<BluetoothAudioState>()(
       setConnectedDevice: (device) => set({ connectedDevice: device }),
       addDiscoveredDevice: (device) => {
         const existing = get().discoveredDevices;
-        const exists = existing.find(d => d.id === device.id);
+        const exists = existing.find((d) => d.id === device.id);
         if (!exists) {
           set({ discoveredDevices: [...existing, device] });
         }
@@ -102,13 +98,13 @@ class BluetoothAudioManager {
 
     try {
       const state = await (this.bleManager as { state: () => Promise<State> }).state();
-      
+
       if (String(state) === 'PoweredOff') {
         useBluetoothStore.getState().setError('Bluetooth is turned off');
         useBluetoothStore.getState().setBluetoothEnabled(false);
         return false;
       }
-      
+
       if (String(state) === 'Unauthorized') {
         useBluetoothStore.getState().setError('Bluetooth permission not granted');
         return false;
@@ -134,7 +130,7 @@ class BluetoothAudioManager {
    */
   private isMetaGlasses(device: Device): boolean {
     const name = device.name || device.localName || '';
-    return META_DEVICE_NAME_PATTERNS.some(pattern => 
+    return META_DEVICE_NAME_PATTERNS.some((pattern) =>
       name.toLowerCase().includes(pattern.toLowerCase())
     );
   }
@@ -202,14 +198,23 @@ class BluetoothAudioManager {
       useBluetoothStore.getState().setError(null);
 
       // Connect to the device
-      const connectMethod = (this.bleManager as { connectToDevice: (id: string, options: { autoConnect: boolean }) => Promise<Device> }).connectToDevice;
+      const connectMethod = (
+        this.bleManager as {
+          connectToDevice: (id: string, options: { autoConnect: boolean }) => Promise<Device>;
+        }
+      ).connectToDevice;
       const device = await connectMethod(deviceId, {
         autoConnect: true,
       });
 
       // Discover services
-      if ((device as { discoverAllServicesAndCharacteristics: () => Promise<void> }).discoverAllServicesAndCharacteristics) {
-        await (device as { discoverAllServicesAndCharacteristics: () => Promise<void> }).discoverAllServicesAndCharacteristics();
+      if (
+        (device as { discoverAllServicesAndCharacteristics: () => Promise<void> })
+          .discoverAllServicesAndCharacteristics
+      ) {
+        await (
+          device as { discoverAllServicesAndCharacteristics: () => Promise<void> }
+        ).discoverAllServicesAndCharacteristics();
       }
 
       this.connectedDevice = device;
@@ -254,7 +259,9 @@ class BluetoothAudioManager {
       try {
         await this.unrouteAudioFromBluetooth();
         if ((this.connectedDevice as { cancelConnection: () => Promise<void> }).cancelConnection) {
-          await (this.connectedDevice as { cancelConnection: () => Promise<void> }).cancelConnection();
+          await (
+            this.connectedDevice as { cancelConnection: () => Promise<void> }
+          ).cancelConnection();
         }
       } catch (error) {
         console.error('Disconnect error:', error);
@@ -274,7 +281,7 @@ class BluetoothAudioManager {
         // Android: Start Bluetooth SCO (Synchronous Connection-Oriented) link
         // This routes the microphone input from the Bluetooth headset
         const { AudioManager } = NativeModules;
-        
+
         if (AudioManager) {
           // Start Bluetooth SCO for microphone routing
           await AudioManager.startBluetoothSco();
@@ -286,14 +293,16 @@ class BluetoothAudioManager {
           await AudioManager.setBluetoothScoOn(true);
         } else {
           // Fallback: Log that native module is not available
-          console.warn('AudioManager native module not available. Audio routing may not work correctly.');
+          console.warn(
+            'AudioManager native module not available. Audio routing may not work correctly.'
+          );
         }
       } else if (Platform.OS === 'ios') {
         // iOS: Audio routing is handled automatically by the system
         // when a Bluetooth audio device is connected
         // We just need to set the audio session category correctly
         const { AudioSession } = NativeModules;
-        
+
         if (AudioSession) {
           await AudioSession.setCategory('playAndRecord', {
             allowBluetooth: true,
@@ -319,14 +328,14 @@ class BluetoothAudioManager {
     try {
       if (Platform.OS === 'android') {
         const { AudioManager } = NativeModules;
-        
+
         if (AudioManager) {
           await AudioManager.stopBluetoothSco();
           await AudioManager.setBluetoothScoOn(false);
           await AudioManager.setMode('MODE_NORMAL');
         }
       }
-      
+
       useBluetoothStore.getState().setAudioRouted(false);
     } catch (error) {
       console.error('Failed to unroute audio:', error);
@@ -338,7 +347,7 @@ class BluetoothAudioManager {
    */
   isConnectedToMetaGlasses(): boolean {
     const device = useBluetoothStore.getState().connectedDevice;
-    return device?.isConnected && device?.isMetaGlasses || false;
+    return (device?.isConnected && device?.isMetaGlasses) || false;
   }
 
   /**

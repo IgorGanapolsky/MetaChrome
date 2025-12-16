@@ -1,6 +1,6 @@
 /**
  * WebAgentService
- * 
+ *
  * Handles interaction with web-based AI agents like Claude, Cursor, ChatGPT.
  * Provides functionality to:
  * - Detect input fields on web pages
@@ -28,11 +28,14 @@ export const WEB_AGENTS: Record<string, WebAgentConfig> = {
   claude: {
     name: 'Claude',
     urlPatterns: ['claude.ai', 'anthropic.com'],
-    inputSelector: '[contenteditable="true"], textarea[placeholder*="Message"], div[data-placeholder]',
-    submitSelector: 'button[type="submit"], button[aria-label*="Send"], button[data-testid="send-button"]',
+    inputSelector:
+      '[contenteditable="true"], textarea[placeholder*="Message"], div[data-placeholder]',
+    submitSelector:
+      'button[type="submit"], button[aria-label*="Send"], button[data-testid="send-button"]',
     responseSelector: '.prose, [data-message-author="assistant"], .assistant-message',
     messageContainerSelector: '[data-testid="conversation"], .conversation-container',
-    lastMessageSelector: '[data-message-author="assistant"]:last-child, .assistant-message:last-child',
+    lastMessageSelector:
+      '[data-message-author="assistant"]:last-child, .assistant-message:last-child',
   },
   chatgpt: {
     name: 'ChatGPT',
@@ -244,7 +247,7 @@ export const WebAgentCommands = {
       }
     })();
   `,
-  
+
   getResponse: () => `
     (function() {
       const result = window.MetaChromeAgent.getLastResponse();
@@ -254,7 +257,7 @@ export const WebAgentCommands = {
       }));
     })();
   `,
-  
+
   waitForResponse: (timeout: number = 30000) => `
     (function() {
       window.MetaChromeAgent.waitForResponse(${timeout}).then(result => {
@@ -265,7 +268,7 @@ export const WebAgentCommands = {
       });
     })();
   `,
-  
+
   getPageInfo: () => `
     (function() {
       const info = window.MetaChromeAgent.getPageInfo();
@@ -299,7 +302,7 @@ class WebAgentService {
   detectAgent(url: string): WebAgentConfig {
     for (const [key, config] of Object.entries(WEB_AGENTS)) {
       if (key === 'generic') continue;
-      
+
       for (const pattern of config.urlPatterns) {
         if (url.toLowerCase().includes(pattern.toLowerCase())) {
           this.currentConfig = config;
@@ -307,7 +310,7 @@ class WebAgentService {
         }
       }
     }
-    
+
     this.currentConfig = WEB_AGENTS.generic;
     return WEB_AGENTS.generic;
   }
@@ -334,7 +337,7 @@ class WebAgentService {
   handleMessage(event: { nativeEvent: { data: string } }): void {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      
+
       // Call registered handlers
       const handler = this.messageHandlers.get(data.type);
       if (handler) {
@@ -372,7 +375,7 @@ class WebAgentService {
     return new Promise((resolve) => {
       this.pendingResponse = resolve;
       this.executeScript(WebAgentCommands.getResponse());
-      
+
       // Timeout after 5 seconds
       setTimeout(() => {
         if (this.pendingResponse) {
@@ -389,15 +392,15 @@ class WebAgentService {
   async sendAndWaitForResponse(text: string, timeout: number = 30000): Promise<string> {
     return new Promise((resolve) => {
       this.pendingResponse = resolve;
-      
+
       // Send the message
       this.executeScript(WebAgentCommands.typeAndSubmit(text));
-      
+
       // Wait for response
       setTimeout(() => {
         this.executeScript(WebAgentCommands.waitForResponse(timeout));
       }, 500);
-      
+
       // Overall timeout
       setTimeout(() => {
         if (this.pendingResponse) {

@@ -16,22 +16,26 @@
 ## ⚠️ Needs Attention
 
 ### Tests
+
 - [ ] Unit tests need fixing (jest-expo compatibility issue)
 - [ ] Test coverage currently 0% (target: 30% minimum)
 - [ ] E2E tests need device testing
 
 ### Configuration
+
 - [ ] EAS project ID needs to be set
 - [ ] Sentry DSN needs to be configured
 - [ ] Environment variables need to be set
 
 ### App Store
+
 - [ ] Screenshots need to be created
 - [ ] App icon needs review
 - [ ] Privacy policy URL needs hosting
 - [ ] Support URL needs to be set
 
 ### UAT
+
 - [ ] Manual testing needs to be performed
 - [ ] Test on real devices (iOS & Android)
 - [ ] Test Meta Ray-Ban integration
@@ -41,11 +45,13 @@
 ## 🚀 Pre-Release Steps
 
 1. **Fix Tests**
+
    ```bash
    yarn test --fix
    ```
 
 2. **Build Production**
+
    ```bash
    eas build --platform ios --profile production
    eas build --platform android --profile production

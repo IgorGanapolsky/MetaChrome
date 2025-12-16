@@ -14,8 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useCustomCommandStore } from '@/entities/custom-command';
 import { useHaptics } from '@/shared/lib';
-import { 
-  bluetoothAudioManager, 
+import {
+  bluetoothAudioManager,
   useBluetoothStore,
   siriShortcutsService,
   BluetoothDevice,
@@ -26,7 +26,7 @@ export function MetaRayBanSettings() {
     useCustomCommandStore();
   const { impact, notification } = useHaptics();
   const bluetoothState = useBluetoothStore();
-  
+
   const [isScanning, setIsScanning] = useState(false);
   const [showDeviceList, setShowDeviceList] = useState(false);
   const [editingWakeWord, setEditingWakeWord] = useState(false);
@@ -35,7 +35,7 @@ export function MetaRayBanSettings() {
   // Initialize Bluetooth on mount
   useEffect(() => {
     bluetoothAudioManager.initialize();
-    
+
     // Initialize Siri shortcuts on iOS
     if (Platform.OS === 'ios') {
       siriShortcutsService.initialize();
@@ -48,7 +48,7 @@ export function MetaRayBanSettings() {
     impact('medium');
     setIsScanning(true);
     setShowDeviceList(true);
-    
+
     try {
       await bluetoothAudioManager.startScan(15000); // 15 second scan
     } catch (error) {
@@ -62,16 +62,16 @@ export function MetaRayBanSettings() {
   const handleConnectDevice = async (device: BluetoothDevice) => {
     impact('medium');
     setIsScanning(false);
-    
+
     try {
       const success = await bluetoothAudioManager.connect(device.id);
-      
+
       if (success) {
         // Update app state
         connectMetaRayBan(device.name || 'Meta Ray-Ban Glasses');
         notification('success');
         setShowDeviceList(false);
-        
+
         Alert.alert(
           'Connected!',
           `${device.name} is now connected. Voice commands will be processed through the device.`,
@@ -88,22 +88,18 @@ export function MetaRayBanSettings() {
   // Disconnect from device
   const handleDisconnect = () => {
     impact('light');
-    Alert.alert(
-      'Disconnect Device',
-      'Are you sure you want to disconnect?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Disconnect',
-          style: 'destructive',
-          onPress: async () => {
-            await bluetoothAudioManager.disconnect();
-            disconnectMetaRayBan();
-            notification('warning');
-          },
+    Alert.alert('Disconnect Device', 'Are you sure you want to disconnect?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Disconnect',
+        style: 'destructive',
+        onPress: async () => {
+          await bluetoothAudioManager.disconnect();
+          disconnectMetaRayBan();
+          notification('warning');
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleSaveWakeWord = () => {
@@ -187,7 +183,11 @@ export function MetaRayBanSettings() {
                 ]}
               />
               <Text style={styles.statusText}>
-                {isConnected ? 'Connected' : bluetoothState.isBluetoothEnabled ? 'Not Connected' : 'Bluetooth Off'}
+                {isConnected
+                  ? 'Connected'
+                  : bluetoothState.isBluetoothEnabled
+                    ? 'Not Connected'
+                    : 'Bluetooth Off'}
               </Text>
             </View>
           </View>
@@ -208,7 +208,7 @@ export function MetaRayBanSettings() {
               </Text>
               {isScanning && <ActivityIndicator size="small" color="#8B5CF6" />}
             </View>
-            
+
             {bluetoothState.discoveredDevices.length > 0 ? (
               <FlatList
                 data={bluetoothState.discoveredDevices}
@@ -221,7 +221,7 @@ export function MetaRayBanSettings() {
                 {isScanning ? 'Looking for devices...' : 'No devices found'}
               </Text>
             )}
-            
+
             <TouchableOpacity
               style={styles.cancelScanButton}
               onPress={() => {
@@ -246,11 +246,7 @@ export function MetaRayBanSettings() {
               <ActivityIndicator color="#FFF" />
             ) : (
               <>
-                <Ionicons
-                  name={isConnected ? 'bluetooth' : 'search'}
-                  size={20}
-                  color="#FFF"
-                />
+                <Ionicons name={isConnected ? 'bluetooth' : 'search'} size={20} color="#FFF" />
                 <Text style={styles.connectButtonText}>
                   {isConnected ? 'Disconnect' : 'Scan for Devices'}
                 </Text>
@@ -291,9 +287,7 @@ export function MetaRayBanSettings() {
             <Ionicons name="mic-outline" size={22} color="#8B5CF6" />
             <View style={styles.settingText}>
               <Text style={styles.settingLabel}>Wake Word</Text>
-              <Text style={styles.settingDescription}>
-                Say this to activate voice commands
-              </Text>
+              <Text style={styles.settingDescription}>Say this to activate voice commands</Text>
             </View>
           </View>
           {editingWakeWord ? (
@@ -315,7 +309,9 @@ export function MetaRayBanSettings() {
               style={styles.wakeWordDisplay}
               onPress={() => setEditingWakeWord(true)}
             >
-              <Text style={styles.wakeWordText}>&quot;{metaRayBanSettings.customWakeWord}&quot;</Text>
+              <Text style={styles.wakeWordText}>
+                &quot;{metaRayBanSettings.customWakeWord}&quot;
+              </Text>
               <Ionicons name="pencil-outline" size={16} color="#71717A" />
             </TouchableOpacity>
           )}
@@ -327,9 +323,7 @@ export function MetaRayBanSettings() {
             <Ionicons name="ear-outline" size={22} color="#8B5CF6" />
             <View style={styles.settingText}>
               <Text style={styles.settingLabel}>Wake Word Detection</Text>
-              <Text style={styles.settingDescription}>
-                Listen for wake word automatically
-              </Text>
+              <Text style={styles.settingDescription}>Listen for wake word automatically</Text>
             </View>
           </View>
           <Switch
@@ -346,16 +340,12 @@ export function MetaRayBanSettings() {
             <Ionicons name="volume-high-outline" size={22} color="#8B5CF6" />
             <View style={styles.settingText}>
               <Text style={styles.settingLabel}>Voice Feedback</Text>
-              <Text style={styles.settingDescription}>
-                Speak responses through device
-              </Text>
+              <Text style={styles.settingDescription}>Speak responses through device</Text>
             </View>
           </View>
           <Switch
             value={metaRayBanSettings.voiceFeedbackEnabled}
-            onValueChange={(value) =>
-              updateMetaRayBanSettings({ voiceFeedbackEnabled: value })
-            }
+            onValueChange={(value) => updateMetaRayBanSettings({ voiceFeedbackEnabled: value })}
             trackColor={{ false: '#3A3A45', true: '#8B5CF6' }}
             thumbColor={metaRayBanSettings.voiceFeedbackEnabled ? '#FFF' : '#888'}
           />
@@ -367,16 +357,12 @@ export function MetaRayBanSettings() {
             <Ionicons name="phone-portrait-outline" size={22} color="#8B5CF6" />
             <View style={styles.settingText}>
               <Text style={styles.settingLabel}>Haptic Feedback</Text>
-              <Text style={styles.settingDescription}>
-                Vibrate phone on command execution
-              </Text>
+              <Text style={styles.settingDescription}>Vibrate phone on command execution</Text>
             </View>
           </View>
           <Switch
             value={metaRayBanSettings.hapticFeedbackEnabled}
-            onValueChange={(value) =>
-              updateMetaRayBanSettings({ hapticFeedbackEnabled: value })
-            }
+            onValueChange={(value) => updateMetaRayBanSettings({ hapticFeedbackEnabled: value })}
             trackColor={{ false: '#3A3A45', true: '#8B5CF6' }}
             thumbColor={metaRayBanSettings.hapticFeedbackEnabled ? '#FFF' : '#888'}
           />
@@ -387,8 +373,8 @@ export function MetaRayBanSettings() {
       <View style={styles.infoBanner}>
         <Ionicons name="information-circle-outline" size={20} color="#8B5CF6" />
         <Text style={styles.infoText}>
-          Connect your Meta Ray-Ban glasses via Bluetooth. Voice commands are captured through the 
-          glasses&apos; microphone and responses are played through the speakers. Works with Claude, 
+          Connect your Meta Ray-Ban glasses via Bluetooth. Voice commands are captured through the
+          glasses&apos; microphone and responses are played through the speakers. Works with Claude,
           Cursor, ChatGPT, and other web agents.
         </Text>
       </View>

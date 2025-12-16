@@ -1,9 +1,9 @@
 /**
  * SiriShortcutsService
- * 
+ *
  * Integrates with iOS Siri Shortcuts to allow users to create
  * custom voice commands that trigger app actions.
- * 
+ *
  * Uses react-native-siri-shortcut library.
  */
 
@@ -50,7 +50,7 @@ export interface SiriShortcut {
 export interface SiriShortcutsState {
   shortcuts: SiriShortcut[];
   isAvailable: boolean;
-  
+
   // Actions
   setShortcuts: (shortcuts: SiriShortcut[]) => void;
   addShortcut: (shortcut: SiriShortcut) => void;
@@ -67,12 +67,12 @@ export const useSiriShortcutsStore = create<SiriShortcutsState>()(
       setShortcuts: (shortcuts) => set({ shortcuts }),
       addShortcut: (shortcut) => {
         const existing = get().shortcuts;
-        const filtered = existing.filter(s => s.id !== shortcut.id);
+        const filtered = existing.filter((s) => s.id !== shortcut.id);
         set({ shortcuts: [...filtered, shortcut] });
       },
       removeShortcut: (id) => {
         const existing = get().shortcuts;
-        set({ shortcuts: existing.filter(s => s.id !== id) });
+        set({ shortcuts: existing.filter((s) => s.id !== id) });
       },
       setAvailable: (available) => set({ isAvailable: available }),
     }),
@@ -240,7 +240,7 @@ class SiriShortcutsService {
 
     try {
       donateShortcut(options);
-      
+
       // Add to store
       useSiriShortcutsStore.getState().addShortcut({
         id: options.activityType,

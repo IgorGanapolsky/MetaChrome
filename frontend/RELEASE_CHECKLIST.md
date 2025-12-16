@@ -3,12 +3,14 @@
 ## Pre-Release (Before Building)
 
 ### Code Quality
+
 - [x] TypeScript errors fixed (0 errors)
 - [x] ESLint passes
 - [x] Prettier formatting applied
 - [x] Code reviewed
 
 ### Configuration
+
 - [ ] Set EAS_PROJECT_ID in environment
 - [ ] Configure Sentry DSN
 - [ ] Update version numbers
@@ -16,6 +18,7 @@
 - [ ] Test app.config.js
 
 ### Testing
+
 - [ ] Run `yarn test` (may show warnings due to jest-expo issue)
 - [ ] Run `yarn uat` (E2E tests)
 - [ ] Manual testing on iOS device
@@ -25,6 +28,7 @@
 - [ ] Test error scenarios
 
 ### Documentation
+
 - [x] Privacy policy written
 - [x] UAT checklist created
 - [x] App store metadata prepared
@@ -34,18 +38,22 @@
 ## Build Phase
 
 ### iOS Build
+
 ```bash
 eas build --platform ios --profile production
 ```
+
 - [ ] Build succeeds
 - [ ] TestFlight upload works
 - [ ] App installs on test devices
 - [ ] EAS Project ID configured: `04975b9f-98b0-4dd1-9038-ee96259801ac`
 
 ### Android Build
+
 ```bash
 eas build --platform android --profile production
 ```
+
 - [ ] Build succeeds
 - [ ] APK/AAB generated
 - [ ] App installs on test devices
@@ -54,6 +62,7 @@ eas build --platform android --profile production
 ## Pre-Submission
 
 ### App Store Connect (iOS)
+
 - [ ] App information complete
 - [ ] Screenshots uploaded (all required sizes)
 - [ ] App preview video (optional)
@@ -65,6 +74,7 @@ eas build --platform android --profile production
 - [ ] App review information
 
 ### Google Play Console (Android)
+
 - [ ] Store listing complete
 - [ ] Screenshots uploaded
 - [ ] Feature graphic
@@ -74,6 +84,7 @@ eas build --platform android --profile production
 - [ ] Pricing
 
 ### Final Checks
+
 - [ ] Test production build thoroughly
 - [ ] Verify error tracking works
 - [ ] Check analytics (if enabled)
@@ -85,11 +96,13 @@ eas build --platform android --profile production
 ## Submission
 
 ### iOS
+
 - [ ] Submit for App Review
 - [ ] Answer any review questions
 - [ ] Monitor review status
 
 ### Android
+
 - [ ] Create release
 - [ ] Upload AAB
 - [ ] Complete release notes
@@ -99,12 +112,14 @@ eas build --platform android --profile production
 ## Post-Release
 
 ### Monitoring
+
 - [ ] Set up Sentry alerts
 - [ ] Monitor crash reports
 - [ ] Track user feedback
 - [ ] Monitor app store reviews
 
 ### Updates
+
 - [ ] Plan next version
 - [ ] Address critical bugs
 - [ ] Gather user feedback
@@ -113,6 +128,7 @@ eas build --platform android --profile production
 ## Version History
 
 ### v1.0.0 (Initial Release)
+
 - Meta Ray-Ban integration
 - Voice command support
 - Custom command creation

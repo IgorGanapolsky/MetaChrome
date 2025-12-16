@@ -39,18 +39,21 @@ export function BrowserContent() {
   }, [activeTab?.url]);
 
   // Handle messages from WebView (including web agent responses)
-  const onWebViewMessage = useCallback((event: WebViewMessageEvent) => {
-    // First, let web agent service handle it
-    webAgentService.handleMessage(event);
-    
-    // Then pass to browser controls for other handling
-    handleWebViewMessage(event);
-  }, [handleWebViewMessage]);
+  const onWebViewMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      // First, let web agent service handle it
+      webAgentService.handleMessage(event);
+
+      // Then pass to browser controls for other handling
+      handleWebViewMessage(event);
+    },
+    [handleWebViewMessage]
+  );
 
   // Inject web agent script when page loads
   const onLoadEnd = useCallback(() => {
     setIsLoading(false);
-    
+
     // Inject the web agent script for AI chat interfaces
     if (webViewRef.current && activeTab?.url) {
       const agent = webAgentService.detectAgent(activeTab.url);
@@ -62,14 +65,17 @@ export function BrowserContent() {
   }, [activeTab?.url]);
 
   // Handle navigation state changes
-  const onNavigationStateChange = useCallback((navState: any) => {
-    if (activeTab && navState.url !== activeTab.url) {
-      updateTab(activeTab.id, { 
-        url: navState.url,
-        name: navState.title || activeTab.name,
-      });
-    }
-  }, [activeTab, updateTab]);
+  const onNavigationStateChange = useCallback(
+    (navState: any) => {
+      if (activeTab && navState.url !== activeTab.url) {
+        updateTab(activeTab.id, {
+          url: navState.url,
+          name: navState.title || activeTab.name,
+        });
+      }
+    },
+    [activeTab, updateTab]
+  );
 
   if (!activeTab) {
     return (

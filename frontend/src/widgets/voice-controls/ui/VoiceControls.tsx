@@ -6,8 +6,8 @@ import { useSpeechRecognitionEvent } from '@jamsch/expo-speech-recognition';
 import { useVoiceCommands } from '@/features/voice-commands';
 import { useCustomCommandStore } from '@/entities/custom-command';
 import { useHaptics } from '@/shared/lib';
-import { 
-  useSpeechStore, 
+import {
+  useSpeechStore,
   speechService,
   useBluetoothStore,
   bluetoothAudioManager,
@@ -18,11 +18,11 @@ export function VoiceControls() {
   const { executeCommand } = useVoiceCommands();
   const { commands, metaRayBanSettings } = useCustomCommandStore();
   const { impact, notification } = useHaptics();
-  
+
   // Speech recognition state
   const speechState = useSpeechStore();
   const bluetoothState = useBluetoothStore();
-  
+
   const [isProcessing, setIsProcessing] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -40,17 +40,17 @@ export function VoiceControls() {
     if (isFinal && transcript) {
       useSpeechStore.getState().setTranscript(transcript);
       useSpeechStore.getState().setListening(false);
-      
+
       // Check for wake word if enabled
       if (metaRayBanSettings.wakeWordEnabled) {
         const wakeWord = metaRayBanSettings.customWakeWord.toLowerCase();
         const lowerTranscript = transcript.toLowerCase();
-        
+
         if (lowerTranscript.includes(wakeWord)) {
           // Extract command after wake word
           const commandStart = lowerTranscript.indexOf(wakeWord) + wakeWord.length;
           const command = transcript.substring(commandStart).trim();
-          
+
           if (command) {
             setIsProcessing(true);
             await executeCommand(command);
@@ -99,7 +99,7 @@ export function VoiceControls() {
   // Initialize speech service on mount
   useEffect(() => {
     speechService.initialize();
-    
+
     // Set wake words
     if (metaRayBanSettings.customWakeWord) {
       speechService.setWakeWords([
@@ -200,11 +200,7 @@ export function VoiceControls() {
       {/* Connection Status Bar */}
       <TouchableOpacity style={styles.statusBar} onPress={handleOpenSettings}>
         <View style={styles.statusLeft}>
-          <Ionicons
-            name={connectionStatus.icon}
-            size={18}
-            color={connectionStatus.color}
-          />
+          <Ionicons name={connectionStatus.icon} size={18} color={connectionStatus.color} />
           <Text style={[styles.statusText, { color: connectionStatus.color }]}>
             {connectionStatus.text}
           </Text>
@@ -234,11 +230,13 @@ export function VoiceControls() {
       </TouchableOpacity>
 
       {/* Status Text */}
-      <Text style={[
-        styles.voiceStatus,
-        speechState.error && styles.voiceStatusError,
-        speechState.isListening && styles.voiceStatusListening,
-      ]}>
+      <Text
+        style={[
+          styles.voiceStatus,
+          speechState.error && styles.voiceStatusError,
+          speechState.isListening && styles.voiceStatusListening,
+        ]}
+      >
         {getStatusText()}
       </Text>
 
@@ -253,17 +251,11 @@ export function VoiceControls() {
       {/* Quick Commands */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickScroll}>
         {/* Built-in quick commands */}
-        <TouchableOpacity
-          style={styles.quickCmd}
-          onPress={() => executeCommand('read page')}
-        >
+        <TouchableOpacity style={styles.quickCmd} onPress={() => executeCommand('read page')}>
           <Text style={styles.quickCmdText}>Read page</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.quickCmd}
-          onPress={() => executeCommand('scroll down')}
-        >
+
+        <TouchableOpacity style={styles.quickCmd} onPress={() => executeCommand('scroll down')}>
           <Text style={styles.quickCmdText}>Scroll down</Text>
         </TouchableOpacity>
 
@@ -277,7 +269,7 @@ export function VoiceControls() {
             <Text style={styles.quickCmdText}>{cmd.triggerPhrase}</Text>
           </TouchableOpacity>
         ))}
-        
+
         <TouchableOpacity style={styles.addQuickCmd} onPress={handleOpenSettings}>
           <Ionicons name="add" size={16} color="#8B5CF6" />
           <Text style={styles.addQuickCmdText}>Add</Text>

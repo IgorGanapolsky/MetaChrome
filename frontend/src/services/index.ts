@@ -1,21 +1,21 @@
 // Bluetooth Audio
-export { 
-  bluetoothAudioManager, 
+export {
+  bluetoothAudioManager,
   useBluetoothStore,
   type BluetoothDevice,
   type BluetoothAudioState,
 } from './bluetooth/BluetoothAudioManager';
 
 // Speech Recognition
-export { 
-  speechService, 
+export {
+  speechService,
   useSpeechStore,
   useSpeechRecognition,
   type SpeechState,
 } from './speech/SpeechRecognitionService';
 
 // Web Agent (for Claude, Cursor, ChatGPT interaction)
-export { 
+export {
   webAgentService,
   WebAgentCommands,
   WEB_AGENTS,

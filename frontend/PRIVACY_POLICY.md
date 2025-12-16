@@ -9,11 +9,13 @@ MetaChrome ("we", "our", or "us") is committed to protecting your privacy. This 
 ## Information We Collect
 
 ### Data You Provide
+
 - **Voice Commands**: Voice commands you create and use within the app
 - **Custom Commands**: Custom voice command configurations
 - **Tab Data**: Browser tabs and navigation history (stored locally on your device)
 
 ### Automatically Collected Data
+
 - **Usage Data**: App performance metrics and error reports (via Sentry)
 - **Device Information**: Device type, operating system version
 - **Meta Ray-Ban Integration**: Connection status and settings (if connected)
@@ -57,5 +59,6 @@ If you have questions about this Privacy Policy, please contact us through the a
 ## Data Deletion
 
 To delete all your data:
+
 1. Uninstall the app from your device
 2. All locally stored data will be permanently deleted

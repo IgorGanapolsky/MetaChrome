@@ -37,11 +37,7 @@ const ACTION_TYPES: ActionType[] = [
   'custom_script',
 ];
 
-export function CommandEditorModal({
-  visible,
-  onClose,
-  editCommand,
-}: CommandEditorModalProps) {
+export function CommandEditorModal({ visible, onClose, editCommand }: CommandEditorModalProps) {
   const { addCommand, updateCommand } = useCustomCommandStore();
 
   const [triggerPhrase, setTriggerPhrase] = useState('');
@@ -119,12 +115,7 @@ export function CommandEditorModal({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalOverlay}
@@ -143,9 +134,7 @@ export function CommandEditorModal({
             {/* Trigger Phrase */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Trigger Phrase</Text>
-              <Text style={styles.hint}>
-                What you&apos;ll say to activate this command
-              </Text>
+              <Text style={styles.hint}>What you&apos;ll say to activate this command</Text>
               <TextInput
                 style={styles.input}
                 value={triggerPhrase}
@@ -177,16 +166,9 @@ export function CommandEditorModal({
                       ]}
                       onPress={() => setActionType(type)}
                     >
-                      <Ionicons
-                        name={iconName}
-                        size={20}
-                        color={isSelected ? '#FFF' : '#A1A1AA'}
-                      />
+                      <Ionicons name={iconName} size={20} color={isSelected ? '#FFF' : '#A1A1AA'} />
                       <Text
-                        style={[
-                          styles.actionTypeText,
-                          isSelected && styles.actionTypeTextSelected,
-                        ]}
+                        style={[styles.actionTypeText, isSelected && styles.actionTypeTextSelected]}
                       >
                         {ACTION_TYPE_LABELS[type].split(' ')[0]}
                       </Text>
@@ -201,10 +183,7 @@ export function CommandEditorModal({
               <Text style={styles.label}>Action Target</Text>
               <Text style={styles.hint}>{ACTION_TYPE_LABELS[actionType]}</Text>
               <TextInput
-                style={[
-                  styles.input,
-                  actionType === 'custom_script' && styles.multilineInput,
-                ]}
+                style={[styles.input, actionType === 'custom_script' && styles.multilineInput]}
                 value={actionTarget}
                 onChangeText={setActionTarget}
                 placeholder={getPlaceholderForActionType(actionType)}
@@ -218,9 +197,7 @@ export function CommandEditorModal({
             {/* Description */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Description (Optional)</Text>
-              <Text style={styles.hint}>
-                A friendly description of what this command does
-              </Text>
+              <Text style={styles.hint}>A friendly description of what this command does</Text>
               <TextInput
                 style={styles.input}
                 value={description}
@@ -238,16 +215,13 @@ export function CommandEditorModal({
             <TouchableOpacity
               style={[
                 styles.saveButton,
-                (!triggerPhrase.trim() || !actionTarget.trim()) &&
-                  styles.saveButtonDisabled,
+                (!triggerPhrase.trim() || !actionTarget.trim()) && styles.saveButtonDisabled,
               ]}
               onPress={handleSave}
               disabled={!triggerPhrase.trim() || !actionTarget.trim()}
             >
               <Ionicons name="checkmark" size={20} color="#FFF" />
-              <Text style={styles.saveButtonText}>
-                {editCommand ? 'Update' : 'Create'}
-              </Text>
+              <Text style={styles.saveButtonText}>{editCommand ? 'Update' : 'Create'}</Text>
             </TouchableOpacity>
           </View>
         </View>

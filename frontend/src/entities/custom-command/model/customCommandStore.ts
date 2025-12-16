@@ -105,7 +105,8 @@ export const useCustomCommandStore = create<CustomCommandState>()(
           triggerPhrase: commandData.triggerPhrase.toLowerCase().trim(),
           actionType: commandData.actionType,
           actionTarget: commandData.actionTarget,
-          description: commandData.description || `${commandData.actionType}: ${commandData.actionTarget}`,
+          description:
+            commandData.description || `${commandData.actionType}: ${commandData.actionTarget}`,
           enabled: commandData.enabled ?? true,
           createdAt: new Date(),
           isMetaRayBan: commandData.isMetaRayBan ?? true,
@@ -117,9 +118,7 @@ export const useCustomCommandStore = create<CustomCommandState>()(
 
       updateCommand: (id: string, updates: Partial<CustomVoiceCommand>) => {
         set((state) => ({
-          commands: state.commands.map((cmd) =>
-            cmd.id === id ? { ...cmd, ...updates } : cmd
-          ),
+          commands: state.commands.map((cmd) => (cmd.id === id ? { ...cmd, ...updates } : cmd)),
         }));
       },
 
@@ -146,9 +145,7 @@ export const useCustomCommandStore = create<CustomCommandState>()(
         const enabledCommands = get().getEnabledCommands();
 
         // Exact match first
-        const exactMatch = enabledCommands.find(
-          (cmd) => cmd.triggerPhrase === normalizedPhrase
-        );
+        const exactMatch = enabledCommands.find((cmd) => cmd.triggerPhrase === normalizedPhrase);
         if (exactMatch) return exactMatch;
 
         // Partial match (phrase contains trigger or trigger contains phrase)

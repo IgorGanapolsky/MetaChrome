@@ -69,10 +69,10 @@ export function useVoiceCommands() {
       switch (command.actionType) {
         case 'navigate': {
           // Navigate to URL
-          const url = command.actionTarget.startsWith('http') 
-            ? command.actionTarget 
+          const url = command.actionTarget.startsWith('http')
+            ? command.actionTarget
             : `https://${command.actionTarget}`;
-          
+
           const activeTab = tabs.find((t) => t.id === activeTabId);
           if (activeTab) {
             // Update current tab by removing and re-adding with new URL
@@ -82,7 +82,7 @@ export function useVoiceCommands() {
             // Create new tab
             addTab(createTab(command.actionTarget, url));
           }
-          
+
           const result = `Navigating to ${command.actionTarget}`;
           await speakResponse(result);
           return result;
@@ -172,7 +172,11 @@ export function useVoiceCommands() {
         }
 
         // Check for "read response" or "what did it say"
-        if (cmd.includes('read response') || cmd.includes('what did') || cmd.includes('read reply')) {
+        if (
+          cmd.includes('read response') ||
+          cmd.includes('what did') ||
+          cmd.includes('read reply')
+        ) {
           // Web agent response reading would be implemented here
           result = 'No response found - Web agent integration coming soon';
           await speakResponse(result);
@@ -238,14 +242,14 @@ export function useVoiceCommands() {
           // Extract URL or site name
           const target = command.substring(command.indexOf(' ') + 1).trim();
           let url = target;
-          
+
           // Handle common sites
           if (!target.includes('.')) {
             url = `https://www.${target}.com`;
           } else if (!target.startsWith('http')) {
             url = `https://${target}`;
           }
-          
+
           addTab(createTab(target, url));
           result = `Opening ${target}`;
           await speakResponse(result);

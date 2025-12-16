@@ -3,18 +3,22 @@ const React = require('react');
 
 const View = ({ children, ...props }) => React.createElement('div', props, children);
 const Text = ({ children, ...props }) => React.createElement('span', props, children);
-const TouchableOpacity = ({ children, onPress, ...props }) => 
+const TouchableOpacity = ({ children, onPress, ...props }) =>
   React.createElement('button', { ...props, onClick: onPress }, children);
 const TextInput = (props) => React.createElement('input', props);
 const ScrollView = ({ children, ...props }) => React.createElement('div', props, children);
-const FlatList = ({ data, renderItem, keyExtractor, ...props }) => 
-  React.createElement('div', props, data?.map((item, index) => renderItem({ item, index })));
+const FlatList = ({ data, renderItem, keyExtractor, ...props }) =>
+  React.createElement(
+    'div',
+    props,
+    data?.map((item, index) => renderItem({ item, index }))
+  );
 const Image = (props) => React.createElement('img', props);
 const ActivityIndicator = () => React.createElement('div', { 'data-testid': 'loading' });
-const Modal = ({ children, visible, ...props }) => 
+const Modal = ({ children, visible, ...props }) =>
   visible ? React.createElement('div', props, children) : null;
 const Switch = (props) => React.createElement('input', { type: 'checkbox', ...props });
-const Pressable = ({ children, onPress, ...props }) => 
+const Pressable = ({ children, onPress, ...props }) =>
   React.createElement('button', { ...props, onClick: onPress }, children);
 
 const StyleSheet = {
