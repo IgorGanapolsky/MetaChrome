@@ -19,6 +19,7 @@
     "expo:go": "node scripts/start-expo-go.js",
     "build:production": "bash scripts/build-production.sh",
     "uat": "bash scripts/run-uat.sh",
+    "test:smoke": "bash scripts/test-smoke.sh",
     "lint:fix": "eslint --fix .",
     "typecheck": "tsc --noEmit"
   },
