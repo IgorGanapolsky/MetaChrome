@@ -209,11 +209,11 @@ class BluetoothAudioManager {
 
       // Discover services
       if (
-        (device as { discoverAllServicesAndCharacteristics: () => Promise<void> })
+        (device as unknown as { discoverAllServicesAndCharacteristics: () => Promise<unknown> })
           .discoverAllServicesAndCharacteristics
       ) {
         await (
-          device as { discoverAllServicesAndCharacteristics: () => Promise<void> }
+          device as unknown as { discoverAllServicesAndCharacteristics: () => Promise<unknown> }
         ).discoverAllServicesAndCharacteristics();
       }
 
@@ -258,9 +258,9 @@ class BluetoothAudioManager {
     if (this.connectedDevice) {
       try {
         await this.unrouteAudioFromBluetooth();
-        if ((this.connectedDevice as { cancelConnection: () => Promise<void> }).cancelConnection) {
+        if ((this.connectedDevice as unknown as { cancelConnection: () => Promise<unknown> }).cancelConnection) {
           await (
-            this.connectedDevice as { cancelConnection: () => Promise<void> }
+            this.connectedDevice as unknown as { cancelConnection: () => Promise<unknown> }
           ).cancelConnection();
         }
       } catch (error) {
