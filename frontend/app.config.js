@@ -70,17 +70,7 @@ module.exports = {
           speechRecognitionPermission: 'MetaChrome uses speech recognition for hands-free browsing',
         },
       ],
-      [
-        'expo-build-properties',
-        {
-          ios: {
-            newArchEnabled: true,
-          },
-          android: {
-            newArchEnabled: true,
-          },
-        },
-      ],
+      'expo-build-properties',
       './plugins/withMetaChrome.js',
       './plugins/withAccessibilityService.js',
     ],
