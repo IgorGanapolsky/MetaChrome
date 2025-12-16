@@ -4,22 +4,33 @@ import { useTabStore } from '@/entities/tab';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
-jest.mock('@/entities/tab');
-jest.mock('expo-router');
-jest.mock('expo-haptics');
+// Mock the tab store
+const mockAddTab = jest.fn();
+jest.mock('@/entities/tab', () => ({
+  useTabStore: jest.fn(() => ({
+    addTab: mockAddTab,
+  })),
+}));
+
+// Mock expo-router
+const mockRouterBack = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    back: mockRouterBack,
+    push: jest.fn(),
+    replace: jest.fn(),
+  }),
+}));
+
+// Mock expo-haptics
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(() => Promise.resolve()),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
+}));
 
 describe('useAddTab', () => {
-  const mockAddTab = jest.fn();
-  const mockRouterBack = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
-    (useTabStore as unknown as jest.Mock).mockReturnValue({
-      addTab: mockAddTab,
-    });
-    (useRouter as jest.Mock).mockReturnValue({
-      back: mockRouterBack,
-    });
   });
 
   it('should add tab with normalized URL', () => {

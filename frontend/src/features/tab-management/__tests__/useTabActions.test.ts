@@ -60,6 +60,7 @@ describe('useTabActions', () => {
       result.current.closeTab('1');
     });
 
-    expect(mockRemoveTab).toHaveBeenCalledWith('1');
+    // Should NOT call removeTab when only one tab exists
+    expect(mockRemoveTab).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,9 @@
 module.exports = {
-  preset: 'jest-expo',
+  // Don't use jest-expo preset - it has React 19 compatibility issues
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+  },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-ng/.*|react-clone-referenced-element|@react-navigation|@unimodules|unimodules|sentry-expo|native-base|react-native-svg|@shopify|zustand)',
   ],
@@ -28,11 +32,12 @@ module.exports = {
     '^@/shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@/types/(.*)$': '<rootDir>/src/types/$1',
     '^@/theme/(.*)$': '<rootDir>/src/theme/$1',
+    '^@/services/(.*)$': '<rootDir>/src/services/$1',
+    '^@/services$': '<rootDir>/src/services/index.ts',
   },
-  setupFiles: ['<rootDir>/jest.setup.fix.js'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testEnvironment: 'node',
   globals: {
     __DEV__: true,
   },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 };
