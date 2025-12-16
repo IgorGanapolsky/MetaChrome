@@ -43,6 +43,7 @@ function createAppLiveSession() {
 
   console.log(`📱 Requesting device: ${device} (${osVersion})`);
   console.log(`🔑 Using App ID: ${BROWSERSTACK_APP_ID.substring(0, 20)}...`);
+  console.log('⏳ Creating session...');
 
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
@@ -79,9 +80,16 @@ async function main() {
     console.log(`📱 Device: ${session.device || 'Default'}`);
     console.log(`🔗 Session URL: ${session.app_url || session.browser_url}`);
     
-    if (session.app_url) {
-      console.log('\n💡 Open this URL in your browser to interact with your app:');
-      console.log(`   ${session.app_url}`);
+    const sessionUrl = session.app_url || session.browser_url || session.url;
+    
+    if (sessionUrl) {
+      console.log('\n✅ SUCCESS! Open this URL on your phone browser:');
+      console.log(`\n   ${sessionUrl}\n`);
+      console.log('📱 This will show your React Native app running on a real device');
+      console.log('🖱️  You can interact with it using touch/mouse');
+    } else {
+      console.log('\n⚠️  Session created but no URL returned');
+      console.log('Response:', JSON.stringify(session, null, 2));
     }
     
     console.log('\n⌨️  Press Ctrl+C to end the session');

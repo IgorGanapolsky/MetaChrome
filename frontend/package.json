@@ -20,7 +20,9 @@
     "browserstack:upload": "node scripts/browserstack-upload.js",
     "browserstack:live": "node scripts/browserstack-live.js",
     "browserstack:live:android": "node scripts/browserstack-live.js 'Samsung Galaxy S23' '13.0'",
-    "browserstack:live:ios": "node scripts/browserstack-live.js 'iPhone 14 Pro' '16'"
+    "browserstack:live:ios": "node scripts/browserstack-live.js 'iPhone 14 Pro' '16'",
+    "firebase:test": "node scripts/firebase-test-lab.js",
+    "build:test": "node scripts/build-and-test.js"
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.3",
