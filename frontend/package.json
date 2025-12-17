@@ -19,10 +19,13 @@
     "expo:go": "node scripts/start-expo-go.js",
     "build:production": "bash scripts/build-production.sh",
     "uat": "bash scripts/run-uat.sh",
-    "test:smoke": "bash scripts/test-smoke.sh",
     "lint:fix": "eslint --fix .",
     "typecheck": "tsc --noEmit",
-    "validate:config": "node scripts/validate-expo-config.js"
+    "validate:config": "node scripts/validate-expo-config.js",
+    "preflight": "node scripts/preflight-check.js",
+    "preflight:full": "node scripts/preflight-check.js --full",
+    "test:smoke": "jest --testPathPattern=smoke --passWithNoTests",
+    "test:all": "yarn preflight && yarn test && yarn test:smoke"
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.3",
