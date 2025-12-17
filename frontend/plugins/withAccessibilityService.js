@@ -39,20 +39,59 @@ function withAccessibilityPackageRegistration(config) {
     // Add package to getPackages() if not present
     const packageRegistration = 'packages.add(new MetaChromeAccessibilityPackage());';
     if (!mainApplication.includes('MetaChromeAccessibilityPackage')) {
-      // Find getPackages method and add our package
-      const getPackagesMatch = mainApplication.match(
-        /protected List<ReactPackage> getPackages\(\) \{[\s\S]*?return packages;/
+      // Try multiple patterns for different Expo/RN versions
+
+      // Pattern 1: Modern Expo with PackageList - look for "return packages" or "return PackageList"
+      // Pattern 2: Old style getPackages with manual list
+
+      // First, try to find PackageList pattern (newer Expo)
+      const packageListMatch = mainApplication.match(
+        /PackageList\(this\)\.(?:packages|getPackages\(\))/
       );
-      if (getPackagesMatch) {
-        const insertPoint = mainApplication.indexOf(
-          'return packages;',
-          mainApplication.indexOf('getPackages')
+
+      if (packageListMatch) {
+        // Modern Expo - add after PackageList initialization
+        // Look for the return statement in getPackages
+        const getPackagesStart = mainApplication.indexOf('getPackages');
+        if (getPackagesStart !== -1) {
+          // Find the return statement
+          const returnMatch = mainApplication.indexOf('return ', getPackagesStart);
+          if (returnMatch !== -1) {
+            // Insert before return
+            mainApplication =
+              mainApplication.slice(0, returnMatch) +
+              packageRegistration +
+              '\n        ' +
+              mainApplication.slice(returnMatch);
+          }
+        }
+      } else {
+        // Try classic pattern
+        const getPackagesMatch = mainApplication.match(
+          /@?Override\s*\n?\s*protected List<ReactPackage> getPackages\(\)/
         );
-        mainApplication =
-          mainApplication.slice(0, insertPoint) +
-          packageRegistration +
-          '\n      ' +
-          mainApplication.slice(insertPoint);
+
+        if (getPackagesMatch) {
+          // Find return packages; or return statement
+          const returnIndex = mainApplication.indexOf(
+            'return packages;',
+            mainApplication.indexOf('getPackages')
+          );
+          const returnIndex2 = mainApplication.indexOf(
+            'return ',
+            mainApplication.indexOf('getPackages')
+          );
+
+          const insertPoint = returnIndex !== -1 ? returnIndex : returnIndex2;
+
+          if (insertPoint !== -1) {
+            mainApplication =
+              mainApplication.slice(0, insertPoint) +
+              packageRegistration +
+              '\n      ' +
+              mainApplication.slice(insertPoint);
+          }
+        }
       }
     }
 

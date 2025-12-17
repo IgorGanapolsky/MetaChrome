@@ -185,9 +185,15 @@ export function VoiceControls() {
     router.push('/meta-rayban' as any);
   };
 
-  const handleOpenAccessibilitySettings = () => {
+  const handleOpenAccessibilitySettings = async () => {
     if (Platform.OS === 'android') {
-      androidAccessibilityService.openSettings();
+      try {
+        await androidAccessibilityService.openSettings();
+      } catch (error) {
+        console.error('Failed to open accessibility settings:', error);
+        // Show error to user via the speech store
+        useSpeechStore.getState().setError(`Failed to open settings: ${error}`);
+      }
     }
   };
 
