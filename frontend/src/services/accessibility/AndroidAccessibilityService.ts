@@ -131,10 +131,26 @@ const FallbackModule: AccessibilityNativeModule = {
 };
 
 // Get the native module or fallback
-const AccessibilityModule: AccessibilityNativeModule =
-  Platform.OS === 'android' && NativeModules.MetaChromeAccessibility
-    ? NativeModules.MetaChromeAccessibility
-    : FallbackModule;
+const getNativeModule = (): AccessibilityNativeModule => {
+  if (Platform.OS !== 'android') {
+    console.log('[MetaChromeAccessibility] Not Android, using fallback');
+    return FallbackModule;
+  }
+
+  const nativeModule = NativeModules.MetaChromeAccessibility;
+  if (nativeModule) {
+    console.log('[MetaChromeAccessibility] Native module found');
+    return nativeModule;
+  }
+
+  console.warn(
+    '[MetaChromeAccessibility] Native module NOT found. Available modules:',
+    Object.keys(NativeModules)
+  );
+  return FallbackModule;
+};
+
+const AccessibilityModule: AccessibilityNativeModule = getNativeModule();
 
 /**
  * AndroidAccessibilityService class
@@ -203,7 +219,14 @@ class AndroidAccessibilityService {
    * Open accessibility settings for the user to enable the service
    */
   async openSettings(): Promise<void> {
-    await AccessibilityModule.openAccessibilitySettings();
+    try {
+      console.log('[MetaChromeAccessibility] Opening accessibility settings...');
+      await AccessibilityModule.openAccessibilitySettings();
+      console.log('[MetaChromeAccessibility] Settings opened successfully');
+    } catch (error) {
+      console.error('[MetaChromeAccessibility] Failed to open settings:', error);
+      throw error;
+    }
   }
 
   /**
