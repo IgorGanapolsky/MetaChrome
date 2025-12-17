@@ -13,7 +13,10 @@ const {
   withAndroidManifest,
   withInfoPlist,
   withEntitlementsPlist,
+  withDangerousMod,
 } = require('@expo/config-plugins');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Configure Android manifest for Bluetooth and App Actions
@@ -96,6 +99,86 @@ function withAndroidConfig(config) {
 }
 
 /**
+ * Create shortcuts.xml for Android App Actions
+ */
+function withAndroidShortcutsXml(config) {
+  return withDangerousMod(config, [
+    'android',
+    async (config) => {
+      const projectRoot = config.modRequest.projectRoot;
+      const xmlDir = path.join(
+        projectRoot,
+        'android',
+        'app',
+        'src',
+        'main',
+        'res',
+        'xml'
+      );
+
+      if (!fs.existsSync(xmlDir)) {
+        fs.mkdirSync(xmlDir, { recursive: true });
+      }
+
+      const shortcutsXml = `<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="open_browser"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_short_label_browser"
+        android:shortcutLongLabel="@string/shortcut_long_label_browser">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.metachrome.app"
+            android:targetClass="com.metachrome.app.MainActivity"
+            android:data="metachrome://browser" />
+    </shortcut>
+</shortcuts>`;
+
+      fs.writeFileSync(path.join(xmlDir, 'shortcuts.xml'), shortcutsXml);
+      return config;
+    },
+  ]);
+}
+
+/**
+ * Add string resources for shortcuts
+ */
+function withAndroidStrings(config) {
+  return withDangerousMod(config, [
+    'android',
+    async (config) => {
+      const projectRoot = config.modRequest.projectRoot;
+      const stringsPath = path.join(
+        projectRoot,
+        'android',
+        'app',
+        'src',
+        'main',
+        'res',
+        'values',
+        'strings.xml'
+      );
+
+      if (fs.existsSync(stringsPath)) {
+        let stringsContent = fs.readFileSync(stringsPath, 'utf8');
+        
+        if (!stringsContent.includes('shortcut_short_label_browser')) {
+             const newStrings = `
+    <string name="shortcut_short_label_browser">Browser</string>
+    <string name="shortcut_long_label_browser">Open MetaChrome Browser</string>
+`;
+             stringsContent = stringsContent.replace('</resources>', `${newStrings}</resources>`);
+             fs.writeFileSync(stringsPath, stringsContent);
+        }
+      }
+      return config;
+    },
+  ]);
+}
+
+/**
  * Configure iOS Info.plist for Bluetooth and Siri
  */
 function withIOSConfig(config) {
@@ -169,5 +252,8 @@ module.exports = function withMetaChrome(config) {
   config = withAndroidConfig(config);
   config = withIOSConfig(config);
   config = withIOSEntitlements(config);
+  // Add new ones
+  config = withAndroidShortcutsXml(config);
+  config = withAndroidStrings(config);
   return config;
 };
