@@ -6,9 +6,60 @@
  * perform actions on behalf of the user.
  */
 
-const { withAndroidManifest, withDangerousMod, withPlugins } = require('@expo/config-plugins');
+const {
+  withAndroidManifest,
+  withDangerousMod,
+  withPlugins,
+  withMainApplication,
+} = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
+
+/**
+ * Register the native module package in MainApplication
+ */
+function withAccessibilityPackageRegistration(config) {
+  return withMainApplication(config, async (config) => {
+    let mainApplication = config.modResults.contents;
+    const packageName = config.android?.package || 'com.metachrome.app';
+
+    // Add import if not present
+    const importStatement = `import ${packageName}.MetaChromeAccessibilityPackage;`;
+    if (!mainApplication.includes(importStatement)) {
+      // Add import after the last import statement
+      const lastImportIndex = mainApplication.lastIndexOf('import ');
+      const endOfImportLine = mainApplication.indexOf('\n', lastImportIndex);
+      mainApplication =
+        mainApplication.slice(0, endOfImportLine + 1) +
+        importStatement +
+        '\n' +
+        mainApplication.slice(endOfImportLine + 1);
+    }
+
+    // Add package to getPackages() if not present
+    const packageRegistration = 'packages.add(new MetaChromeAccessibilityPackage());';
+    if (!mainApplication.includes('MetaChromeAccessibilityPackage')) {
+      // Find getPackages method and add our package
+      const getPackagesMatch = mainApplication.match(
+        /protected List<ReactPackage> getPackages\(\) \{[\s\S]*?return packages;/
+      );
+      if (getPackagesMatch) {
+        const insertPoint = mainApplication.indexOf(
+          'return packages;',
+          mainApplication.indexOf('getPackages')
+        );
+        mainApplication =
+          mainApplication.slice(0, insertPoint) +
+          packageRegistration +
+          '\n      ' +
+          mainApplication.slice(insertPoint);
+      }
+    }
+
+    config.modResults.contents = mainApplication;
+    return config;
+  });
+}
 
 /**
  * Add AccessibilityService to Android manifest
@@ -692,5 +743,6 @@ module.exports = function withAccessibilityService(config) {
     withAccessibilityStrings,
     withAccessibilityServiceJava,
     withAccessibilityNativeModule,
+    withAccessibilityPackageRegistration,
   ]);
 };
