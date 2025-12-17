@@ -29,7 +29,8 @@ describe('EAS Build Readiness', () => {
   });
 
   describe('app.config.js', () => {
-    let config: { expo: Record<string, unknown> };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let config: { expo: Record<string, any> };
 
     beforeAll(() => {
       const configPath = path.join(ROOT, 'app.config.js');
