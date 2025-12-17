@@ -22,10 +22,14 @@ function withAccessibilityPackageRegistration(config) {
   return withMainApplication(config, async (config) => {
     let mainApplication = config.modResults.contents;
     const packageName = config.android?.package || 'com.metachrome.app';
+    const isKotlin = config.modResults.language === 'kt';
 
     // Add import if not present
-    const importStatement = `import ${packageName}.MetaChromeAccessibilityPackage;`;
-    if (!mainApplication.includes(importStatement)) {
+    const importStatement = isKotlin
+      ? `import ${packageName}.MetaChromeAccessibilityPackage`
+      : `import ${packageName}.MetaChromeAccessibilityPackage;`;
+
+    if (!mainApplication.includes('MetaChromeAccessibilityPackage')) {
       // Add import after the last import statement
       const lastImportIndex = mainApplication.lastIndexOf('import ');
       const endOfImportLine = mainApplication.indexOf('\n', lastImportIndex);
@@ -37,59 +41,51 @@ function withAccessibilityPackageRegistration(config) {
     }
 
     // Add package to getPackages() if not present
-    const packageRegistration = 'packages.add(new MetaChromeAccessibilityPackage());';
-    if (!mainApplication.includes('MetaChromeAccessibilityPackage')) {
-      // Try multiple patterns for different Expo/RN versions
-
-      // Pattern 1: Modern Expo with PackageList - look for "return packages" or "return PackageList"
-      // Pattern 2: Old style getPackages with manual list
-
-      // First, try to find PackageList pattern (newer Expo)
-      const packageListMatch = mainApplication.match(
-        /PackageList\(this\)\.(?:packages|getPackages\(\))/
-      );
-
-      if (packageListMatch) {
-        // Modern Expo - add after PackageList initialization
-        // Look for the return statement in getPackages
-        const getPackagesStart = mainApplication.indexOf('getPackages');
-        if (getPackagesStart !== -1) {
-          // Find the return statement
-          const returnMatch = mainApplication.indexOf('return ', getPackagesStart);
-          if (returnMatch !== -1) {
-            // Insert before return
-            mainApplication =
-              mainApplication.slice(0, returnMatch) +
-              packageRegistration +
-              '\n        ' +
-              mainApplication.slice(returnMatch);
-          }
+    if (!mainApplication.includes('MetaChromeAccessibilityPackage()')) {
+      if (isKotlin) {
+        // Kotlin pattern: PackageList(this).packages.apply { ... }
+        const applyMatch = mainApplication.match(/\.packages\.apply\s*\{/);
+        if (applyMatch) {
+          const applyIndex = mainApplication.indexOf(applyMatch[0]);
+          const insertPoint = applyIndex + applyMatch[0].length;
+          mainApplication =
+            mainApplication.slice(0, insertPoint) +
+            '\n              add(MetaChromeAccessibilityPackage())' +
+            mainApplication.slice(insertPoint);
         }
       } else {
-        // Try classic pattern
-        const getPackagesMatch = mainApplication.match(
-          /@?Override\s*\n?\s*protected List<ReactPackage> getPackages\(\)/
+        // Java patterns
+        const packageRegistration = 'packages.add(new MetaChromeAccessibilityPackage());';
+
+        // Try PackageList pattern first
+        const packageListMatch = mainApplication.match(
+          /PackageList\(this\)\.(?:packages|getPackages\(\))/
         );
 
-        if (getPackagesMatch) {
-          // Find return packages; or return statement
+        if (packageListMatch) {
+          const getPackagesStart = mainApplication.indexOf('getPackages');
+          if (getPackagesStart !== -1) {
+            const returnMatch = mainApplication.indexOf('return ', getPackagesStart);
+            if (returnMatch !== -1) {
+              mainApplication =
+                mainApplication.slice(0, returnMatch) +
+                packageRegistration +
+                '\n        ' +
+                mainApplication.slice(returnMatch);
+            }
+          }
+        } else {
+          // Classic pattern
           const returnIndex = mainApplication.indexOf(
             'return packages;',
             mainApplication.indexOf('getPackages')
           );
-          const returnIndex2 = mainApplication.indexOf(
-            'return ',
-            mainApplication.indexOf('getPackages')
-          );
-
-          const insertPoint = returnIndex !== -1 ? returnIndex : returnIndex2;
-
-          if (insertPoint !== -1) {
+          if (returnIndex !== -1) {
             mainApplication =
-              mainApplication.slice(0, insertPoint) +
+              mainApplication.slice(0, returnIndex) +
               packageRegistration +
               '\n      ' +
-              mainApplication.slice(insertPoint);
+              mainApplication.slice(returnIndex);
           }
         }
       }
