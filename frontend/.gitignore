@@ -3,6 +3,10 @@
 dist/
 web-build/
 
+# Native builds (managed by EAS)
+android/
+ios/
+
 # Node
 node_modules/
 npm-debug.log
