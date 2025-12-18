@@ -11,6 +11,11 @@ on:
         options:
           - apk
           - aab
+      clean_build:
+        description: 'Force clean build (ignore cache)'
+        required: false
+        default: false
+        type: boolean
 
 env:
   NODE_VERSION: '20'
@@ -41,37 +46,51 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
 
-      # Gradle caching for faster builds (saves ~10-15 min on subsequent builds)
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            frontend/android/.gradle
-          key: gradle-${{ runner.os }}-${{ hashFiles('frontend/android/gradle/wrapper/gradle-wrapper.properties', 'frontend/android/build.gradle', 'frontend/android/app/build.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      # Cache prebuild output (android folder) - saves ~3-5 min
+      - name: Cache Prebuild
+        if: ${{ !inputs.clean_build }}
+        id: cache-prebuild
+        uses: actions/cache@v4
+        with:
+          path: frontend/android
+          key: prebuild-android-${{ hashFiles('frontend/app.json', 'frontend/app.config.js', 'frontend/package.json') }}
+          restore-keys: |
+            prebuild-android-
+
+      # Only run prebuild if cache miss
       - name: Generate native code
-        run: npx expo prebuild --platform android --clean
+        if: steps.cache-prebuild.outputs.cache-hit != 'true' || inputs.clean_build
+        run: npx expo prebuild --platform android
+
+      # Gradle caching - saves ~5-10 min on subsequent builds
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('frontend/android/gradle/wrapper/gradle-wrapper.properties', 'frontend/android/build.gradle', 'frontend/android/app/build.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
       - name: Create debug keystore
         run: |
-          mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -noprompt
+          if [ ! -f ~/.android/debug.keystore ]; then
+            mkdir -p ~/.android
+            keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -noprompt
+          fi
 
       - name: Build APK
         if: ${{ inputs.build_type == 'apk' }}
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon --build-cache --parallel
+          ./gradlew assembleRelease --build-cache --parallel --max-workers=4 -Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"
         env:
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
 
@@ -79,7 +98,7 @@ jobs:
         if: ${{ inputs.build_type == 'aab' }}
         run: |
           cd android
-          ./gradlew bundleRelease --no-daemon --build-cache --parallel
+          ./gradlew bundleRelease --build-cache --parallel --max-workers=4 -Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"
         env:
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
 
