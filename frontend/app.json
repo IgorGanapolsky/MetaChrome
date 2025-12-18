@@ -83,8 +83,7 @@
           }
         }
       ],
-      "./plugins/withMetaChrome.js",
-      "./plugins/withAccessibilityService.js"
+      "./plugins/withMetaChrome.js"
     ],
     "experiments": {
       "typedRoutes": true
