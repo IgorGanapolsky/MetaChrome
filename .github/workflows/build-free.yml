@@ -1,6 +1,14 @@
-name: Fast Build (8-core Runner)
+name: Build APK
 
 on:
+  # Auto-build on push to main (FREE 2-core runner)
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/build-free.yml'
+
+  # Manual trigger with runner options
   workflow_dispatch:
     inputs:
       build_type:
@@ -11,21 +19,15 @@ on:
         options:
           - apk
           - aab
-      clean_build:
-        description: 'Force clean build (ignore cache)'
-        required: false
-        default: false
-        type: boolean
       runner_size:
         description: 'Runner size (cost vs speed)'
         required: true
-        default: '8-core'
+        default: '2-core-free'
         type: choice
         options:
           - '2-core-free'
           - '4-core'
           - '8-core'
-          - '16-core'
 
 env:
   NODE_VERSION: '20'
@@ -33,8 +35,9 @@ env:
 
 jobs:
   build-android:
-    name: Build Android (${{ inputs.runner_size }})
-    runs-on: ${{ inputs.runner_size == '2-core-free' && 'ubuntu-latest' || inputs.runner_size == '4-core' && 'ubuntu-latest-4-cores' || inputs.runner_size == '8-core' && 'ubuntu-latest-8-cores' || 'ubuntu-latest-16-cores' }}
+    name: Build Android
+    # Use free runner for auto builds, selected runner for manual
+    runs-on: ${{ github.event_name == 'push' && 'ubuntu-latest' || inputs.runner_size == '4-core' && 'ubuntu-latest-4-cores' || inputs.runner_size == '8-core' && 'ubuntu-latest-8-cores' || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: frontend
@@ -62,68 +65,42 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      # Cache prebuild output (android folder) - saves ~3-5 min
       - name: Cache Prebuild
-        if: ${{ !inputs.clean_build }}
         id: cache-prebuild
         uses: actions/cache@v4
         with:
           path: frontend/android
           key: prebuild-android-${{ hashFiles('frontend/app.json', 'frontend/app.config.js', 'frontend/package.json') }}
-          restore-keys: |
-            prebuild-android-
+          restore-keys: prebuild-android-
 
-      # Only run prebuild if cache miss
       - name: Generate native code
-        if: steps.cache-prebuild.outputs.cache-hit != 'true' || inputs.clean_build
+        if: steps.cache-prebuild.outputs.cache-hit != 'true'
         run: npx expo prebuild --platform android
 
-      # Gradle caching - saves ~5-10 min on subsequent builds
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('frontend/android/gradle/wrapper/gradle-wrapper.properties', 'frontend/android/build.gradle', 'frontend/android/app/build.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
+          key: gradle-${{ runner.os }}-${{ hashFiles('frontend/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
 
-      - name: Create debug keystore
+      - name: Create keystore
         run: |
-          if [ ! -f ~/.android/debug.keystore ]; then
-            mkdir -p ~/.android
-            keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -noprompt
-          fi
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -noprompt 2>/dev/null || true
 
       - name: Build APK
-        if: ${{ inputs.build_type == 'apk' }}
         run: |
           cd android
-          ./gradlew assembleRelease --build-cache --parallel -Dorg.gradle.jvmargs="-Xmx6g -XX:+HeapDumpOnOutOfMemoryError -XX:+UseParallelGC"
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
-
-      - name: Build AAB
-        if: ${{ inputs.build_type == 'aab' }}
-        run: |
-          cd android
-          ./gradlew bundleRelease --build-cache --parallel -Dorg.gradle.jvmargs="-Xmx6g -XX:+HeapDumpOnOutOfMemoryError -XX:+UseParallelGC"
+          ./gradlew assembleRelease --build-cache --parallel -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseParallelGC"
         env:
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
 
       - name: Upload APK
-        if: ${{ inputs.build_type == 'apk' }}
         uses: actions/upload-artifact@v4
         with:
           name: metachrome-release.apk
           path: frontend/android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
-
-      - name: Upload AAB
-        if: ${{ inputs.build_type == 'aab' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: metachrome-release.aab
-          path: frontend/android/app/build/outputs/bundle/release/*.aab
           retention-days: 30
