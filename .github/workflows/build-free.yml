@@ -67,12 +67,4 @@ jobs:
         with:
           name: metachrome-${{ inputs.profile }}.apk
           path: frontend/build.apk
-
-      - name: Upload to Firebase App Distribution
-        if: ${{ secrets.FIREBASE_APP_ID != '' }}
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: ${{ secrets.FIREBASE_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          groups: testers
-          file: frontend/build.apk
+          retention-days: 30
