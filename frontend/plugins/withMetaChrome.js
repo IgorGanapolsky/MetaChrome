@@ -90,23 +90,6 @@ function withAndroidConfig(config) {
         mainActivity['intent-filter'].push(deepLinkFilter);
       }
 
-      // Add meta-data for shortcuts
-      if (!mainActivity['meta-data']) {
-        mainActivity['meta-data'] = [];
-      }
-
-      const hasShortcuts = mainActivity['meta-data'].some(
-        (m) => m.$['android:name'] === 'android.app.shortcuts'
-      );
-
-      if (!hasShortcuts) {
-        mainActivity['meta-data'].push({
-          $: {
-            'android:name': 'android.app.shortcuts',
-            'android:resource': '@xml/shortcuts',
-          },
-        });
-      }
     }
 
     return config;
