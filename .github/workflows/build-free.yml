@@ -53,8 +53,14 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build APK locally (FREE)
-        run: eas build --platform android --profile ${{ inputs.profile }} --local --output ./build.apk
+      - name: Generate native code
+        run: npx expo prebuild --platform android --clean
+
+      - name: Build APK with Gradle (no EAS needed)
+        run: |
+          cd android
+          ./gradlew assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk ../build.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
