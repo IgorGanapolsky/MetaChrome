@@ -89,7 +89,6 @@ function withAndroidConfig(config) {
       if (!hasDeepLink) {
         mainActivity['intent-filter'].push(deepLinkFilter);
       }
-
     }
 
     return config;
