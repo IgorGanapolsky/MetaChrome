@@ -82,8 +82,7 @@
             "newArchEnabled": true
           }
         }
-      ],
-      "./plugins/withMetaChrome.js"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
