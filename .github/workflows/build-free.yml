@@ -1,4 +1,4 @@
-name: Free Build + Firebase Distribution
+name: Free Build (GitHub Actions)
 
 on:
   workflow_dispatch:
