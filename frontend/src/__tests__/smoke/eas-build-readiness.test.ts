@@ -228,4 +228,37 @@ describe('EAS Build Readiness', () => {
       expect(fs.existsSync(assetPath)).toBe(true);
     });
   });
+
+  describe('Navigation Structure', () => {
+    let layoutContent: string;
+
+    beforeAll(() => {
+      const layoutPath = path.join(ROOT, 'app/_layout.tsx');
+      layoutContent = fs.readFileSync(layoutPath, 'utf8');
+    });
+
+    test('_layout.tsx exists', () => {
+      const layoutPath = path.join(ROOT, 'app/_layout.tsx');
+      expect(fs.existsSync(layoutPath)).toBe(true);
+    });
+
+    test('ErrorBoundary does NOT wrap Stack navigator', () => {
+      // ErrorBoundary wrapping Stack breaks React Navigation's prevent remove context
+      // This caused: "Couldn't find the prevent remove context. Is your component inside NavigationContent?"
+      const errorBoundaryWrapsStack = /<ErrorBoundary[^>]*>[\s\S]*<Stack/;
+      expect(layoutContent).not.toMatch(errorBoundaryWrapsStack);
+    });
+
+    test('uses GestureHandlerRootView', () => {
+      expect(layoutContent).toContain('GestureHandlerRootView');
+    });
+
+    test('uses SafeAreaProvider', () => {
+      expect(layoutContent).toContain('SafeAreaProvider');
+    });
+
+    test('exports default function', () => {
+      expect(layoutContent).toMatch(/export\s+default\s+function\s+\w+Layout/);
+    });
+  });
 });
