@@ -23,4 +23,4 @@ maestro test maestro/flows/meta-rayban.yaml
 echo ""
 echo "✅ E2E Tests Complete!"
 echo ""
-echo "📋 Next: Run manual UAT using UAT_CHECKLIST.md"
+echo "📋 Next: Run manual UAT using docs/frontend/UAT_CHECKLIST.md"

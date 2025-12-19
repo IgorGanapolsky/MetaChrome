@@ -198,8 +198,8 @@ function withIOSConfig(config) {
       'MetaChrome uses speech recognition to understand your voice commands.';
 
     // Siri usage description
-    config.modResults.NSSiriUsageDescription =
-      'MetaChrome uses Siri to allow you to create custom voice shortcuts for hands-free browsing.';
+    // config.modResults.NSSiriUsageDescription =
+    //   'MetaChrome uses Siri to allow you to create custom voice shortcuts for hands-free browsing.';
 
     // URL schemes for deep linking
     if (!config.modResults.CFBundleURLTypes) {
@@ -239,7 +239,7 @@ function withIOSConfig(config) {
 function withIOSEntitlements(config) {
   return withEntitlementsPlist(config, (config) => {
     // Enable Siri
-    config.modResults['com.apple.developer.siri'] = true;
+    // config.modResults['com.apple.developer.siri'] = true;
 
     return config;
   });

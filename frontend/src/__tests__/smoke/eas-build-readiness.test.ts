@@ -14,7 +14,6 @@ describe('EAS Build Readiness', () => {
   describe('Required Files', () => {
     const requiredFiles = [
       'app.config.js',
-      'app.json',
       'eas.json',
       'package.json',
       'tsconfig.json',

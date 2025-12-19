@@ -74,6 +74,10 @@ agenthub/agents/youtube/db
 *.deb
 *.dylib
 
+# Local screenshots (keep app assets unaffected)
+/Screenshot*.png
+/screenshot*.png
+
 # Build caches
 .cache/
 

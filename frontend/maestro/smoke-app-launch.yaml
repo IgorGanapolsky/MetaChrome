@@ -33,12 +33,14 @@ tags:
 # Test tab switching
 - tapOn: "Cursor"
 - extendedWaitUntil:
-    visible: "cursor.com"
+    visible:
+      id: "webview-cursor"
     timeout: 5000
 
 - tapOn: "Claude"
 - extendedWaitUntil:
-    visible: "claude.ai"
+    visible:
+      id: "webview-claude"
     timeout: 5000
 
 # Verify settings navigation

@@ -1,12 +1,24 @@
 import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { colors } from '@/theme';
 import { initMonitoring, initAnalytics, trackEvent, AnalyticsEvents } from '@/shared/lib';
 
+const isDevToolsEnabled = __DEV__ && process.env.NODE_ENV !== 'test';
+
+if (isDevToolsEnabled) {
+  require('@/shared/lib/reactotron');
+}
+
+const RozeniteDevTools = isDevToolsEnabled
+  ? require('@/shared/lib/rozenite').RozeniteDevTools
+  : null;
+
 export default function RootLayout() {
+  const navigationRef = useNavigationContainerRef();
+
   useEffect(() => {
     // Initialize monitoring and analytics
     initMonitoring();
@@ -38,6 +50,7 @@ export default function RootLayout() {
             }}
           />
         </Stack>
+        {RozeniteDevTools ? <RozeniteDevTools navigationRef={navigationRef} /> : null}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -22,6 +22,9 @@ export function BrowserContent() {
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
+  const activeTabTestId = activeTab
+    ? `webview-${activeTab.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+    : 'webview-unknown';
 
   // Update global ref and web agent service when WebView is available
   useEffect(() => {
@@ -160,6 +163,7 @@ export function BrowserContent() {
       )}
       <WebView
         ref={webViewRef}
+        testID={activeTabTestId}
         source={{ uri: activeTab.url }}
         style={styles.webview}
         onLoadStart={() => setIsLoading(true)}

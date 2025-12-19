@@ -23,14 +23,19 @@ tags:
     id: "glasses-button"
     optional: true
 
+# If glasses button not found, try settings
+- runFlow:
+    when:
+      notVisible: "Meta Ray-Ban"
+    commands:
+      - tapOn:
+          id: "settings-button"
+          optional: true
+
 # Wait for settings page
 - extendedWaitUntil:
     visible: "Meta Ray-Ban"
     timeout: 5000
-
-# Scroll to find Custom Commands section
-- scroll:
-    direction: DOWN
 
 # Look for Add button or Custom Commands section
 - assertVisible:

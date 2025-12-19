@@ -11,7 +11,11 @@ export {
   speechService,
   useSpeechStore,
   useSpeechRecognition,
+  useSpeechRecognitionEventSafe,
+  getSpeechPermissions,
+  requestSpeechPermissions,
   type SpeechState,
+  type SpeechPermissionStatus,
 } from './speech/SpeechRecognitionService';
 
 // Web Agent (for Claude, Cursor, ChatGPT interaction)
@@ -48,3 +52,8 @@ export {
   type AccessibilityNode,
   type AccessibilityState,
 } from './accessibility';
+
+// AI Services (Vertex RAG + Dialogflow CX)
+export { retrieveContexts, generateWithRag } from './ai/vertexRag';
+export { detectIntent } from './ai/dialogflowCx';
+export { logFeedback } from './observability/feedback';

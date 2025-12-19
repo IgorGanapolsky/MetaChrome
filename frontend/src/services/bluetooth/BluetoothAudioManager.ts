@@ -77,12 +77,35 @@ export const useBluetoothStore = create<BluetoothAudioState>()(
 );
 
 class BluetoothAudioManager {
-  private bleManager: BleManager;
+  private bleManager: BleManager | null = null;
   private connectedDevice: Device | null = null;
   private isInitialized = false;
 
   constructor() {
-    this.bleManager = new BleManager();
+    this.bleManager = this.createBleManager();
+  }
+
+  private createBleManager(): BleManager | null {
+    if (!NativeModules.BlePlx) {
+      useBluetoothStore
+        .getState()
+        .setError('Bluetooth not available in this build. Use a dev client or native build.');
+      return null;
+    }
+
+    try {
+      return new BleManager();
+    } catch (error) {
+      useBluetoothStore.getState().setError(`Bluetooth initialization failed: ${error}`);
+      return null;
+    }
+  }
+
+  private getManager(): BleManager | null {
+    if (!this.bleManager) {
+      this.bleManager = this.createBleManager();
+    }
+    return this.bleManager;
   }
 
   /**
@@ -92,7 +115,13 @@ class BluetoothAudioManager {
     if (this.isInitialized) return true;
 
     try {
-      const state = await (this.bleManager as { state: () => Promise<State> }).state();
+      const manager = this.getManager();
+      if (!manager) {
+        useBluetoothStore.getState().setBluetoothEnabled(false);
+        return false;
+      }
+
+      const state = await (manager as { state: () => Promise<State> }).state();
 
       if (String(state) === 'PoweredOff') {
         useBluetoothStore.getState().setError('Bluetooth is turned off');
@@ -109,7 +138,7 @@ class BluetoothAudioManager {
       this.isInitialized = true;
 
       // Listen for state changes
-      this.bleManager.onStateChange((newState: State) => {
+      manager.onStateChange((newState: State) => {
         useBluetoothStore.getState().setBluetoothEnabled(String(newState) === 'PoweredOn');
       }, true);
 
@@ -138,12 +167,18 @@ class BluetoothAudioManager {
       await this.initialize();
     }
 
+    const manager = this.getManager();
+    if (!manager) {
+      useBluetoothStore.getState().setScanning(false);
+      return;
+    }
+
     useBluetoothStore.getState().clearDiscoveredDevices();
     useBluetoothStore.getState().setScanning(true);
     useBluetoothStore.getState().setError(null);
 
     return new Promise((resolve) => {
-      this.bleManager.startDeviceScan(
+      manager.startDeviceScan(
         null, // Scan for all devices
         { allowDuplicates: false },
         (error: unknown, device: Device | null) => {
@@ -181,7 +216,13 @@ class BluetoothAudioManager {
    * Stop scanning for devices
    */
   stopScan(): void {
-    this.bleManager.stopDeviceScan();
+    const manager = this.getManager();
+    if (!manager) {
+      useBluetoothStore.getState().setScanning(false);
+      return;
+    }
+
+    manager.stopDeviceScan();
     useBluetoothStore.getState().setScanning(false);
   }
 
@@ -190,11 +231,16 @@ class BluetoothAudioManager {
    */
   async connect(deviceId: string): Promise<boolean> {
     try {
+      const manager = this.getManager();
+      if (!manager) {
+        return false;
+      }
+
       useBluetoothStore.getState().setError(null);
 
       // Connect to the device
       const connectMethod = (
-        this.bleManager as {
+        manager as {
           connectToDevice: (id: string, options: { autoConnect: boolean }) => Promise<Device>;
         }
       ).connectToDevice;
@@ -352,7 +398,10 @@ class BluetoothAudioManager {
    * Get the BLE manager instance for advanced operations
    */
   getBleManager(): BleManager {
-    return this.bleManager;
+    if (!this.bleManager) {
+      this.bleManager = this.createBleManager();
+    }
+    return this.bleManager as BleManager;
   }
 
   /**
@@ -361,7 +410,9 @@ class BluetoothAudioManager {
   destroy(): void {
     this.stopScan();
     this.disconnect();
-    this.bleManager.destroy();
+    if (this.bleManager) {
+      this.bleManager.destroy();
+    }
   }
 }
 

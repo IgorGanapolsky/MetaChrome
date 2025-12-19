@@ -97,11 +97,12 @@ interface AccessibilityNativeModule {
   navigateChromeToUrl(url: string): Promise<boolean>;
 }
 
-// Fallback implementation for iOS or when native module is not available
+// Fallback implementation for iOS or when native module is not available.
+// Keep silent to avoid noisy devtools logs when the module is absent.
 const FallbackModule: AccessibilityNativeModule = {
   isAccessibilityEnabled: async () => false,
   openAccessibilitySettings: async () => {
-    console.warn('AccessibilityService is only available on Android');
+    // no-op
   },
   isServiceRunning: async () => false,
   openApp: async () => false,
@@ -140,6 +141,15 @@ const getNativeModule = (): AccessibilityNativeModule => {
   const nativeModule = NativeModules.MetaChromeAccessibility;
   if (nativeModule) {
     console.log('[MetaChromeAccessibility] Native module found');
+
+    // Ensure required EventEmitter methods exist to satisfy RN 0.81 contract.
+    if (!nativeModule.addListener) {
+      nativeModule.addListener = () => {};
+    }
+    if (!nativeModule.removeListeners) {
+      nativeModule.removeListeners = () => {};
+    }
+
     return nativeModule;
   }
 
@@ -164,10 +174,10 @@ class AndroidAccessibilityService {
    * Initialize the accessibility service
    */
   async initialize(): Promise<boolean> {
-    if (Platform.OS !== 'android') {
+    if (!hasNativeAccessibility || Platform.OS !== 'android') {
       useAccessibilityStore
         .getState()
-        .setError('AccessibilityService is only available on Android');
+        .setError('Accessibility service native module unavailable (Android only).');
       return false;
     }
 

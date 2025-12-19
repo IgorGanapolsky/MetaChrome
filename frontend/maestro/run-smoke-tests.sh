@@ -4,7 +4,7 @@
 
 set -e
 
-PLATFORM=${1:-android}
+PLATFORM=${1:-auto}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "🧪 Running MetaChrome Smoke Tests on $PLATFORM"
@@ -27,7 +27,7 @@ for test_file in "$SCRIPT_DIR"/smoke-*.yaml; do
     test_name=$(basename "$test_file" .yaml)
     echo "▶️  Running: $test_name"
     
-    if maestro test "$test_file" --platform "$PLATFORM"; then
+    if maestro test "$test_file" --config "$SCRIPT_DIR/config.yaml"; then
         echo "✅ $test_name passed"
     else
         echo "❌ $test_name failed"

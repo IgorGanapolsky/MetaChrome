@@ -1,5 +1,6 @@
 // metro.config.js
 const { getDefaultConfig } = require('expo/metro-config');
+const { withRozenite } = require('@rozenite/metro');
 const path = require('path');
 const { FileStore } = require('metro-cache');
 
@@ -24,4 +25,6 @@ config.resolver.alias = {
 // Reduce the number of workers to decrease resource usage
 config.maxWorkers = 2;
 
-module.exports = config;
+module.exports = withRozenite(config, {
+  enabled: process.env.WITH_ROZENITE === 'true',
+});

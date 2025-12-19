@@ -20,7 +20,11 @@ export function BrowserHeader({ isConnected = true, onToggleLogs }: BrowserHeade
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
-        <TouchableOpacity onPress={handleOpenMetaRayBan} style={styles.glassesButton}>
+        <TouchableOpacity
+          testID="glasses-button"
+          onPress={handleOpenMetaRayBan}
+          style={styles.glassesButton}
+        >
           <Ionicons
             name="glasses-outline"
             size={24}
@@ -28,7 +32,13 @@ export function BrowserHeader({ isConnected = true, onToggleLogs }: BrowserHeade
           />
           {metaRayBanSettings.isConnected && <View style={styles.connectedBadge} />}
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Meta Chrome</Text>
+        <TouchableOpacity
+          testID="debug-nav"
+          onLongPress={() => router.push('/debug' as any)}
+          delayLongPress={500}
+        >
+          <Text style={styles.headerTitle}>Meta Chrome</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.headerRight}>
         <View style={[styles.statusDot, isConnected ? styles.connected : styles.disconnected]} />
@@ -37,7 +47,11 @@ export function BrowserHeader({ isConnected = true, onToggleLogs }: BrowserHeade
             <Ionicons name="terminal-outline" size={22} color="#71717A" />
           </TouchableOpacity>
         )}
-        <TouchableOpacity style={styles.headerButton} onPress={handleOpenMetaRayBan}>
+        <TouchableOpacity
+          testID="settings-button"
+          style={styles.headerButton}
+          onPress={handleOpenMetaRayBan}
+        >
           <Ionicons name="settings-outline" size={22} color="#71717A" />
         </TouchableOpacity>
       </View>

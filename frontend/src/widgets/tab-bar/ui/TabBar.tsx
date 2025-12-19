@@ -37,7 +37,11 @@ export function TabBar() {
             </Text>
           </TouchableOpacity>
         ))}
-        <TouchableOpacity style={styles.addTab} onPress={() => router.push('/add-tab' as any)}>
+        <TouchableOpacity
+          testID="add-tab-button"
+          style={styles.addTab}
+          onPress={() => router.push('/add-tab' as any)}
+        >
           <Ionicons name="add" size={20} color="#71717A" />
         </TouchableOpacity>
       </ScrollView>

@@ -24,9 +24,8 @@ A voice-controlled browser app designed for Meta Ray-Ban smart glasses.
 
 ### Prerequisites
 
-- Node.js 18+
-- Yarn
-- Expo CLI
+- Node.js 20.x (see `frontend/.nvmrc`)
+- Yarn 1.22.x
 - iOS Simulator / Android Emulator (or physical device)
 
 ### Installation
@@ -69,7 +68,8 @@ frontend/
 ```bash
 # Development
 yarn start                    # Start Expo dev server
-npx expo start --dev-client  # Start with dev client
+yarn start:rozenite           # Start Expo with Rozenite enabled
+npx expo start --dev-client   # Start with dev client
 yarn ios                      # Run on iOS
 yarn android                  # Run on Android
 
@@ -90,6 +90,24 @@ eas build --platform ios --profile production     # Build iOS
 eas build --platform android --profile production # Build Android
 yarn build:production                             # Build both platforms
 ```
+
+### DevTools (Reactotron + Rozenite)
+
+Reactotron is auto-enabled in development. Start the desktop app, then run the app in iOS/Android.
+
+For Android emulators/devices, you'll typically need:
+
+```bash
+adb reverse tcp:9090 tcp:9090
+```
+
+Rozenite is disabled by default and must be enabled via Metro:
+
+```bash
+yarn start:rozenite
+```
+
+This enables plugin auto-discovery. The React Navigation plugin is wired up in `app/_layout.tsx`, so it will appear in React Native DevTools once the app connects. If you’re running on a physical device, update the `host` in `src/shared/lib/reactotron.ts` to your machine’s LAN IP.
 
 ## Testing
 
