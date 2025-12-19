@@ -14,12 +14,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useCustomCommandStore } from '@/entities/custom-command';
 import { useHaptics } from '@/shared/lib';
+// Import directly to avoid loading speech recognition native module
 import {
   bluetoothAudioManager,
   useBluetoothStore,
-  siriShortcutsService,
   BluetoothDevice,
-} from '@/services';
+} from '@/services/bluetooth/BluetoothAudioManager';
+import { siriShortcutsService } from '@/services/siri/SiriShortcutsService';
 
 export function MetaRayBanSettings() {
   const { metaRayBanSettings, updateMetaRayBanSettings, connectMetaRayBan, disconnectMetaRayBan } =
