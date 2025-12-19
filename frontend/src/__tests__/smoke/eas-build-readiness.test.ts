@@ -299,5 +299,37 @@ describe('EAS Build Readiness', () => {
         expect(content).not.toContain('@jamsch/expo-speech-recognition');
       }
     });
+
+    test('No barrel import from @/services in non-lazy-loaded widgets', () => {
+      // The @/services barrel export loads ALL services including speech recognition
+      // Only VoiceControls (lazy-loaded) should import from @/services barrel
+      // All other widgets must import directly from specific service files
+      const widgetsDir = path.join(ROOT, 'src/widgets');
+      const widgetFiles = fs.readdirSync(widgetsDir, { recursive: true })
+        .filter((f): f is string => typeof f === 'string' && f.endsWith('.tsx'));
+
+      const allowedFiles = ['VoiceControls.tsx']; // These are lazy-loaded
+
+      for (const file of widgetFiles) {
+        const fileName = path.basename(file);
+        if (allowedFiles.includes(fileName)) continue;
+
+        const content = fs.readFileSync(path.join(widgetsDir, file), 'utf8');
+        // Must not import from @/services barrel (which loads speech recognition)
+        const hasBarrelImport = /from\s+['"]@\/services['"]/.test(content);
+        expect(hasBarrelImport).toBe(false);
+      }
+    });
+
+    test('BrowserContent imports webAgentService directly', () => {
+      // BrowserContent must NOT use @/services barrel to avoid loading speech module
+      const browserContentPath = path.join(ROOT, 'src/widgets/browser-content/ui/BrowserContent.tsx');
+      const content = fs.readFileSync(browserContentPath, 'utf8');
+
+      // Must import directly from webagent service
+      expect(content).toContain('@/services/webagent/WebAgentService');
+      // Must NOT import from barrel
+      expect(content).not.toMatch(/from\s+['"]@\/services['"]/);
+    });
   });
 });

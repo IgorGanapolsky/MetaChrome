@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { useTabStore } from '@/entities/tab';
 import { useBrowserControls } from '@/features/browser-controls';
-import { webAgentService, WEB_AGENTS } from '@/services';
+// Import directly to avoid loading speech recognition native module
+import { webAgentService, WEB_AGENTS } from '@/services/webagent/WebAgentService';
 
 // Store WebView ref globally for voice commands to access
 let globalWebViewRef: React.RefObject<WebView | null> | null = null;
