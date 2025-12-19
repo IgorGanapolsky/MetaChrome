@@ -1,23 +1,22 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, Suspense } from 'react';
+import { View, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrowserHeader } from '@/widgets/browser-header';
 import { TabBar } from '@/widgets/tab-bar';
 import { BrowserContent } from '@/widgets/browser-content';
-import { VoiceControls } from '@/widgets/voice-controls';
 import { CommandLog } from '@/widgets/command-log';
 import { CommandResult } from '@/widgets/command-result';
-import { useVoiceCommands } from '@/features/voice-commands';
+
+// Lazy load VoiceControls to prevent crash if native module fails
+const VoiceControls = React.lazy(() =>
+  import('@/widgets/voice-controls').then((m) => ({ default: m.VoiceControls })).catch(() => ({
+    default: () => <View style={{ padding: 16, backgroundColor: '#1F1F28' }}><Text style={{ color: '#fff' }}>Voice controls unavailable</Text></View>,
+  }))
+);
 
 export function BrowserPage() {
   const [showLogs, setShowLogs] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
-  const { executeCommand } = useVoiceCommands();
-
-  const handleExecuteCommand = async (command: string) => {
-    const result = await executeCommand(command);
-    setLastResult(result);
-  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -28,7 +27,9 @@ export function BrowserPage() {
       </View>
       <CommandResult result={lastResult} onDismiss={() => setLastResult(null)} />
       <CommandLog visible={showLogs} onClose={() => setShowLogs(false)} />
-      <VoiceControls />
+      <Suspense fallback={<View style={{ padding: 16, backgroundColor: '#1F1F28' }} />}>
+        <VoiceControls />
+      </Suspense>
     </SafeAreaView>
   );
 }
