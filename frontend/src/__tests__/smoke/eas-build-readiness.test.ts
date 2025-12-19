@@ -261,4 +261,43 @@ describe('EAS Build Readiness', () => {
       expect(layoutContent).toMatch(/export\s+default\s+function\s+\w+Layout/);
     });
   });
+
+  describe('Native Module Safety', () => {
+    // These tests ensure native modules are properly wrapped to prevent app crashes
+
+    test('BrowserPage lazy-loads VoiceControls', () => {
+      // VoiceControls uses @jamsch/expo-speech-recognition which can crash on startup
+      // It MUST be lazy-loaded with React.lazy() to prevent app crash
+      const browserPagePath = path.join(ROOT, 'src/pages/browser/index.tsx');
+      const content = fs.readFileSync(browserPagePath, 'utf8');
+
+      // Must use React.lazy for VoiceControls
+      expect(content).toMatch(/React\.lazy\(\s*\(\)\s*=>/);
+      expect(content).toContain('Suspense');
+
+      // Must NOT have direct import of VoiceControls
+      expect(content).not.toMatch(/^import.*VoiceControls.*from/m);
+    });
+
+    test('BrowserPage has error handling for lazy components', () => {
+      const browserPagePath = path.join(ROOT, 'src/pages/browser/index.tsx');
+      const content = fs.readFileSync(browserPagePath, 'utf8');
+
+      // Must have .catch() in lazy import for graceful degradation
+      expect(content).toMatch(/\.catch\s*\(/);
+    });
+
+    test('No direct speech recognition import in main pages', () => {
+      // @jamsch/expo-speech-recognition should never be imported directly in pages
+      // It should only be used in services/widgets that are lazy-loaded
+      const pagesDir = path.join(ROOT, 'src/pages');
+      const pageFiles = fs.readdirSync(pagesDir, { recursive: true })
+        .filter((f): f is string => typeof f === 'string' && f.endsWith('.tsx'));
+
+      for (const file of pageFiles) {
+        const content = fs.readFileSync(path.join(pagesDir, file), 'utf8');
+        expect(content).not.toContain('@jamsch/expo-speech-recognition');
+      }
+    });
+  });
 });
