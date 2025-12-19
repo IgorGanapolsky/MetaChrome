@@ -63,13 +63,6 @@ module.exports = {
           backgroundColor: '#000',
         },
       ],
-      [
-        '@jamsch/expo-speech-recognition',
-        {
-          microphonePermission: 'MetaChrome needs microphone access for voice commands',
-          speechRecognitionPermission: 'MetaChrome uses speech recognition for hands-free browsing',
-        },
-      ],
       'expo-build-properties',
       './plugins/withMetaChrome.js',
       './plugins/withAccessibilityService.js',
