@@ -291,7 +291,8 @@ describe('EAS Build Readiness', () => {
       // @jamsch/expo-speech-recognition should never be imported directly in pages
       // It should only be used in services/widgets that are lazy-loaded
       const pagesDir = path.join(ROOT, 'src/pages');
-      const pageFiles = fs.readdirSync(pagesDir, { recursive: true })
+      const pageFiles = fs
+        .readdirSync(pagesDir, { recursive: true })
         .filter((f): f is string => typeof f === 'string' && f.endsWith('.tsx'));
 
       for (const file of pageFiles) {
@@ -305,7 +306,8 @@ describe('EAS Build Readiness', () => {
       // Only VoiceControls (lazy-loaded) should import from @/services barrel
       // All other widgets must import directly from specific service files
       const widgetsDir = path.join(ROOT, 'src/widgets');
-      const widgetFiles = fs.readdirSync(widgetsDir, { recursive: true })
+      const widgetFiles = fs
+        .readdirSync(widgetsDir, { recursive: true })
         .filter((f): f is string => typeof f === 'string' && f.endsWith('.tsx'));
 
       const allowedFiles = ['VoiceControls.tsx']; // These are lazy-loaded
@@ -323,7 +325,10 @@ describe('EAS Build Readiness', () => {
 
     test('BrowserContent imports webAgentService directly', () => {
       // BrowserContent must NOT use @/services barrel to avoid loading speech module
-      const browserContentPath = path.join(ROOT, 'src/widgets/browser-content/ui/BrowserContent.tsx');
+      const browserContentPath = path.join(
+        ROOT,
+        'src/widgets/browser-content/ui/BrowserContent.tsx'
+      );
       const content = fs.readFileSync(browserContentPath, 'utf8');
 
       // Must import directly from webagent service
