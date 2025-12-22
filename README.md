@@ -110,6 +110,7 @@ frontend/
 - **RAG operations:** `yarn rag:build` (rebuild chunks) and `yarn rag:publish` (upload + import to Vertex).
 - **Evals:** `yarn eval:monitorability` (CoT/trace clarity heuristic).
 - **LangSmith sync (pending 403 fix):** `yarn langsmith:sync` (needs valid LANGSMITH_API_KEY/project scope).
+- **Predictive state (on-device):** see `frontend/src/shared/predictive-state.ts` (`addEvent`, `getRecentEvents`, `predictNextIntents`) for lightweight intent prediction to feed the agent/router.
 
 ## Data Stores & Agents
 
