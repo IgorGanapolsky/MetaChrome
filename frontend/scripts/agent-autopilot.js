@@ -14,6 +14,10 @@ const ROOT = path.join(__dirname, "..");
 function run(label, cmd) {
   console.log(`\n=== ${label} ===`);
   execSync(cmd, { stdio: "inherit", cwd: ROOT, shell: "/bin/bash" });
+  execSync(
+    `node scripts/ops-log.js --action "${label}" --result ok --details "${cmd.replace(/"/g, "'")}"`,
+    { stdio: "inherit", cwd: ROOT, shell: "/bin/bash" }
+  );
 }
 
 function main() {
