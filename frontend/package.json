@@ -35,9 +35,21 @@
     "memory:list": "node scripts/memory-list.js",
     "memory:forget": "node scripts/memory-forget.js",
     "memory:reflect": "node scripts/memory-reflect.js",
-    "docs:sync": "node scripts/docs-sync.js"
+    "docs:sync": "node scripts/docs-sync.js",
+    "rag:build": "node scripts/memory-decay.js && node scripts/chunk-docs.js",
+    "rag:publish": "node scripts/rag-publish.js",
+    "kernel:bench": "node scripts/kernel-bench.js",
+    "kernel:select": "node scripts/kernel-select.js",
+    "kernel:gen": "python3 scripts/kernel-generate.py",
+    "kernel:loop": "yarn kernel:gen && yarn kernel:bench && yarn kernel:select && yarn rag:build",
+    "agent:autopilot": "node scripts/agent-autopilot.js",
+    "agent:dev": "node scripts/agent-dev.js",
+    "langsmith:sync": "node scripts/langsmith-sync.js",
+    "eval:monitorability": "node scripts/eval-monitorability.js"
   },
   "dependencies": {
+    "@google-labs/agent-kit": "^0.18.0",
+    "@google-labs/core": "^0.18.0",
     "@expo/ngrok": "^4.1.3",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "^2.2.0",

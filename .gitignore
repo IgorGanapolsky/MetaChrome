@@ -86,6 +86,11 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+
+# Generated artifacts (not tracked)
+docs/chunks/
+frontend/artifacts/
+frontend/kernels/generated_*.py
 -e 
 # Environment files
 *.env

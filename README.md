@@ -102,6 +102,20 @@ frontend/
 └── assets/                # Images & fonts
 ```
 
+## Automation & Agents (Dec 2025)
+
+- **Autopilot (nightly-ready):** `yarn agent:autopilot` → kernel gen/bench/select → RAG rebuild → Vertex publish → monitorability eval. Uses the `claude-code-lessons` data store (global) with summaries enabled.
+- **Query lessons (CLI):** `yarn agent:dev "your question"` → reliability-aware retrieval from `claude-code-lessons` (Discovery Engine). Shows reasoning + uncertainty when evidence is weak.
+- **Kernel experimentation:** `yarn kernel:gen` → `yarn kernel:bench` → `yarn kernel:select` (logs a reflection on wins). Full loop: `yarn kernel:loop`.
+- **RAG operations:** `yarn rag:build` (rebuild chunks) and `yarn rag:publish` (upload + import to Vertex).
+- **Evals:** `yarn eval:monitorability` (CoT/trace clarity heuristic).
+- **LangSmith sync (pending 403 fix):** `yarn langsmith:sync` (needs valid LANGSMITH_API_KEY/project scope).
+
+## Data Stores & Agents
+
+- Lessons data store: `projects/claude-code-learning/locations/global/collections/default_collection/dataStores/claude-code-lessons`
+- Vertex agent (global): `ca28d7d3-554c-44c2-a63f-b5a5f6fc1905` – wired to the lessons data store with Gemini summaries.
+
 ## License
 
 MIT
