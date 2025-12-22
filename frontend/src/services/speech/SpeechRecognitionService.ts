@@ -47,13 +47,19 @@ class SpeechRecognitionService {
 
   onCommand(_callback: (command: string) => void): void {}
 
-  async startListening(_options?: { continuous?: boolean; detectWakeWord?: boolean }): Promise<void> {
+  async startListening(_options?: {
+    continuous?: boolean;
+    detectWakeWord?: boolean;
+  }): Promise<void> {
     useSpeechStore.getState().setError('Speech recognition unavailable');
   }
 
   async stopListening(): Promise<void> {}
 
-  async speak(text: string, options?: { language?: string; pitch?: number; rate?: number }): Promise<void> {
+  async speak(
+    text: string,
+    options?: { language?: string; pitch?: number; rate?: number }
+  ): Promise<void> {
     const { language = 'en-US', pitch = 1.0, rate = 1.0 } = options || {};
     try {
       useSpeechStore.getState().setSpeaking(true);
