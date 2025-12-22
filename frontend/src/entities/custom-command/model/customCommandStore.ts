@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CustomVoiceCommand, CustomCommandCreate, MetaRayBanSettings, ActionType } from './types';
+import { CustomVoiceCommand, CustomCommandCreate, MetaRayBanSettings } from './types';
 
 interface CustomCommandState {
   commands: CustomVoiceCommand[];

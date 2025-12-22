@@ -7,17 +7,12 @@
  */
 
 import { BleManager, Device, State } from 'react-native-ble-plx';
-import { Platform, NativeModules, NativeEventEmitter } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Meta Ray-Ban device identifiers
-const META_RAYBAN_SERVICE_UUIDS = [
-  '0000180f-0000-1000-8000-00805f9b34fb', // Battery Service
-  '0000180a-0000-1000-8000-00805f9b34fb', // Device Information
-];
-
+// Meta Ray-Ban device name patterns for identification
 const META_DEVICE_NAME_PATTERNS = ['Ray-Ban', 'Meta', 'Oakley'];
 
 export interface BluetoothDevice {
