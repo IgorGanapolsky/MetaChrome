@@ -41,7 +41,13 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           version: 'latest'
-          install_components: 'beta'
+
+      - name: Debug gcloud commands
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          gcloud --version
+          gcloud help || true
+          gcloud components list --filter='state.name=Installed'
 
       - name: Ensure bucket exists
         if: steps.guard.outputs.enabled == 'true'
@@ -53,9 +59,9 @@ jobs:
       - name: Ensure data store exists
         if: steps.guard.outputs.enabled == 'true'
         run: |
-          gcloud beta discovery-engine data-stores describe $DATASTORE_ID \
+          gcloud discovery-engine data-stores describe $DATASTORE_ID \
             --location=$LOCATION --collection=default_collection \
-            || gcloud beta discovery-engine data-stores create $DATASTORE_ID \
+            || gcloud discovery-engine data-stores create $DATASTORE_ID \
                  --location=$LOCATION --collection=default_collection \
                  --data-store-id=$DATASTORE_ID \
                  --display-name="MetaChrome Lessons" \
@@ -66,9 +72,9 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: |
           ENGINE_ID=metachrome-search
-          gcloud beta discovery-engine engines describe $ENGINE_ID \
+          gcloud discovery-engine engines describe $ENGINE_ID \
             --location=$LOCATION --collection=default_collection \
-            || gcloud beta discovery-engine engines create $ENGINE_ID \
+            || gcloud discovery-engine engines create $ENGINE_ID \
                  --location=$LOCATION --collection=default_collection \
                  --engine-id=$ENGINE_ID \
                  --display-name="MetaChrome RAG Search" \
