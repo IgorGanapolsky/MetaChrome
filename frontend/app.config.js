@@ -13,8 +13,9 @@ module.exports = {
     ios: {
       supportsTablet: true,
       // Use a personal-team-friendly bundle id to avoid registration conflicts.
-      bundleIdentifier: process.env.IOS_BUNDLE_ID || 'com.ganapolsky.metachrome.dev',
+      bundleIdentifier: process.env.IOS_BUNDLE_ID || 'com.ganapolsky.metachrome',
       buildNumber: process.env.IOS_BUILD_NUMBER || '1',
+      appleTeamId: process.env.IOS_APPLE_TEAM_ID || '9GMM26JC5X',
       infoPlist: {
         NSMicrophoneUsageDescription: 'MetaChrome needs microphone access for voice commands',
         NSSpeechRecognitionUsageDescription:
@@ -27,7 +28,7 @@ module.exports = {
       },
     },
     android: {
-      package: process.env.ANDROID_PACKAGE || 'com.ganapolsky.metachrome.dev',
+      package: process.env.ANDROID_PACKAGE || 'com.ganapolsky.metachrome',
       versionCode: parseInt(process.env.ANDROID_VERSION_CODE || '1', 10),
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',

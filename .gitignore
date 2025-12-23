@@ -99,3 +99,4 @@ frontend/kernels/generated_*.py
 # Environment files
 *.env
 *.env.*
+qa/artifacts/

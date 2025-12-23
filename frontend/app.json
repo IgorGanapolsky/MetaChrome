@@ -17,7 +17,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.metachrome.app",
+      "bundleIdentifier": "com.ganapolsky.metachrome",
       "buildNumber": "1",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "MetaChrome needs microphone access for voice commands",
@@ -28,7 +28,7 @@
       }
     },
     "android": {
-      "package": "com.metachrome.app",
+      "package": "com.ganapolsky.metachrome",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
