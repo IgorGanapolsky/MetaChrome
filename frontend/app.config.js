@@ -75,9 +75,9 @@ module.exports = {
       router: {
         origin: false,
       },
-      gcp: {
-        projectId: 'claude-code-learning',
+      eas: {
+        projectId: process.env.EAS_PROJECT_ID || 'e85c8a8a-0436-41d8-aad1-f6872a6527bd',
       },
-,
+    },
   },
 };

@@ -53,7 +53,7 @@ function info(msg) {
 function checkRequiredFiles() {
   info('Checking required files...');
 
-  const required = ['app.config.js', 'app.json', 'package.json', 'tsconfig.json'];
+  const required = ['app.config.js', 'app.json', 'eas.json', 'package.json', 'tsconfig.json'];
 
   let allExist = true;
   for (const file of required) {
@@ -123,6 +123,48 @@ function checkAppConfig() {
     }
   } catch (e) {
     error(`Failed to load app.config.js: ${e.message}`);
+  }
+}
+
+function checkEasJson() {
+  info('Validating eas.json...');
+
+  try {
+    const easPath = path.join(ROOT, 'eas.json');
+    const eas = JSON.parse(fs.readFileSync(easPath, 'utf8'));
+
+    // Check build profiles exist
+    const requiredProfiles = ['development', 'preview', 'production'];
+    for (const profile of requiredProfiles) {
+      if (!eas.build?.[profile]) {
+        error(`eas.json missing build profile: ${profile}`);
+      }
+    }
+
+    // Check node version is valid
+    const nodeVersions = [];
+    for (const profile of Object.values(eas.build || {})) {
+      if (profile.node) {
+        nodeVersions.push(profile.node);
+      }
+    }
+
+    for (const version of nodeVersions) {
+      // Check if version format is valid (major.minor.patch)
+      if (!/^\d+\.\d+\.\d+$/.test(version)) {
+        error(`Invalid node version format in eas.json: ${version}`);
+      }
+
+      // Check if major version is reasonable (18, 20, 22)
+      const major = parseInt(version.split('.')[0]);
+      if (major < 18 || major > 22) {
+        warn(`Unusual node version in eas.json: ${version}`);
+      }
+    }
+
+    pass('eas.json is valid');
+  } catch (e) {
+    error(`Failed to load eas.json: ${e.message}`);
   }
 }
 
@@ -278,7 +320,7 @@ async function main() {
   // Run all checks
   checkRequiredFiles();
   checkAppConfig();
-  // checkEasJson(); // Removed
+  checkEasJson();
   checkPackageJson();
   checkGitStatus();
   checkConfigSync();
