@@ -55,9 +55,9 @@ jobs:
       - name: Ensure data store exists
         if: steps.guard.outputs.enabled == 'true'
         run: |
-          gcloud alpha discovery-engine data-stores describe $DATASTORE_ID \
+          gcloud alpha discoveryengine data-stores describe $DATASTORE_ID \
             --location=$LOCATION --collection=default_collection \
-            || gcloud alpha discovery-engine data-stores create $DATASTORE_ID \
+            || gcloud alpha discoveryengine data-stores create $DATASTORE_ID \
                  --location=$LOCATION --collection=default_collection \
                  --data-store-id=$DATASTORE_ID \
                  --display-name="MetaChrome Lessons" \
@@ -68,9 +68,9 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: |
           ENGINE_ID=metachrome-search
-          gcloud alpha discovery-engine engines describe $ENGINE_ID \
+          gcloud alpha discoveryengine engines describe $ENGINE_ID \
             --location=$LOCATION --collection=default_collection \
-            || gcloud alpha discovery-engine engines create $ENGINE_ID \
+            || gcloud alpha discoveryengine engines create $ENGINE_ID \
                  --location=$LOCATION --collection=default_collection \
                  --engine-id=$ENGINE_ID \
                  --display-name="MetaChrome RAG Search" \
