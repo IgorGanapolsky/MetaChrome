@@ -36,8 +36,8 @@ export const runCypher = async (query: string, params: Record<string, any> = {})
 
 export const retrieveGraphContext = async (query: string): Promise<string> => {
   // Simple extraction of entities from query for lookup
-  const words = query.split(/\s+/).map(w => w.replace(/[^a-zA-Z0-9]/g, ''));
-  
+  const words = query.split(/\s+/).map((w) => w.replace(/[^a-zA-Z0-9]/g, ''));
+
   // 1-hop retrieval query
   // Find nodes matching keywords (fuzzy), then find their neighbors
   const cypher = `
@@ -50,9 +50,9 @@ export const retrieveGraphContext = async (query: string): Promise<string> => {
     RETURN n, r, neighbor
     LIMIT 20
   `;
-  
+
   const records = await runCypher(cypher, { words, query });
-  
+
   if (records.length === 0) return '';
 
   // Format context text

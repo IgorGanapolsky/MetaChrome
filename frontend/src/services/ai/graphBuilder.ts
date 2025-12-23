@@ -31,7 +31,10 @@ export const extractEntitiesFromText = async (text: string): Promise<ExtractedGr
       data?.predictions?.[0]?.content || // alternative format
       '{}';
 
-    const cleanJson = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
+    const cleanJson = rawContent
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
     return JSON.parse(cleanJson);
   } catch (error) {
     console.warn('Failed to extract entities (using fallback data for testing):', error);
@@ -40,12 +43,22 @@ export const extractEntitiesFromText = async (text: string): Promise<ExtractedGr
       nodes: [
         { id: 'GraphRAG System', type: 'System', description: 'A Graph-based RAG architecture' },
         { id: 'Neo4j', type: 'Database', description: 'Graph database' },
-        { id: 'Vertex AI', type: 'AI Service', description: 'Google Cloud AI' }
+        { id: 'Vertex AI', type: 'AI Service', description: 'Google Cloud AI' },
       ],
       edges: [
-        { source: 'GraphRAG System', target: 'Neo4j', relation: 'DEPENDS_ON', description: 'Database backend' },
-        { source: 'GraphRAG System', target: 'Vertex AI', relation: 'USES', description: 'LLM provider' }
-      ]
+        {
+          source: 'GraphRAG System',
+          target: 'Neo4j',
+          relation: 'DEPENDS_ON',
+          description: 'Database backend',
+        },
+        {
+          source: 'GraphRAG System',
+          target: 'Vertex AI',
+          relation: 'USES',
+          description: 'LLM provider',
+        },
+      ],
     };
   }
 };
