@@ -14,6 +14,7 @@
 
 import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
 import { create } from 'zustand';
+const hasNativeAccessibility = !!NativeModules.MetaChromeAccessibility;
 
 // Types for accessibility actions
 export interface AccessibilityNode {
