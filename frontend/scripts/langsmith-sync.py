@@ -64,7 +64,7 @@ def main():
     langsmith = ensure_langsmith()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     runs = fetch_runs(langsmith)
-    payload = {"project": PROJECT, "count": len(runs), "runs": [r.model_dump() for r in runs]}
+    payload = {"project": PROJECT, "count": len(runs), "runs": [r.dict() for r in runs]}
     OUT_FILE.write_text(json.dumps(payload, indent=2, default=str))
     print(f"Saved {len(runs)} runs to {OUT_FILE}")
     if FAIL_IF_EMPTY and len(runs) == 0:
