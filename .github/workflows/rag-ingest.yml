@@ -43,13 +43,6 @@ jobs:
           version: '458.0.0'
           install_components: 'beta'
 
-      - name: Install Discovery Engine CLI
-        if: steps.guard.outputs.enabled == 'true'
-        run: |
-          set -e
-          gcloud components install discoveryengine --quiet || \
-            gcloud components install discoveryengine-alpha --quiet
-
       - name: Ensure bucket exists
         if: steps.guard.outputs.enabled == 'true'
         run: |
@@ -57,30 +50,38 @@ jobs:
             gsutil mb -l $LOCATION gs://$BUCKET
           fi
 
-      - name: Ensure data store exists
+      - name: Ensure data store exists (best-effort)
         if: steps.guard.outputs.enabled == 'true'
         run: |
-          gcloud beta discovery-engine data-stores describe $DATASTORE_ID \
-            --location=$LOCATION --collection=default_collection \
-            || gcloud beta discovery-engine data-stores create $DATASTORE_ID \
-                 --location=$LOCATION --collection=default_collection \
-                 --data-store-id=$DATASTORE_ID \
-                 --display-name="MetaChrome Lessons" \
-                 --industry-vertical=GENERIC \
-                 --content-config=CONTENT_REQUIRED
+          if gcloud beta discovery-engine --help >/dev/null 2>&1; then
+            gcloud beta discovery-engine data-stores describe $DATASTORE_ID \
+              --location=$LOCATION --collection=default_collection \
+              || gcloud beta discovery-engine data-stores create $DATASTORE_ID \
+                   --location=$LOCATION --collection=default_collection \
+                   --data-store-id=$DATASTORE_ID \
+                   --display-name="MetaChrome Lessons" \
+                   --industry-vertical=GENERIC \
+                   --content-config=CONTENT_REQUIRED
+          else
+            echo "discovery-engine CLI not available on runner; assuming data store already exists."
+          fi
 
-      - name: Ensure search engine exists
+      - name: Ensure search engine exists (best-effort)
         if: steps.guard.outputs.enabled == 'true'
         run: |
-          ENGINE_ID=metachrome-search
-          gcloud beta discovery-engine engines describe $ENGINE_ID \
-            --location=$LOCATION --collection=default_collection \
-            || gcloud beta discovery-engine engines create $ENGINE_ID \
-                 --location=$LOCATION --collection=default_collection \
-                 --engine-id=$ENGINE_ID \
-                 --display-name="MetaChrome RAG Search" \
-                 --type=search \
-                 --data-store-ids=$DATASTORE_ID
+          if gcloud beta discovery-engine --help >/dev/null 2>&1; then
+            ENGINE_ID=metachrome-search
+            gcloud beta discovery-engine engines describe $ENGINE_ID \
+              --location=$LOCATION --collection=default_collection \
+              || gcloud beta discovery-engine engines create $ENGINE_ID \
+                   --location=$LOCATION --collection=default_collection \
+                   --engine-id=$ENGINE_ID \
+                   --display-name="MetaChrome RAG Search" \
+                   --type=search \
+                   --data-store-ids=$DATASTORE_ID
+          else
+            echo "discovery-engine CLI not available; skipping engine ensure."
+          fi
 
       - name: Install Node & deps
         if: steps.guard.outputs.enabled == 'true'
