@@ -1,0 +1,68 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  claude-review:
+    name: Automated Code Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Claude Code CLI
+        run: |
+          # Install Claude Code CLI
+          curl -fsSL https://raw.githubusercontent.com/anthropics/claude-code/main/install.sh | sh
+
+      - name: Run Claude Code Review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Run the review workflow slash command
+          claude-code /compound-engineering:workflows:review ${{ github.event.pull_request.number }}
+
+      - name: Post Review Results
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Post review findings as PR comment
+          if [ -d "todos" ]; then
+            REVIEW_SUMMARY="## 🤖 Claude Code Review\n\n"
+            REVIEW_SUMMARY="${REVIEW_SUMMARY}Automated code review completed. Found $(ls todos/*-pending-p1-*.md 2>/dev/null | wc -l) critical issues.\n\n"
+
+            # Add P1 findings
+            if ls todos/*-pending-p1-*.md 1> /dev/null 2>&1; then
+              REVIEW_SUMMARY="${REVIEW_SUMMARY}### 🔴 Critical Issues (P1)\n\n"
+              for todo in todos/*-pending-p1-*.md; do
+                TITLE=$(grep "^# " "$todo" | head -1 | sed 's/^# //')
+                REVIEW_SUMMARY="${REVIEW_SUMMARY}- **${TITLE}** ([View Details](${todo}))\n"
+              done
+              REVIEW_SUMMARY="${REVIEW_SUMMARY}\n"
+            fi
+
+            # Add P2 findings
+            if ls todos/*-pending-p2-*.md 1> /dev/null 2>&1; then
+              REVIEW_SUMMARY="${REVIEW_SUMMARY}### 🟡 Important Issues (P2)\n\n"
+              for todo in todos/*-pending-p2-*.md; do
+                TITLE=$(grep "^# " "$todo" | head -1 | sed 's/^# //')
+                REVIEW_SUMMARY="${REVIEW_SUMMARY}- **${TITLE}** ([View Details](${todo}))\n"
+              done
+              REVIEW_SUMMARY="${REVIEW_SUMMARY}\n"
+            fi
+
+            # Post comment
+            gh pr comment ${{ github.event.pull_request.number }} --body "${REVIEW_SUMMARY}
+
+See \`todos/\` directory for detailed findings and recommended solutions."
+          fi
