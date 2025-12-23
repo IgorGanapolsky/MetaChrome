@@ -48,13 +48,27 @@ export class VertexAISink implements Sink<any> {
 
   async write(items: AsyncGenerator<DataRecord<any>>): Promise<void> {
     // Vertex AI import expects a file in GCS.
-    // We reuse JsonLineSink to write local file first, then upload, then trigger import.
+    // We write a temp JSONL file, upload, then trigger import.
 
     const tempFile = path.join(os.tmpdir(), `metachrome-chunks-${Date.now()}.jsonl`);
-    const jsonSink = new JsonLineSink(tempFile);
 
     console.log('[VertexAISink] Writing local temp file...');
-    await jsonSink.write(items);
+    const lines: string[] = [];
+    for await (const item of items) {
+      const line = JSON.stringify({
+        id: item.id.replace(/[^a-zA-Z0-9_]/g, '_'),
+        structData: {
+          source: item.metadata?.fileName || 'unknown',
+          summary_hint: item.data.summary_hint,
+        },
+        content: {
+          mimeType: 'text/plain',
+          rawBytes: Buffer.from(item.data.text).toString('base64'),
+        },
+      });
+      lines.push(line);
+    }
+    fs.writeFileSync(tempFile, lines.join('\n') + '\n', { encoding: 'utf8' });
 
     console.log(`[VertexAISink] Uploading to ${this.bucketUri}...`);
     this.run(`gsutil cp ${tempFile} ${this.bucketUri}`);
