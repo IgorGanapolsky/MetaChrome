@@ -11,7 +11,7 @@ const processFile = async (filePath: string) => {
     const content = fs.readFileSync(filePath, 'utf-8');
     const entities = await extractEntitiesFromText(content);
     console.log(`  Extracted ${entities.nodes.length} nodes, ${entities.edges.length} edges.`);
-    
+
     if (entities.nodes.length > 0) {
       await upsertGraph(entities);
     }
@@ -39,10 +39,10 @@ const main = async () => {
         console.log(`Docs dir not found at ${DOCS_DIR}, skipping bulk build.`);
         return;
       }
-      
-      const files = fs.readdirSync(DOCS_DIR).filter(f => f.endsWith('.md'));
+
+      const files = fs.readdirSync(DOCS_DIR).filter((f) => f.endsWith('.md'));
       console.log(`Found ${files.length} documents.`);
-      
+
       for (const file of files) {
         await processFile(path.join(DOCS_DIR, file));
       }

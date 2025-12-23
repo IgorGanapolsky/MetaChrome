@@ -1,0 +1,54 @@
+name: Orchestrate CI + LangSmith + RAG
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to test"
+        required: false
+        default: main
+      notify_slack:
+        description: "Post status to Slack (requires secret SLACK_WEBHOOK_URL)"
+        required: false
+        default: "false"
+  schedule:
+    - cron: "15 12 * * *"  # daily sanity run
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set ref
+        id: ref
+        run: echo "ref=${{ github.event.inputs.ref || 'main' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger CI
+        uses: peter-evans/workflow-dispatch@v3
+        with:
+          workflow: CI
+          ref: ${{ steps.ref.outputs.ref }}
+
+      - name: Trigger LangSmith Sync
+        uses: peter-evans/workflow-dispatch@v3
+        with:
+          workflow: LangSmith Sync
+          ref: ${{ steps.ref.outputs.ref }}
+
+      - name: Trigger RAG Ingest
+        uses: peter-evans/workflow-dispatch@v3
+        with:
+          workflow: RAG Ingest (MetaChrome)
+          ref: ${{ steps.ref.outputs.ref }}
+
+      - name: Slack notify (optional)
+        if: ${{ github.event.inputs.notify_slack == 'true' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
+          REF: ${{ steps.ref.outputs.ref }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "No SLACK_WEBHOOK_URL set; skipping Slack notify."
+          else
+            msg='{"text":":rocket: Orchestrated runs kicked off for '$REF' (CI + LangSmith + RAG)."}'
+            curl -X POST -H 'Content-Type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
+          fi
