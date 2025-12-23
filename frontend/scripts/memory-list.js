@@ -24,11 +24,13 @@ const reflections = fs.existsSync(reflectionsPath)
   : [];
 
 console.log('--- Explicit memories ---');
-explicit.forEach((e) => console.log(`[${e.timestamp}] ${e.key}: ${e.value} ${e.tags?.length ? '(' + e.tags.join(',') + ')' : ''}`));
+explicit.forEach((e) =>
+  console.log(
+    `[${e.timestamp}] ${e.key}: ${e.value} ${e.tags?.length ? '(' + e.tags.join(',') + ')' : ''}`
+  )
+);
 if (!explicit.length) console.log('(none)');
 
 console.log('\n--- Recent reflections (last 10) ---');
-reflections
-  .slice(-10)
-  .forEach((r) => console.log(`[${r.timestamp}] ${r.sentiment}: ${r.text}`));
+reflections.slice(-10).forEach((r) => console.log(`[${r.timestamp}] ${r.sentiment}: ${r.text}`));
 if (!reflections.length) console.log('(none)');

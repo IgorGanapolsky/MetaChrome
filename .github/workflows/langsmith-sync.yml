@@ -9,7 +9,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Guard: require LangSmith secret
+      - name: "Guard: require LangSmith secret"
         id: guard
         run: |
           if [ -z "${{ secrets.LANGSMITH_API_KEY }}" ]; then
@@ -49,4 +49,5 @@ jobs:
 
       - name: Skip (missing secret)
         if: steps.guard.outputs.enabled != 'true'
-        run: echo "Skipping LangSmith sync: LANGSMITH_API_KEY secret not set."
+        run: |
+          echo "Skipping LangSmith sync: LANGSMITH_API_KEY secret not set."

@@ -8,9 +8,7 @@ const buildHeaders = () => ({
 
 const withApiKey = (url: string) =>
   appConfig.vertex.apiKey
-    ? `${url}${url.includes('?') ? '&' : '?'}key=${encodeURIComponent(
-        appConfig.vertex.apiKey
-      )}`
+    ? `${url}${url.includes('?') ? '&' : '?'}key=${encodeURIComponent(appConfig.vertex.apiKey)}`
     : url;
 
 const vertexBaseUrlV1 = () =>

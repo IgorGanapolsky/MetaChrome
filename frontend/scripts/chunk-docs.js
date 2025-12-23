@@ -105,11 +105,7 @@ function main() {
   const docChunks = files.flatMap(processFile);
   const memoryChunks = loadReflections();
   const allChunks = [...docChunks, ...memoryChunks];
-  fs.writeFileSync(
-    OUTPUT_FILE,
-    allChunks.map((c) => JSON.stringify(c)).join('\n'),
-    'utf8'
-  );
+  fs.writeFileSync(OUTPUT_FILE, allChunks.map((c) => JSON.stringify(c)).join('\n'), 'utf8');
   console.log(`Wrote ${allChunks.length} chunks to ${OUTPUT_FILE}`);
 }
 

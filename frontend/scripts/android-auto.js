@@ -41,7 +41,10 @@ function startEmulatorIfNeeded() {
   // Try to start the AVD
   try {
     console.log(`🖥️ Starting Android emulator: ${FALLBACK_EMULATOR}`);
-    spawnSync('nohup', ['emulator', `-avd`, FALLBACK_EMULATOR], { stdio: 'ignore', detached: true });
+    spawnSync('nohup', ['emulator', `-avd`, FALLBACK_EMULATOR], {
+      stdio: 'ignore',
+      detached: true,
+    });
     // Wait up to ~40s for device to appear
     for (let i = 0; i < 40; i++) {
       if (listAdbDevices().length > 0) return;
