@@ -6,32 +6,37 @@
  * 3) Rebuild RAG chunks
  * 4) Publish to Vertex data store
  */
-const { execSync } = require("child_process");
-const path = require("path");
+const { execSync } = require('child_process');
+const path = require('path');
 
-const ROOT = path.join(__dirname, "..");
+const ROOT = path.join(__dirname, '..');
 
 function run(label, cmd) {
   console.log(`\n=== ${label} ===`);
-  execSync(cmd, { stdio: "inherit", cwd: ROOT, shell: "/bin/bash" });
+  execSync(cmd, { stdio: 'inherit', cwd: ROOT, shell: '/bin/bash' });
   execSync(
     `node scripts/ops-log.js --action "${label}" --result ok --details "${cmd.replace(/"/g, "'")}"`,
-    { stdio: "inherit", cwd: ROOT, shell: "/bin/bash" }
+    { stdio: 'inherit', cwd: ROOT, shell: '/bin/bash' }
   );
 }
 
 function main() {
   try {
-    run("Generate kernels", "yarn kernel:gen");
-    run("Bench kernels", "yarn kernel:bench");
-    run("Select best kernel + log reflection", "yarn kernel:select");
-    run("Rebuild RAG chunks", "yarn rag:build");
-    run("Publish to Vertex", "VERTEX_API_KEY=skip GCP_PROJECT_ID=claude-code-learning yarn rag:publish");
-    run("Monitorability eval (optional)", "yarn eval:monitorability || true");
-    console.log("\nReliability guard: low-quality answers will be withheld in agent-dev; reflections only on verified wins.");
-    console.log("\n✅ Agent autopilot complete.");
+    run('Generate kernels', 'yarn kernel:gen');
+    run('Bench kernels', 'yarn kernel:bench');
+    run('Select best kernel + log reflection', 'yarn kernel:select');
+    run('Rebuild RAG chunks', 'yarn rag:build');
+    run(
+      'Publish to Vertex',
+      'VERTEX_API_KEY=skip GCP_PROJECT_ID=claude-code-learning yarn rag:publish'
+    );
+    run('Monitorability eval (optional)', 'yarn eval:monitorability || true');
+    console.log(
+      '\nReliability guard: low-quality answers will be withheld in agent-dev; reflections only on verified wins.'
+    );
+    console.log('\n✅ Agent autopilot complete.');
   } catch (err) {
-    console.error("\n❌ Agent autopilot failed:", err.message);
+    console.error('\n❌ Agent autopilot failed:', err.message);
     process.exit(1);
   }
 }

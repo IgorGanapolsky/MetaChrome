@@ -1,12 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { detectIntent, generateWithRag, retrieveContexts } from '@/services';
 import { appConfig } from '@/shared/lib/config';
@@ -27,7 +20,8 @@ export default function DebugScreen() {
   const configSummary = useMemo(
     () => ({
       gcpProjectId: appConfig.gcpProjectId || '(missing)',
-      dialogflowAgent: appConfig.dialogflow.agentName || appConfig.dialogflow.agentId || '(missing)',
+      dialogflowAgent:
+        appConfig.dialogflow.agentName || appConfig.dialogflow.agentId || '(missing)',
       dialogflowLocation: appConfig.dialogflow.location,
       vertexRagCorpus: appConfig.vertex.ragCorpus || '(missing)',
       vertexRagLocation: appConfig.vertex.ragLocation,
@@ -124,7 +118,6 @@ export default function DebugScreen() {
           <Text style={styles.cardTitle}>Result</Text>
           <Text style={styles.code}>{result || 'No output yet.'}</Text>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

@@ -29,13 +29,14 @@ const sentiment = sentimentRaw.includes('up')
 const repoRoot = path.join(__dirname, '..', '..');
 const filePath = path.join(repoRoot, 'docs', 'memory', 'reflections.jsonl');
 
-const line = JSON.stringify({
-  timestamp: new Date().toISOString(),
-  type: 'implicit',
-  sentiment,
-  source: 'lesson',
-  text,
-}) + '\n';
+const line =
+  JSON.stringify({
+    timestamp: new Date().toISOString(),
+    type: 'implicit',
+    sentiment,
+    source: 'lesson',
+    text,
+  }) + '\n';
 
 fs.appendFileSync(filePath, line);
 console.log('Appended reflection:', text);

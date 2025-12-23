@@ -32,7 +32,10 @@ function chooseIosDevice() {
 
   try {
     const raw = execSync('xcrun xctrace list devices', { encoding: 'utf8' });
-    const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+    const lines = raw
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
 
     // Prefer an iPhone-like device line with a UDID (physical) and not a Simulator.
     const physical = lines.find((l) => {
@@ -57,7 +60,10 @@ function chooseIosDevice() {
 function chooseAndroidDevice() {
   try {
     const raw = execSync('adb devices -l', { encoding: 'utf8' });
-    const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+    const lines = raw
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
     const deviceLine = lines.find((l) => l.endsWith('device') && !l.includes('emulator'));
     if (deviceLine) {
       const serial = deviceLine.split(/\s+/)[0];
@@ -103,7 +109,7 @@ function main() {
     log(
       `Found physical ${target.flag === '--ios' ? 'iOS' : 'Android'} device ${
         target.udid || target.name || target.serial
-      }; launching Metro targeting it.`,
+      }; launching Metro targeting it.`
     );
 
     // Prevent Expo CLI from auto-opening a simulator when we have a real device.
