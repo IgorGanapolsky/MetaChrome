@@ -43,6 +43,13 @@ jobs:
           version: '458.0.0'
           install_components: 'beta'
 
+      - name: Install Discovery Engine CLI
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          set -e
+          gcloud components install discoveryengine --quiet || \
+            gcloud components install discoveryengine-alpha --quiet
+
       - name: Ensure bucket exists
         if: steps.guard.outputs.enabled == 'true'
         run: |
