@@ -18,9 +18,11 @@ const fs = require('fs');
 
 const PROJECT_ROOT = path.join(__dirname, '..');
 const CHUNKS_FILE = path.join(PROJECT_ROOT, '..', 'docs', 'chunks', 'chunks.jsonl');
-const BUCKET_URI = 'gs://metachrome-rag-claude-code-learning-us-central1/chunks/chunks.jsonl';
+// Target MetaChrome project + bucket + datastore
+const BUCKET_URI = 'gs://metachrome-ai-2025-rag/chunks/chunks.jsonl';
+// us-central1 data store
 const DATA_STORE_RESOURCE =
-  'projects/claude-code-learning/locations/global/collections/default_collection/dataStores/claude-code-lessons/branches/default_branch/documents';
+  'projects/metachrome-2025/locations/us-central1/collections/default_collection/dataStores/metachrome-lessons/branches/default_branch/documents';
 const HOST = 'https://discoveryengine.googleapis.com';
 
 function run(cmd) {
