@@ -123,6 +123,10 @@ jest.mock('@jamsch/expo-speech-recognition', () => ({
     getStateAsync: jest.fn(() => Promise.resolve({ isRecognizing: false })),
     requestPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
   },
+  SpeechRecognitionModule: {
+    start: jest.fn(),
+    stop: jest.fn(),
+  },
 }));
 
 // Mock react-native-safe-area-context

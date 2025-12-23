@@ -40,9 +40,7 @@ function findPhysicalDevice() {
   }
   const phone = devices.find(
     (d) =>
-      d.platform === 'com.apple.platform.iphoneos' &&
-      d.available === true &&
-      d.interface === 'usb'
+      d.platform === 'com.apple.platform.iphoneos' && d.available === true && d.interface === 'usb'
   );
   if (phone) {
     return { name: normalizeQuotes(phone.name), udid: phone.identifier };
@@ -90,7 +88,9 @@ function main() {
       console.warn('Device run failed; falling back to simulator.');
       console.warn(err?.message || err);
       console.log(`🖥️ Running on simulator: ${FALLBACK_SIM}`);
-      run(`${envPrefix} npx expo run:ios --device "${FALLBACK_SIM}" --configuration Debug ${portFlag}`);
+      run(
+        `${envPrefix} npx expo run:ios --device "${FALLBACK_SIM}" --configuration Debug ${portFlag}`
+      );
     }
   } else if (device) {
     console.log(`📱 Found device: ${device.name} — running on device`);
@@ -101,11 +101,15 @@ function main() {
       console.warn('Device run failed; falling back to simulator.');
       console.warn(err?.message || err);
       console.log(`🖥️ Running on simulator: ${FALLBACK_SIM}`);
-      run(`${envPrefix} npx expo run:ios --device "${FALLBACK_SIM}" --configuration Debug ${portFlag}`);
+      run(
+        `${envPrefix} npx expo run:ios --device "${FALLBACK_SIM}" --configuration Debug ${portFlag}`
+      );
     }
   } else {
     console.log(`🖥️ No device found; running on simulator: ${FALLBACK_SIM}`);
-    run(`${envPrefix} npx expo run:ios --device "${FALLBACK_SIM}" --configuration Debug ${portFlag}`);
+    run(
+      `${envPrefix} npx expo run:ios --device "${FALLBACK_SIM}" --configuration Debug ${portFlag}`
+    );
   }
 }
 

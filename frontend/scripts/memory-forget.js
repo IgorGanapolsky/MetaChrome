@@ -25,20 +25,14 @@ let removed = 0;
 if (fs.existsSync(explicitPath)) {
   const data = JSON.parse(fs.readFileSync(explicitPath, 'utf8'));
   const kept = data.filter(
-    (e) =>
-      !e.key.toLowerCase().includes(needle) &&
-      !(e.value || '').toLowerCase().includes(needle),
+    (e) => !e.key.toLowerCase().includes(needle) && !(e.value || '').toLowerCase().includes(needle)
   );
   removed += data.length - kept.length;
   fs.writeFileSync(explicitPath, JSON.stringify(kept, null, 2));
 }
 
 if (fs.existsSync(reflectionsPath)) {
-  const lines = fs
-    .readFileSync(reflectionsPath, 'utf8')
-    .trim()
-    .split('\n')
-    .filter(Boolean);
+  const lines = fs.readFileSync(reflectionsPath, 'utf8').trim().split('\n').filter(Boolean);
   const kept = lines.filter((l) => !l.toLowerCase().includes(needle));
   removed += lines.length - kept.length;
   fs.writeFileSync(reflectionsPath, kept.join('\n') + (kept.length ? '\n' : ''));
