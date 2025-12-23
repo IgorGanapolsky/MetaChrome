@@ -12,38 +12,48 @@ on:
         required: false
         default: "false"
   schedule:
-    - cron: "15 12 * * *"  # daily sanity run
+    - cron: "15 12 * * *" # daily sanity run
 
 jobs:
   dispatch:
     runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OWNER: IgorGanapolsky
+      REPO: MetaChrome
     steps:
       - name: Set ref
         id: ref
         run: echo "ref=${{ github.event.inputs.ref || 'main' }}" >> "$GITHUB_OUTPUT"
 
-      - name: Trigger CI
-        uses: peter-evans/workflow-dispatch@v3
-        with:
-          workflow: CI
-          ref: ${{ steps.ref.outputs.ref }}
+      - name: Dispatch CI
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$OWNER/$REPO/actions/workflows/ci.yml/dispatches \
+            -d "{\"ref\":\"${{ steps.ref.outputs.ref }}\"}"
 
-      - name: Trigger LangSmith Sync
-        uses: peter-evans/workflow-dispatch@v3
-        with:
-          workflow: LangSmith Sync
-          ref: ${{ steps.ref.outputs.ref }}
+      - name: Dispatch LangSmith Sync
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$OWNER/$REPO/actions/workflows/langsmith-sync.yml/dispatches \
+            -d "{\"ref\":\"${{ steps.ref.outputs.ref }}\"}"
 
-      - name: Trigger RAG Ingest
-        uses: peter-evans/workflow-dispatch@v3
-        with:
-          workflow: RAG Ingest (MetaChrome)
-          ref: ${{ steps.ref.outputs.ref }}
+      - name: Dispatch RAG Ingest
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$OWNER/$REPO/actions/workflows/rag-ingest.yml/dispatches \
+            -d "{\"ref\":\"${{ steps.ref.outputs.ref }}\"}"
 
       - name: Slack notify (optional)
         if: ${{ github.event.inputs.notify_slack == 'true' }}
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
           REF: ${{ steps.ref.outputs.ref }}
         run: |
           if [ -z "$SLACK_WEBHOOK_URL" ]; then
