@@ -9,8 +9,10 @@ on:
         default: main
       notify_slack:
         description: "Post status to Slack (requires secret SLACK_WEBHOOK_URL)"
-        type: boolean
-        default: false
+        required: false
+        default: "false"
+  schedule:
+    - cron: "15 12 * * *"  # daily sanity run
 
 jobs:
   dispatch:
