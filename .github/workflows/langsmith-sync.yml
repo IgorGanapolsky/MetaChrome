@@ -1,36 +1,12 @@
 name: LangSmith Sync
 
 on:
-<<<<<<< HEAD
-  pull_request:
-=======
   push:
     branches: [main]
->>>>>>> origin/main
   workflow_dispatch:
 
 jobs:
   sync:
-<<<<<<< HEAD
-    if: ${{ secrets.LANGSMITH_API_KEY != '' }}
-    runs-on: ubuntu-latest
-    env:
-      LANGSMITH_PROJECT: MetaChrome
-      LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install deps
-        run: |
-          cd frontend
-          yarn install --ignore-scripts --silent
-      - name: LangSmith sync (fail if empty)
-=======
     runs-on: ubuntu-latest
     steps:
       - name: "Guard: require LangSmith secret"
@@ -67,20 +43,11 @@ jobs:
         env:
           LANGSMITH_PROJECT: MetaChrome
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
->>>>>>> origin/main
         run: |
           cd frontend
           yarn langsmith:check
 
-<<<<<<< HEAD
-  skip-no-secret:
-    if: ${{ secrets.LANGSMITH_API_KEY == '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Skipping LangSmith sync: LANGSMITH_API_KEY secret not set."
-=======
       - name: Skip (missing secret)
         if: steps.guard.outputs.enabled != 'true'
         run: |
           echo "Skipping LangSmith sync: LANGSMITH_API_KEY secret not set."
->>>>>>> origin/main
