@@ -44,7 +44,8 @@
     "kernel:loop": "yarn kernel:gen && yarn kernel:bench && yarn kernel:select && yarn rag:build",
     "agent:autopilot": "node scripts/agent-autopilot.js",
     "agent:dev": "node scripts/agent-dev.js",
-    "langsmith:sync": "node scripts/langsmith-sync.js",
+    "langsmith:sync": "python3 scripts/langsmith-sync.py",
+    "langsmith:check": "LANGSMITH_FAIL_IF_EMPTY=true python3 scripts/langsmith-sync.py",
     "eval:monitorability": "node scripts/eval-monitorability.js"
   },
   "dependencies": {

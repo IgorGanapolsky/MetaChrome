@@ -1,0 +1,35 @@
+name: LangSmith Sync
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    if: ${{ secrets.LANGSMITH_API_KEY != '' }}
+    runs-on: ubuntu-latest
+    env:
+      LANGSMITH_PROJECT: MetaChrome
+      LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          cd frontend
+          yarn install --ignore-scripts --silent
+      - name: LangSmith sync (fail if empty)
+        run: |
+          cd frontend
+          yarn langsmith:check
+
+  skip-no-secret:
+    if: ${{ secrets.LANGSMITH_API_KEY == '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skipping LangSmith sync: LANGSMITH_API_KEY secret not set."
