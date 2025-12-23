@@ -1,0 +1,98 @@
+name: Auto-merge Dependabot PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto-merge Dependabot PRs
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Wait for CI checks
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          check-regexp: '.*' # Wait for all checks
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+          allowed-conclusions: success,skipped,neutral
+
+      - name: Auto-approve security updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for security patches
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: |
+          gh pr merge --auto --squash "$PR_URL"
+          echo "✅ Auto-merge enabled for Dependabot PR"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on major version updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          gh pr comment "$PR_URL" --body "⚠️ **Major version update detected** - requires manual review before merging.
+
+          This update may contain breaking changes. Please review:
+          - Release notes and changelog
+          - Breaking changes and migration guide
+          - Impact on existing functionality
+
+          After reviewing, approve and merge manually if safe."
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Slack on auto-merge
+        if: |
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor') &&
+          env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          msg=$(cat <<'EOF'
+          {
+            "text": "✅ Dependabot PR auto-merged",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "✅ *Dependabot PR auto-merged* — MetaChrome"
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  { "type": "mrkdwn", "text": "*Package:*\n${{ steps.metadata.outputs.dependency-names }}" },
+                  { "type": "mrkdwn", "text": "*Update:*\n${{ steps.metadata.outputs.update-type }}" },
+                  { "type": "mrkdwn", "text": "*PR:*\n<${{ github.event.pull_request.html_url }}|View PR>" }
+                ]
+              }
+            ]
+          }
+          EOF
+          )
+          curl -X POST -H 'Content-Type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
