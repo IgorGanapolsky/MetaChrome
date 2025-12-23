@@ -22,8 +22,8 @@ const CHUNKS_FILE = path.join(PROJECT_ROOT, '..', 'docs', 'chunks', 'chunks.json
 const BUCKET_URI = 'gs://metachrome-rag-2025/chunks/chunks.jsonl';
 // us-central1 data store
 const DATA_STORE_RESOURCE =
-  'projects/metachrome-2025/locations/us-central1/collections/default_collection/dataStores/metachrome-lessons/branches/default_branch/documents';
-const HOST = 'https://us-central1-discoveryengine.googleapis.com';
+  'projects/metachrome-2025/locations/global/collections/default_collection/dataStores/metachrome-lessons/branches/default_branch/documents';
+const HOST = 'https://discoveryengine.googleapis.com';
 
 function run(cmd) {
   return execSync(cmd, { stdio: 'inherit', cwd: PROJECT_ROOT, shell: '/bin/bash' });
