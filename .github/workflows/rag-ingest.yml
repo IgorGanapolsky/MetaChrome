@@ -1,0 +1,85 @@
+name: RAG Ingest (MetaChrome)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  BUCKET: metachrome-ai-2025-rag
+  DATASTORE_ID: metachrome-lessons
+  LOCATION: us-central1
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    if: ${{ env.GCP_PROJECT_ID != '' && secrets.GCP_SA_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Ensure bucket exists
+        run: |
+          if ! gsutil ls -b gs://$BUCKET >/dev/null 2>&1; then
+            gsutil mb -l $LOCATION gs://$BUCKET
+          fi
+
+      - name: Ensure data store exists
+        run: |
+          gcloud discovery-engine data-stores describe $DATASTORE_ID \
+            --location=$LOCATION --collection=default_collection \
+            || gcloud discovery-engine data-stores create $DATASTORE_ID \
+                 --location=$LOCATION --collection=default_collection \
+                 --data-store-id=$DATASTORE_ID \
+                 --display-name="MetaChrome Lessons" \
+                 --industry-vertical=GENERIC \
+                 --content-config=CONTENT_REQUIRED
+
+      - name: Ensure search engine exists
+        run: |
+          ENGINE_ID=metachrome-search
+          gcloud discovery-engine engines describe $ENGINE_ID \
+            --location=$LOCATION --collection=default_collection \
+            || gcloud discovery-engine engines create $ENGINE_ID \
+                 --location=$LOCATION --collection=default_collection \
+                 --engine-id=$ENGINE_ID \
+                 --display-name="MetaChrome RAG Search" \
+                 --type=search \
+                 --data-store-ids=$DATASTORE_ID
+
+      - name: Install Node & deps
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install frontend deps
+        run: |
+          cd frontend
+          yarn install --frozen-lockfile
+
+      - name: Build chunks and ingest
+        run: |
+          cd frontend
+          yarn rag:build
+          yarn rag:publish
+
+      - name: Notify Slack on failure
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
+        run: |
+          msg='{"text":":x: RAG ingest failed on '${{ github.ref_name }}' run '${{ github.run_number }}'"}'
+          curl -X POST -H 'Content-Type: application/json' --data "$msg" ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  skip:
+    if: ${{ env.GCP_PROJECT_ID == '' || secrets.GCP_SA_KEY == '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skipping RAG ingest: missing GCP_PROJECT_ID or GCP_SA_KEY secret."
