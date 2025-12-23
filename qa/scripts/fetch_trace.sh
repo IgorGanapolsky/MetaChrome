@@ -18,6 +18,17 @@ cd "$(dirname "$0")/../.."
 # Ensure output directory exists
 mkdir -p qa/tests/data
 
+
+# Load API Key from frontend/.env if applicable
+if [ -f "frontend/.env" ]; then
+    export $(grep -v '^#' frontend/.env | xargs)
+fi
+
+# Ensure LANGCHAIN_API_KEY is set (map from LANGSMITH_API_KEY if needed)
+if [ -z "$LANGCHAIN_API_KEY" ] && [ -n "$LANGSMITH_API_KEY" ]; then
+    export LANGCHAIN_API_KEY=$LANGSMITH_API_KEY
+fi
+
 # Activate venv
 source qa/.venv/bin/activate
 
