@@ -791,6 +791,32 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@bjorn3/browser_wasi_shim@^0.4.1":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@bjorn3/browser_wasi_shim/-/browser_wasi_shim-0.4.2.tgz#7419f414ec01521653f1863b737d1f03e3e94725"
+  integrity sha512-/iHkCVUG3VbcbmEHn5iIUpIrh7a7WPiwZ3sHy4HZKZzBdSadwdddYDZAII2zBvQYV0Lfi8naZngPCN7WPHI/hA==
+
+"@breadboard-ai/build@0.12.2":
+  version "0.12.2"
+  resolved "https://registry.yarnpkg.com/@breadboard-ai/build/-/build-0.12.2.tgz#167e265dd114dba0d3d77f697b2ad5cc144b9204"
+  integrity sha512-DKDOVUl6ni7RTg40R4zJG4lwWW0zhPOaPINFVU2Wj+bdJUg8P638GkYZIz40/vW4/M+YUpt/3Apz/odNIM5LoA==
+  dependencies:
+    "@breadboard-ai/types" "0.7.0"
+    "@google-labs/breadboard" "^0.34.0"
+    "@types/json-schema" "^7.0.15"
+
+"@breadboard-ai/jsandbox@0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@breadboard-ai/jsandbox/-/jsandbox-0.6.0.tgz#90c8ae08ef6514aebf5e8cc63c3eaf8d9c13fc9d"
+  integrity sha512-Qu80hNqWc4EdhmxSAJJkfyqqh7PogcWZE6LWVllpfGNL4HRl+Ig/lu3WuvKPido53psAf/54LRgteAz54dVYTg==
+  dependencies:
+    "@bjorn3/browser_wasi_shim" "^0.4.1"
+
+"@breadboard-ai/types@0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@breadboard-ai/types/-/types-0.7.0.tgz#9392c1c9a1c6a221d88aed91c838f5c589310805"
+  integrity sha512-4Jm27p63ubPYXWrzGV5qCtqd0y45wtYuWXU/TtPWCZAVn3euuKrD7ANW8eWo0HBSBfCEYQNJSC5grZwRTwPU7A==
+
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
   resolved "https://registry.npmjs.org/@egjs/hammerjs/-/hammerjs-2.0.17.tgz"
@@ -1381,6 +1407,32 @@
     chalk "^4.1.0"
     find-up "^5.0.0"
     js-yaml "^4.1.0"
+
+"@google-labs/agent-kit@^0.18.0":
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/@google-labs/agent-kit/-/agent-kit-0.18.0.tgz#d9c69d2a3ed0b62e2336d03eba90a107d716f7de"
+  integrity sha512-C3ighKNDGfCtWNnFTvqled28w1CS4As/mRQ11w5zDbtJNJr790PkaQFVsUOHNzrLeTsUsFGp1daOkCAfq3mmQA==
+  dependencies:
+    "@breadboard-ai/build" "0.12.2"
+    "@breadboard-ai/types" "0.7.0"
+
+"@google-labs/breadboard-schema@^1.14.0":
+  version "1.15.0"
+  resolved "https://registry.yarnpkg.com/@google-labs/breadboard-schema/-/breadboard-schema-1.15.0.tgz#5eaaf4cbbbaed46b151eba87bee4f413e17f266f"
+  integrity sha512-a7GEk2HKGBYkCccczwdkjykkjKwL73AYien0noz3hCU+SUhQduMdxpbay2039Uw+WT+XI+aDfGZbBC6BwaVE4g==
+  dependencies:
+    "@types/json-schema" "^7.0.15"
+
+"@google-labs/breadboard@^0.34.0":
+  version "0.34.0"
+  resolved "https://registry.yarnpkg.com/@google-labs/breadboard/-/breadboard-0.34.0.tgz#23ded2d1df7d9a4fa36e4283d033cc20b9f9efc2"
+  integrity sha512-7+NM3FFFltnoZvzU7JIxCQqHmEH6XsTtLtvtX6vruWAtlaCOrwbjEYTgH/ZyGC0mxKn3yMPqLCVktMUzqVMYxg==
+  dependencies:
+    "@breadboard-ai/jsandbox" "0.6.0"
+    "@breadboard-ai/types" "0.7.0"
+    "@google-labs/breadboard-schema" "^1.14.0"
+    json-schema "^0.4.0"
+    signal-utils "^0.21.1"
 
 "@humanfs/core@^0.19.1":
   version "0.19.1"
@@ -6496,6 +6548,11 @@ json-schema-traverse@^1.0.0:
   resolved "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz"
   integrity sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==
 
+json-schema@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/json-schema/-/json-schema-0.4.0.tgz#f7de4cf6efab838ebaeb3236474cbba5a1930ab5"
+  integrity sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==
+
 json-stable-stringify-without-jsonify@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz"
@@ -8742,6 +8799,11 @@ signal-exit@^4.0.1, signal-exit@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-4.1.0.tgz#952188c1cbd546070e2dd20d0f41c0ae0530cb04"
   integrity sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==
+
+signal-utils@^0.21.1:
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/signal-utils/-/signal-utils-0.21.1.tgz#1060703b4196e16cbf039c8b9eaa2cb5a99f58cd"
+  integrity sha512-i9cdLSvVH4j8ql8mz2lyrA93xL499P8wEbIev3ldSriXeUwqh+wM4Q5VPhIZ19gPtIS4BOopJuKB8l1+wH9LCg==
 
 simple-plist@^1.1.0:
   version "1.3.1"
