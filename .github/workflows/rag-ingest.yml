@@ -91,10 +91,12 @@ jobs:
           yarn rag:publish
 
       - name: Notify Slack on failure
-        if: steps.guard.outputs.enabled == 'true' && failure() && secrets.SLACK_WEBHOOK_URL != ''
+        if: steps.guard.outputs.enabled == 'true' && failure() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           msg='{"text":":x: RAG ingest failed on '${{ github.ref_name }}' run '${{ github.run_number }}'"}'
-          curl -X POST -H 'Content-Type: application/json' --data "$msg" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST -H 'Content-Type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
 
       - name: Skip (missing secrets)
         if: steps.guard.outputs.enabled != 'true'
