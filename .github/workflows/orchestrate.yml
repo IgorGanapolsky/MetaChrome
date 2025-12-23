@@ -41,10 +41,14 @@ jobs:
           ref: ${{ steps.ref.outputs.ref }}
 
       - name: Slack notify (optional)
-        if: ${{ github.event.inputs.notify_slack == 'true' && secrets.SLACK_WEBHOOK_URL != '' }}
+        if: ${{ github.event.inputs.notify_slack == 'true' }}
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
           REF: ${{ steps.ref.outputs.ref }}
         run: |
-          msg='{"text":":rocket: Orchestrated runs kicked off for '$REF' (CI + LangSmith + RAG)."}'
-          curl -X POST -H 'Content-Type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "No SLACK_WEBHOOK_URL set; skipping Slack notify."
+          else
+            msg='{"text":":rocket: Orchestrated runs kicked off for '$REF' (CI + LangSmith + RAG)."}'
+            curl -X POST -H 'Content-Type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
+          fi
