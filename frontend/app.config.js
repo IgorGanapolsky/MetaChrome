@@ -28,7 +28,7 @@ module.exports = {
       },
     },
     android: {
-      package: process.env.ANDROID_PACKAGE || 'com.ganapolsky.metachrome.dev',
+      package: process.env.ANDROID_PACKAGE || 'com.ganapolsky.metachrome',
       versionCode: parseInt(process.env.ANDROID_VERSION_CODE || '1', 10),
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',

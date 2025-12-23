@@ -12,11 +12,11 @@ jobs:
       BUCKET: metachrome-ai-2025-rag
       DATASTORE_ID: metachrome-lessons
       LOCATION: us-central1
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
     steps:
       - name: "Guard: require secrets"
         id: guard
         env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_SA_KEY" ]; then
@@ -40,7 +40,8 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          version: 'latest'
+          version: '458.0.0'
+          install_components: 'beta'
 
       - name: Ensure bucket exists
         if: steps.guard.outputs.enabled == 'true'
@@ -52,14 +53,27 @@ jobs:
       - name: Ensure data store exists
         if: steps.guard.outputs.enabled == 'true'
         run: |
-          echo "Skipping discovery-engine setup: CLI command not available on runner."
-          # gcloud discovery-engine data-stores describe $DATASTORE_ID ...
+          gcloud beta discovery-engine data-stores describe $DATASTORE_ID \
+            --location=$LOCATION --collection=default_collection \
+            || gcloud beta discovery-engine data-stores create $DATASTORE_ID \
+                 --location=$LOCATION --collection=default_collection \
+                 --data-store-id=$DATASTORE_ID \
+                 --display-name="MetaChrome Lessons" \
+                 --industry-vertical=GENERIC \
+                 --content-config=CONTENT_REQUIRED
 
       - name: Ensure search engine exists
         if: steps.guard.outputs.enabled == 'true'
         run: |
-          echo "Skipping discovery-engine setup: CLI command not available on runner."
-          # gcloud discovery-engine engines describe $ENGINE_ID ...
+          ENGINE_ID=metachrome-search
+          gcloud beta discovery-engine engines describe $ENGINE_ID \
+            --location=$LOCATION --collection=default_collection \
+            || gcloud beta discovery-engine engines create $ENGINE_ID \
+                 --location=$LOCATION --collection=default_collection \
+                 --engine-id=$ENGINE_ID \
+                 --display-name="MetaChrome RAG Search" \
+                 --type=search \
+                 --data-store-ids=$DATASTORE_ID
 
       - name: Install Node & deps
         if: steps.guard.outputs.enabled == 'true'
@@ -77,10 +91,6 @@ jobs:
 
       - name: Build chunks and ingest
         if: steps.guard.outputs.enabled == 'true'
-        env:
-          VERTEX_API_KEY: ${{ secrets.GCP_SA_KEY }} # Using SA Key as API key proxy or assume authenticated via ADC? 
-          # Actually script expects VERTEX_API_KEY. If checking code...
-          # But for now I will expose GCP_PROJECT_ID globally.
         run: |
           cd frontend
           yarn rag:build
