@@ -40,7 +40,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          version: 'latest'
+          version: '458.0.0'
           install_components: 'beta'
 
       - name: Ensure bucket exists
