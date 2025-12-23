@@ -6,8 +6,7 @@ const buildHeaders = () => ({
   'Content-Type': 'application/json',
 });
 
-const makeSessionId = () =>
-  `mc-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
+const makeSessionId = () => `mc-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
 
 export const detectIntent = async ({
   text,
