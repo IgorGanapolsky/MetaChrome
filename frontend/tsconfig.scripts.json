@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "baseUrl": ".",
+    "paths": {
+      "expo-constants": ["./scripts/mocks/expo-constants.ts"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["scripts/**/*", "src/**/*"],
+  "exclude": ["node_modules"]
+}
