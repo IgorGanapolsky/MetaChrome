@@ -17,7 +17,8 @@ jobs:
     defaults:
       run:
         working-directory: frontend
-
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,3 +47,23 @@ jobs:
 
       - name: Run smoke tests
         run: yarn test:smoke --ci
+
+      - name: Notify Slack on failure
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          msg=$(cat <<'EOF'
+          {
+            "text": ":x: CI failed — MetaChrome/${{ github.ref_name }}",
+            "blocks": [
+              { "type": "section", "text": { "type": "mrkdwn", "text": "*CI failed* — MetaChrome/${{ github.ref_name }} (#${{ github.run_number }})" } },
+              { "type": "section", "fields": [
+                { "type": "mrkdwn", "text": "*Job:*\n${{ github.job }}" },
+                { "type": "mrkdwn", "text": "*Commit:*\n`${{ github.sha }}`" },
+                { "type": "mrkdwn", "text": "*Actor:*\n${{ github.actor }}" },
+                { "type": "mrkdwn", "text": "*Run:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open logs>" }
+              ]}
+            ]
+          }
+          EOF
+          )
+          curl -X POST -H 'Content-Type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
