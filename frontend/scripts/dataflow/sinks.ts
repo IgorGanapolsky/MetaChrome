@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { execSync } from 'child_process';
 import { Sink, DataRecord } from './core';
@@ -49,7 +50,7 @@ export class VertexAISink implements Sink<any> {
     // Vertex AI import expects a file in GCS.
     // We reuse JsonLineSink to write local file first, then upload, then trigger import.
 
-    const tempFile = path.join(process.cwd(), 'temp_chunks.jsonl');
+    const tempFile = path.join(os.tmpdir(), `metachrome-chunks-${Date.now()}.jsonl`);
     const jsonSink = new JsonLineSink(tempFile);
 
     console.log('[VertexAISink] Writing local temp file...');
