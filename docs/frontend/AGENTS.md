@@ -6,6 +6,7 @@
 - Branch protection: open PRs, get review, then merge; avoid force-push to `main`.
 - Secrets: keep LANGSMITH and GCP keys in `.env` (never commit). RAG/LLM tooling should read from env only.
 - Source of truth for docs: `README.md`; any .md additions belong under `docs/` and must be linked from README.
+- PR hygiene: resolve all bot comments (e.g., Sentry, CI, lint) before merging; dismiss only after resolution.
 
 Action on startup:
 1) Verify `git remote -v` points to personal origin.
