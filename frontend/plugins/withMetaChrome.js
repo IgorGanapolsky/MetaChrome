@@ -106,15 +106,7 @@ function withAndroidShortcutsXml(config) {
     'android',
     async (config) => {
       const projectRoot = config.modRequest.projectRoot;
-      const xmlDir = path.join(
-        projectRoot,
-        'android',
-        'app',
-        'src',
-        'main',
-        'res',
-        'xml'
-      );
+      const xmlDir = path.join(projectRoot, 'android', 'app', 'src', 'main', 'res', 'xml');
 
       if (!fs.existsSync(xmlDir)) {
         fs.mkdirSync(xmlDir, { recursive: true });
@@ -163,14 +155,14 @@ function withAndroidStrings(config) {
 
       if (fs.existsSync(stringsPath)) {
         let stringsContent = fs.readFileSync(stringsPath, 'utf8');
-        
+
         if (!stringsContent.includes('shortcut_short_label_browser')) {
-             const newStrings = `
+          const newStrings = `
     <string name="shortcut_short_label_browser">Browser</string>
     <string name="shortcut_long_label_browser">Open MetaChrome Browser</string>
 `;
-             stringsContent = stringsContent.replace('</resources>', `${newStrings}</resources>`);
-             fs.writeFileSync(stringsPath, stringsContent);
+          stringsContent = stringsContent.replace('</resources>', `${newStrings}</resources>`);
+          fs.writeFileSync(stringsPath, stringsContent);
         }
       }
       return config;

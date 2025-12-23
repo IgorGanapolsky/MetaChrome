@@ -26,32 +26,31 @@ async function main() {
 
   // Post-process: show reasoning-like block with uncertainty cue if no evidence
   const steps = [];
-  steps.push("1) Retrieved top docs from claude-code-lessons data store.");
+  steps.push('1) Retrieved top docs from claude-code-lessons data store.');
   if (highConfidence) {
-    steps.push("2) High-confidence local intent prediction; skipped remote query.");
+    steps.push('2) High-confidence local intent prediction; skipped remote query.');
   } else if (res.text) {
-    steps.push("2) Synthesized concise summary from returned snippets.");
+    steps.push('2) Synthesized concise summary from returned snippets.');
   } else {
-    steps.push("2) No summary returned; showing raw results.");
+    steps.push('2) No summary returned; showing raw results.');
   }
-  const evidenceNote =
-    highConfidence
-      ? `Handled locally (prediction ${topPred.intent}, conf=${topPred.confidence.toFixed(2)}).`
-      : res.text && (res.reliability ?? 0) >= 0.35
+  const evidenceNote = highConfidence
+    ? `Handled locally (prediction ${topPred.intent}, conf=${topPred.confidence.toFixed(2)}).`
+    : res.text && (res.reliability ?? 0) >= 0.35
       ? `Evidence: snippets from data store; reliability=${(res.reliability ?? 0).toFixed(2)}.`
       : `Insufficient evidence (reliability=${(res.reliability ?? 0).toFixed(
           2
         )}); please verify manually.`;
 
-  console.log("Reasoning:");
-  steps.forEach((s) => console.log(" - " + s));
-  console.log("Answer:");
+  console.log('Reasoning:');
+  steps.forEach((s) => console.log(' - ' + s));
+  console.log('Answer:');
   if (highConfidence) {
     console.log(`Predicted intent: ${topPred.intent} (conf=${topPred.confidence.toFixed(2)})`);
   } else {
     console.log(res.text || JSON.stringify(res.raw, null, 2));
   }
-  console.log("Uncertainty:", evidenceNote);
+  console.log('Uncertainty:', evidenceNote);
 
   if (topPred) {
     logPredictionReflection(topPred);
@@ -82,7 +81,8 @@ function logPredictionReflection(pred) {
   const entry = {
     date: new Date().toISOString(),
     summary: `Predicted intent ${pred.intent} with confidence ${pred.confidence.toFixed(2)} (local fast-path).`,
-    takeaway: 'Use local intent prediction to prefetch/handle simple actions; route complex/low-confidence to cloud.',
+    takeaway:
+      'Use local intent prediction to prefetch/handle simple actions; route complex/low-confidence to cloud.',
     tags: ['prediction', 'intent-routing'],
   };
   try {
