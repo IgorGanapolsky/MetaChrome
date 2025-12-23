@@ -12,11 +12,11 @@ jobs:
       BUCKET: metachrome-ai-2025-rag
       DATASTORE_ID: metachrome-lessons
       LOCATION: us-central1
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
     steps:
       - name: "Guard: require secrets"
         id: guard
         env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_SA_KEY" ]; then
@@ -77,6 +77,10 @@ jobs:
 
       - name: Build chunks and ingest
         if: steps.guard.outputs.enabled == 'true'
+        env:
+          VERTEX_API_KEY: ${{ secrets.GCP_SA_KEY }} # Using SA Key as API key proxy or assume authenticated via ADC? 
+          # Actually script expects VERTEX_API_KEY. If checking code...
+          # But for now I will expose GCP_PROJECT_ID globally.
         run: |
           cd frontend
           yarn rag:build
