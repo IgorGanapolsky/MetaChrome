@@ -16,7 +16,7 @@ const REQUIRED_FIELDS = {
   root: ['owner', 'slug', 'version', 'scheme'],
   ios: ['bundleIdentifier', 'buildNumber'],
   android: ['package', 'versionCode'],
-  extra: ['eas.projectId'],
+  extra: [],
 };
 
 const REQUIRED_PLUGINS = [
@@ -95,11 +95,6 @@ function validateConfig(config, source) {
     if (!expo.android?.[field]) {
       errors.push(`[${source}] Missing required Android field: android.${field}`);
     }
-  }
-
-  // Check extra.eas.projectId
-  if (!getNestedValue(expo, 'extra.eas.projectId')) {
-    errors.push(`[${source}] Missing required field: extra.eas.projectId`);
   }
 
   // Check required plugins
