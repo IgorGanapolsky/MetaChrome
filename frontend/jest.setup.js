@@ -114,6 +114,7 @@ jest.mock('expo-speech', () => ({
   isSpeakingAsync: jest.fn(() => Promise.resolve(false)),
 }));
 
+<<<<<<< HEAD
 // Mock @jamsch/expo-speech-recognition
 jest.mock('@jamsch/expo-speech-recognition', () => ({
   useSpeechRecognitionEvent: jest.fn(),
@@ -128,6 +129,9 @@ jest.mock('@jamsch/expo-speech-recognition', () => ({
     stop: jest.fn(),
   },
 }));
+=======
+
+>>>>>>> fix/ci-stabilization
 
 // Mock react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => {

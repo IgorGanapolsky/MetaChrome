@@ -18,6 +18,11 @@ type AppExtra = {
     heliconeEndpoint?: string;
   };
   googleApiKey?: string;
+  neo4j?: {
+    uri?: string;
+    username?: string;
+    password?: string;
+  };
 };
 
 const extra = (Constants.expoConfig?.extra ||
@@ -51,4 +56,9 @@ export const appConfig = {
       extra.observability?.heliconeEndpoint || 'https://api.worker.helicone.ai/custom/v1/log',
   },
   googleApiKey: extra.googleApiKey || '',
+  neo4j: {
+    uri: extra.neo4j?.uri || '',
+    username: extra.neo4j?.username || '',
+    password: extra.neo4j?.password || '',
+  },
 };
