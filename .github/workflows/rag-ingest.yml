@@ -42,11 +42,44 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           version: 'latest'
 
-      - name: Debug gcloud components
+      - name: Update gcloud and install components
         if: steps.guard.outputs.enabled == 'true'
         run: |
-          gcloud components list
-          gcloud help || true
+          gcloud components update --quiet
+          gcloud components install beta --quiet
+          gcloud --version
+
+      - name: Ensure bucket exists
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          if ! gsutil ls -b gs://$BUCKET >/dev/null 2>&1; then
+            gsutil mb -l $LOCATION gs://$BUCKET
+          fi
+
+      - name: Ensure data store exists
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          gcloud beta discovery-engine data-stores describe $DATASTORE_ID \
+            --location=$LOCATION --collection=default_collection \
+            || gcloud beta discovery-engine data-stores create $DATASTORE_ID \
+                 --location=$LOCATION --collection=default_collection \
+                 --data-store-id=$DATASTORE_ID \
+                 --display-name="MetaChrome Lessons" \
+                 --industry-vertical=GENERIC \
+                 --content-config=CONTENT_REQUIRED
+
+      - name: Ensure search engine exists
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          ENGINE_ID=metachrome-search
+          gcloud beta discovery-engine engines describe $ENGINE_ID \
+            --location=$LOCATION --collection=default_collection \
+            || gcloud beta discovery-engine engines create $ENGINE_ID \
+                 --location=$LOCATION --collection=default_collection \
+                 --engine-id=$ENGINE_ID \
+                 --display-name="MetaChrome RAG Search" \
+                 --type=search \
+                 --data-store-ids=$DATASTORE_ID
 
       - name: Install Node & deps
         if: steps.guard.outputs.enabled == 'true'
@@ -61,3 +94,23 @@ jobs:
         run: |
           cd frontend
           yarn install --frozen-lockfile
+
+      - name: Build chunks and ingest
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          cd frontend
+          yarn rag:build
+          yarn rag:publish
+
+      - name: Notify Slack on failure
+        if: steps.guard.outputs.enabled == 'true' && failure() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          msg='{"text":":x: RAG ingest failed on '${{ github.ref_name }}' run '${{ github.run_number }}'"}'
+          curl -X POST -H 'Content-Type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
+
+      - name: Skip (missing secrets)
+        if: steps.guard.outputs.enabled != 'true'
+        run: |
+          echo "Skipping RAG ingest: missing GCP secrets."
