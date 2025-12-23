@@ -33,7 +33,7 @@ export class Pipeline<In, Out> {
 
   async run(debug: boolean = false): Promise<void> {
     if (debug) console.log(`[Pipeline] Starting: ${this.source.name}`);
-    
+
     let stream = this.source.read();
 
     for (const transform of this.transforms) {
@@ -43,7 +43,7 @@ export class Pipeline<In, Out> {
 
     if (debug) console.log(`[Pipeline] Writing to sink: ${this.sink.name}`);
     await this.sink.write(stream as any);
-    
+
     if (debug) console.log('[Pipeline] Finished.');
   }
 
@@ -58,7 +58,7 @@ export class Pipeline<In, Out> {
         if (value) yield value;
       } else {
         // It's a generator
-        for await (const subItem of (result as AsyncGenerator<DataRecord<U>>)) {
+        for await (const subItem of result as AsyncGenerator<DataRecord<U>>) {
           yield subItem;
         }
       }
