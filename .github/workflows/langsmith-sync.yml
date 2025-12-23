@@ -2,34 +2,51 @@ name: LangSmith Sync
 
 on:
   push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   sync:
-    if: ${{ secrets.LANGSMITH_API_KEY != '' }}
     runs-on: ubuntu-latest
-    env:
-      LANGSMITH_PROJECT: MetaChrome
-      LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
     steps:
+      - name: Guard: require LangSmith secret
+        id: guard
+        run: |
+          if [ -z "${{ secrets.LANGSMITH_API_KEY }}" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Missing LANGSMITH_API_KEY; skipping sync."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.guard.outputs.enabled == 'true'
+
       - uses: actions/setup-node@v4
+        if: steps.guard.outputs.enabled == 'true'
         with:
           node-version: 20
+
       - uses: actions/setup-python@v5
+        if: steps.guard.outputs.enabled == 'true'
         with:
           python-version: '3.11'
+
       - name: Install deps
+        if: steps.guard.outputs.enabled == 'true'
         run: |
           cd frontend
           yarn install --ignore-scripts --silent
+
       - name: LangSmith sync (fail if empty)
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          LANGSMITH_PROJECT: MetaChrome
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
         run: |
           cd frontend
           yarn langsmith:check
 
-  skip-no-secret:
-    if: ${{ secrets.LANGSMITH_API_KEY == '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Skipping LangSmith sync: LANGSMITH_API_KEY secret not set."
+      - name: Skip (missing secret)
+        if: steps.guard.outputs.enabled != 'true'
+        run: echo "Skipping LangSmith sync: LANGSMITH_API_KEY secret not set."
