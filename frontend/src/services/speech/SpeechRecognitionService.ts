@@ -95,3 +95,21 @@ export function useSpeechRecognition() {
     onCommand: speechService.onCommand.bind(speechService),
   };
 }
+
+// Compatibility shims for TS consumers expecting speech permissions/hooks
+export enum SpeechPermissionStatus {
+  GRANTED = 'granted',
+  DENIED = 'denied',
+  UNKNOWN = 'unknown',
+}
+
+export const getSpeechPermissions = async (): Promise<SpeechPermissionStatus> =>
+  SpeechPermissionStatus.DENIED;
+
+export const requestSpeechPermissions = async (): Promise<SpeechPermissionStatus> =>
+  SpeechPermissionStatus.DENIED;
+
+export const useSpeechRecognitionEventSafe = () => {
+  const state = useSpeechStore();
+  return { isListening: state.isListening, error: state.error };
+};

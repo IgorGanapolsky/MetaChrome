@@ -1,0 +1,112 @@
+name: RAG Ingest (MetaChrome)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    env:
+      BUCKET: metachrome-ai-2025-rag
+      DATASTORE_ID: metachrome-lessons
+      LOCATION: us-central1
+    steps:
+      - name: "Guard: require secrets"
+        id: guard
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_SA_KEY" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Missing GCP_PROJECT_ID or GCP_SA_KEY; skipping ingest."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.enabled == 'true'
+
+      - name: Authenticate to GCP
+        if: steps.guard.outputs.enabled == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        if: steps.guard.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Install gcloud alpha
+        if: steps.guard.outputs.enabled == 'true'
+        run: gcloud components install alpha --quiet
+
+      - name: Ensure bucket exists
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          if ! gsutil ls -b gs://$BUCKET >/dev/null 2>&1; then
+            gsutil mb -l $LOCATION gs://$BUCKET
+          fi
+
+      - name: Ensure data store exists
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          gcloud alpha discoveryengine data-stores describe $DATASTORE_ID \
+            --location=$LOCATION --collection=default_collection \
+            || gcloud alpha discoveryengine data-stores create $DATASTORE_ID \
+                 --location=$LOCATION --collection=default_collection \
+                 --data-store-id=$DATASTORE_ID \
+                 --display-name="MetaChrome Lessons" \
+                 --industry-vertical=GENERIC \
+                 --content-config=CONTENT_REQUIRED
+
+      - name: Ensure search engine exists
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          ENGINE_ID=metachrome-search
+          gcloud alpha discoveryengine engines describe $ENGINE_ID \
+            --location=$LOCATION --collection=default_collection \
+            || gcloud alpha discoveryengine engines create $ENGINE_ID \
+                 --location=$LOCATION --collection=default_collection \
+                 --engine-id=$ENGINE_ID \
+                 --display-name="MetaChrome RAG Search" \
+                 --type=search \
+                 --data-store-ids=$DATASTORE_ID
+
+      - name: Install Node & deps
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install frontend deps
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          cd frontend
+          yarn install --frozen-lockfile
+
+      - name: Build chunks and ingest
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          cd frontend
+          yarn rag:build
+          yarn rag:publish
+
+      - name: Notify Slack on failure
+        if: steps.guard.outputs.enabled == 'true' && failure() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          msg='{"text":":x: RAG ingest failed on '${{ github.ref_name }}' run '${{ github.run_number }}'"}'
+          curl -X POST -H 'Content-Type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
+
+      - name: Skip (missing secrets)
+        if: steps.guard.outputs.enabled != 'true'
+        run: |
+          echo "Skipping RAG ingest: missing GCP secrets."

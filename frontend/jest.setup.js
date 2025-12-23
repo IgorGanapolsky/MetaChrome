@@ -114,7 +114,7 @@ jest.mock('expo-speech', () => ({
   isSpeakingAsync: jest.fn(() => Promise.resolve(false)),
 }));
 
-// Mock @jamsch/expo-speech-recognition
+// Mock @jamsch/expo-speech-recognition (virtual module; not installed)
 jest.mock('@jamsch/expo-speech-recognition', () => ({
   useSpeechRecognitionEvent: jest.fn(),
   ExpoSpeechRecognitionModule: {
@@ -123,7 +123,11 @@ jest.mock('@jamsch/expo-speech-recognition', () => ({
     getStateAsync: jest.fn(() => Promise.resolve({ isRecognizing: false })),
     requestPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
   },
-}));
+  SpeechRecognitionModule: {
+    start: jest.fn(),
+    stop: jest.fn(),
+  },
+}), { virtual: true });
 
 // Mock react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => {

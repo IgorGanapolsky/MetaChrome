@@ -77,9 +77,14 @@ function processFile(file) {
   const sentences = paragraphs.flatMap((p) => splitSentences(p));
   return chunkSentences(sentences).map((sentArr, idx) => ({
     id: `${path.relative(PROJECT_ROOT, file)}::${idx}`,
-    source: path.relative(PROJECT_ROOT, file),
-    summary_hint: sentArr.slice(0, 2).join(' ').slice(0, 320),
-    text: sentArr.join(' '),
+    structData: {
+      source: path.relative(PROJECT_ROOT, file),
+      summary_hint: sentArr.slice(0, 2).join(' ').slice(0, 320),
+    },
+    content: {
+      mimeType: 'text/plain',
+      rawBytes: Buffer.from(sentArr.join(' ')).toString('base64'),
+    },
   }));
 }
 
@@ -92,9 +97,14 @@ function loadReflections() {
     const hint = obj.takeaway || obj.summary || text.slice(0, 320);
     return {
       id: `reflections.jsonl::${idx}`,
-      source: 'docs/memory/reflections.jsonl',
-      summary_hint: hint,
-      text,
+      structData: {
+        source: 'docs/memory/reflections.jsonl',
+        summary_hint: hint,
+      },
+      content: {
+        mimeType: 'text/plain',
+        rawBytes: Buffer.from(text).toString('base64'),
+      },
     };
   });
 }
