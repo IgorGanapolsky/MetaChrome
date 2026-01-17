@@ -97,7 +97,7 @@
     "@babel/core": "^7.25.2",
     "@rozenite/metro": "^1.1.0",
     "@rozenite/react-navigation-plugin": "^1.1.0",
-    "@sentry/react-native": "^7.8.0",
+    "@sentry/react-native": "^7.9.0",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^12.4.3",
