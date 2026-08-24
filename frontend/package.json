@@ -94,7 +94,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
+    "@babel/core": "^7.29.6",
     "@rozenite/metro": "^1.2.0",
     "@rozenite/react-navigation-plugin": "^1.2.0",
     "@sentry/react-native": "^7.12.0",
