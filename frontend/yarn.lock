@@ -2304,10 +2304,10 @@
     "@sentry/types" "7.81.1"
     "@sentry/utils" "7.81.1"
 
-"@sentry/babel-plugin-component-annotate@4.9.0":
-  version "4.9.0"
-  resolved "https://registry.yarnpkg.com/@sentry/babel-plugin-component-annotate/-/babel-plugin-component-annotate-4.9.0.tgz#5fbfd024935ab6f3cb39042aa6c4210060202ff4"
-  integrity sha512-TJ7sVoa2Bf36lpJjBAzpNDC5Hg+evjsQnqUPeDx9Nz/YFw0u9rK1cwvi95gVWpx7PJSDCkljIv3aw0m4RatHpQ==
+"@sentry/babel-plugin-component-annotate@4.9.1":
+  version "4.9.1"
+  resolved "https://registry.yarnpkg.com/@sentry/babel-plugin-component-annotate/-/babel-plugin-component-annotate-4.9.1.tgz#76b306cb89ac465946e9328228a20c5e7b83b534"
+  integrity sha512-0gEoi2Lb54MFYPOmdTfxlNKxI7kCOvNV7gP8lxMXJ7nCazF5OqOOZIVshfWjDLrc0QrSV6XdVvwPV9GDn4wBMg==
 
 "@sentry/browser@10.38.0":
   version "10.38.0"
@@ -2491,12 +2491,12 @@
     "@sentry/types" "7.81.1"
     "@sentry/utils" "7.81.1"
 
-"@sentry/react-native@^7.12.1":
-  version "7.12.1"
-  resolved "https://registry.yarnpkg.com/@sentry/react-native/-/react-native-7.12.1.tgz#359d96fc5a6f0c317d590a04d9cc1df38cba3f88"
-  integrity sha512-9sogj9eEAUf23ygZ2Gz5L7WxeG5cAikBnTPXVH+4S+KxS6EZgZ+Dtj9wDCfW9Pj4Uz5TKAImUKidMyulaeM+ww==
+"@sentry/react-native@^7.13.0":
+  version "7.13.0"
+  resolved "https://registry.yarnpkg.com/@sentry/react-native/-/react-native-7.13.0.tgz#ac31f31f9b99dbfccdae26626ec5ae8bbcca2494"
+  integrity sha512-pKY+rln3CEnhnG21eUXcl/yeG5fkNruqXXjEikE5FjsyLmJi2POAGwT4tlupyHtG3fQT5mp06QI7bQdpAuH4Xw==
   dependencies:
-    "@sentry/babel-plugin-component-annotate" "4.9.0"
+    "@sentry/babel-plugin-component-annotate" "4.9.1"
     "@sentry/browser" "10.38.0"
     "@sentry/cli" "2.58.4"
     "@sentry/core" "10.38.0"
